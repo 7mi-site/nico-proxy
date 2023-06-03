@@ -30,7 +30,17 @@ public class NicoNicoVideo implements ShareService {
      */
     @Override
     public String getVideo(String url, ProxyData proxy) throws Exception {
+        return getVideo(url, proxy, true)[0];
+    }
 
+    /**
+     * @param url ニコニコ動画の視聴URL
+     * @param proxy 使用するProxy、公式動画の場合は国内判定されるProxyを指定する
+     * @param AutoHeartBeatSend ハートビート信号を自動で送るようにするか (Trueで自動で送る)
+     * @return String[0] 再生用動画URL String[1] ハートビートセッション文字列 String[2] ハートビート信号ID文字列
+     * @throws Exception
+     */
+    public String[] getVideo(String url, ProxyData proxy, boolean AutoHeartBeatSend) throws Exception {
         System.gc();
 
         // IDのみにする
@@ -39,7 +49,7 @@ public class NicoNicoVideo implements ShareService {
         // 無駄にアクセスしないようにすでに接続されてたらそれを返す
         String VideoURL = QueueList.get(id);
         if (VideoURL != null){
-            return VideoURL;
+            return new String[]{VideoURL,"",""};
         }
 
         final OkHttpClient client = proxy != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxy.getProxyIP(), proxy.getPort()))).build() : new OkHttpClient();
@@ -201,42 +211,35 @@ public class NicoNicoVideo implements ShareService {
             throw new Exception("api.dmc.nico PostData Error");
         }
 
-        System.gc();
 
-        new Thread(()->{
-            Timer timer = new Timer();
+        if (AutoHeartBeatSend){
 
-            Integer[] i = {0};
-            int maxCount = (int)(VideoTime / 40L);
+            new Thread(()->{
+                Timer timer = new Timer();
 
-            TimerTask task = new TimerTask() {
-                @Override
-                public void run() {
-                    RequestBody body = RequestBody.create(HeartBeatSession, JSON);
-                    Request request = new Request.Builder()
-                            .url("https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT")
-                            .post(body)
-                            .build();
-                    try {
-                        Response response = client.newCall(request).execute();
-                        response.close();
-                    } catch (IOException e) {
-                        // e.printStackTrace();
+                Integer[] i = {0};
+                int maxCount = (int)(VideoTime / 40L);
+
+                TimerTask task = new TimerTask() {
+                    @Override
+                    public void run() {
+                        SendHeartBeatVideo(HeartBeatSession, HeartBeatSessionId, proxy);
+                        if (i[0] >= maxCount){
+                            QueueList.remove(id);
+                            timer.cancel();
+                        }
+
+                        i[0]++;
+                        System.gc();
                     }
-                    if (i[0] >= maxCount){
-                        QueueList.remove(id);
-                        timer.cancel();
-                    }
+                };
 
-                    i[0]++;
-                    System.gc();
-                }
-            };
+                timer.scheduleAtFixedRate(task, 0L, 40000L);
+            }).start();
+        }
 
-            timer.scheduleAtFixedRate(task, 0L, 40000L);
-        }).start();
+        return new String[]{VideoURL, HeartBeatSession, HeartBeatSessionId};
 
-        return VideoURL;
     }
 
     /**
@@ -390,6 +393,33 @@ public class NicoNicoVideo implements ShareService {
         }
 
         return LiveURL;
+    }
+
+    /**
+     * @param HeartBeatSession ハートビート信号のセッション
+     * @param HeartBeatSessionId ハートビート信号のURLにつけているID
+     * @param proxy 使用するProxy、getVideoで使用したProxyを指定することを推奨します。
+     * @return 成功した場合はTrue
+     * @throws Exception
+     */
+    public boolean SendHeartBeatVideo(String HeartBeatSession, String HeartBeatSessionId, ProxyData proxy){
+        System.gc();
+        final OkHttpClient client = proxy != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxy.getProxyIP(), proxy.getPort()))).build() : new OkHttpClient();
+
+        RequestBody body = RequestBody.create(HeartBeatSession, JSON);
+        Request request = new Request.Builder()
+                .url("https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT")
+                .post(body)
+                .build();
+        try {
+            Response response = client.newCall(request).execute();
+            response.close();
+
+            return true;
+        } catch (IOException e) {
+            // e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
