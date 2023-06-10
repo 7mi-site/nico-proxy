@@ -28,18 +28,6 @@ public class NicoNicoVideo implements ShareService {
     private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
     /**
-     * @param url   ニコニコ動画の視聴URL
-     * @param proxy 使用するProxy、公式動画の場合は国内判定されるProxyを指定する
-     * @return 再生用動画URL
-     * @throws Exception エラーメッセージ
-     */
-    @Override
-    @Deprecated
-    public String getVideo(String url, ProxyData proxy) throws Exception {
-        return getVideo(url, proxy, true)[0];
-    }
-
-    /**
      * @param url               ニコニコ動画の視聴URL
      * @param proxy             使用するProxy、公式動画の場合は国内判定されるProxyを指定する
      * @param AutoHeartBeatSend ハートビート信号を自動で送るようにするか (Trueで自動で送る)
@@ -299,20 +287,6 @@ public class NicoNicoVideo implements ShareService {
         return result;
     }
 
-    /**
-     * @param url ニコニコ生放送の視聴URL
-     * @param proxy 使用するProxy、国内判定されるProxyを指定する
-     * @return 再生用動画URL (HLS形式)
-     * @throws Exception エラーメッセージ
-     */
-    @Override
-    @Deprecated
-    public String getLive(String url, ProxyData proxy) throws Exception {
-        ResultVideoData live = getLive(new RequestVideoData(url, proxy));
-        return live.getVideoURL();
-    }
-
-
     private WebSocket webSocket = null;
 
     @Override
@@ -469,14 +443,7 @@ public class NicoNicoVideo implements ShareService {
         }
     }
 
-    /**
-     * @param HeartBeatSession ハートビート信号のセッション
-     * @param HeartBeatSessionId ハートビート信号のURLにつけているID
-     * @param proxy 使用するProxy、getVideoで使用したProxyを指定することを推奨します。
-     * @return 成功した場合はTrue
-     */
-    @Deprecated
-    public boolean SendHeartBeatVideo(String HeartBeatSession, String HeartBeatSessionId, ProxyData proxy){
+    private boolean SendHeartBeatVideo(String HeartBeatSession, String HeartBeatSessionId, ProxyData proxy){
         System.gc();
         final OkHttpClient client = proxy != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxy.getProxyIP(), proxy.getPort()))).build() : new OkHttpClient();
 

@@ -14,11 +14,6 @@ import java.net.Proxy;
 
 public class BilibiliTv implements ShareService{
 
-    @Override
-    @Deprecated
-    public String getVideo(String url, ProxyData proxy) throws Exception {
-        return getVideo(new RequestVideoData(url, proxy)).getVideoURL();
-    }
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
@@ -61,14 +56,8 @@ public class BilibiliTv implements ShareService{
     }
 
     @Override
-    public String getLive(String url, ProxyData proxy) {
+    public ResultVideoData getLive(RequestVideoData data) throws Exception {
         // 存在しないので実装しない
-        return null;
-    }
-
-    @Override
-    @Deprecated
-    public ResultVideoData getLive(RequestVideoData data) {
         return null;
     }
 

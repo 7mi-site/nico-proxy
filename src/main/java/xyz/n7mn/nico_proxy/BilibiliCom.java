@@ -15,11 +15,6 @@ import java.util.regex.Pattern;
 
 
 public class BilibiliCom implements ShareService{
-    @Override
-    @Deprecated
-    public String getVideo(String url, ProxyData proxy) throws Exception {
-        return getVideo(new RequestVideoData(url, proxy)).getVideoURL();
-    }
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
@@ -106,12 +101,6 @@ public class BilibiliCom implements ShareService{
         return new ResultVideoData(temp_url, null, false, false, false, null);
     }
 
-    @Override
-    @Deprecated
-    public String getLive(String url, ProxyData proxy) {
-        // 現時点(2023/5/31)では実装しない
-        return null;
-    }
 
     @Override
     public ResultVideoData getLive(RequestVideoData data) {
