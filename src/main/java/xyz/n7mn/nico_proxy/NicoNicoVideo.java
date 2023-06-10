@@ -34,51 +34,6 @@ public class NicoNicoVideo implements ShareService {
      * @return String[0] 再生用動画URL String[1] ハートビートセッション文字列 String[2] ハートビート信号ID文字列
      * @throws Exception エラーメッセージ
      */
-    @Deprecated
-    public String[] getVideo(String url, ProxyData proxy, boolean AutoHeartBeatSend) throws Exception {
-        ResultVideoData video = getVideo(new RequestVideoData(url, proxy));
-
-        Matcher matcher = Pattern.compile("https://api\\.dmc\\.nico/api/sessions/(.*)\\?_format=json&_method=PUT").matcher(video.getTokenJson());
-        String tokenId = "";
-        if (matcher.find()){
-            tokenId = matcher.group(1);
-        }
-
-        if (AutoHeartBeatSend){
-            final OkHttpClient client = proxy != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxy.getProxyIP(), proxy.getPort()))).build() : new OkHttpClient();
-            final String id = getId(url);
-
-            Request request_html = new Request.Builder()
-                    .url("https://www.nicovideo.jp/watch/" + id)
-                    .build();
-            Response response = client.newCall(request_html).execute();
-            String HtmlText = response.body() != null ? response.body().string() : "";
-            response.close();
-            Matcher matcher1 = Pattern.compile("<meta property=\"video:duration\" content=\"(\\d+)\">").matcher(HtmlText);
-
-            long time = matcher1.find() ? Long.parseLong(matcher1.group(1)) : 1600;
-            Timer timer = new Timer();
-            String finalTokenId = tokenId;
-            long[] longs = new long[]{0, time / 40L};
-            TimerTask task = new TimerTask() {
-                @Override
-                public void run() {
-                    SendHeartBeatVideo(finalTokenId, new Gson().fromJson(video.getTokenJson(), TokenJSON.class).getTokenValue(), proxy);
-                    if (longs[0] < longs[1]){
-                        longs[0]++;
-                    } else {
-                        timer.cancel();
-                    }
-                }
-            };
-
-            timer.scheduleAtFixedRate(task, 0L, 40000L);
-        }
-
-        return new String[]{video.getVideoURL(), tokenId, new Gson().fromJson(video.getTokenJson(), TokenJSON.class).getTokenValue()};
-    }
-
-
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
         System.gc();
