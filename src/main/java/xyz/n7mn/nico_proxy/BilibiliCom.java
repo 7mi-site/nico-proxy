@@ -3,6 +3,9 @@ package xyz.n7mn.nico_proxy;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import xyz.n7mn.nico_proxy.data.ProxyData;
+import xyz.n7mn.nico_proxy.data.RequestVideoData;
+import xyz.n7mn.nico_proxy.data.ResultVideoData;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -10,11 +13,17 @@ import java.net.Proxy;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 public class BilibiliCom implements ShareService{
     @Override
+    @Deprecated
     public String getVideo(String url, ProxyData proxy) throws Exception {
+        return getVideo(new RequestVideoData(url, proxy)).getVideoURL();
+    }
 
-        String s = url.split("\\?")[0];
+    @Override
+    public ResultVideoData getVideo(RequestVideoData data) throws Exception {
+        String s = data.getURL().split("\\?")[0];
         String[] strings = s.split("/");
         String id = strings[strings.length - 1];
         if (id.length() == 0 || id.startsWith("?")){
@@ -25,7 +34,7 @@ public class BilibiliCom implements ShareService{
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-        final OkHttpClient client = proxy != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxy.getProxyIP(), proxy.getPort()))).build() : new OkHttpClient();
+        final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
         final String HtmlText;
         Request request_html = new Request.Builder()
                 .url("https://api.bilibili.com/x/web-interface/view?bvid="+id)
@@ -33,9 +42,14 @@ public class BilibiliCom implements ShareService{
 
         try {
             Response response = client.newCall(request_html).execute();
-            HtmlText = response.body().string();
+            if (response.body() != null){
+                HtmlText = response.body().string();
+            } else {
+                HtmlText = "";
+            }
+            response.close();
         } catch (IOException e) {
-            throw new Exception("api.bilibili.com/x/web-interface " + e.getMessage() + (proxy == null ? "" : "(Use Proxy : "+proxy.getProxyIP()+")"));
+            throw new Exception("api.bilibili.com/x/web-interface " + e.getMessage() + (data.getProxy() == null ? "" : "(Use Proxy : "+data.getProxy().getProxyIP()+")"));
         }
 
         //
@@ -55,9 +69,14 @@ public class BilibiliCom implements ShareService{
 
         try {
             Response response2 = client.newCall(request_api).execute();
-            ResultText = response2.body().string();
+            if (response2.body() != null){
+                ResultText = response2.body().string();
+            } else {
+                ResultText = "";
+            }
+            response2.close();
         } catch (IOException e) {
-            throw new Exception("api.bilibili.com/x/player " + e.getMessage() + (proxy == null ? "" : "(Use Proxy : "+proxy.getProxyIP()+")"));
+            throw new Exception("api.bilibili.com/x/player " + e.getMessage() + (data.getProxy() == null ? "" : "(Use Proxy : "+data.getProxy().getProxyIP()+")"));
         }
 
         Matcher matcher2 = Pattern.compile("\"url\":\"(.*)\",\"backup_url\"").matcher(ResultText);
@@ -80,16 +99,22 @@ public class BilibiliCom implements ShareService{
         }
 
 
-        if (!temp_url.startsWith("https://upos-hz-mirrorakam.akamaized.net/")){
-            return temp;
+        if (temp_url != null && !temp_url.startsWith("https://upos-hz-mirrorakam.akamaized.net/")){
+            return new ResultVideoData(temp, null, false, false, false, null);
         }
 
-        return temp_url;
+        return new ResultVideoData(temp_url, null, false, false, false, null);
     }
 
     @Override
-    public String getLive(String url, ProxyData proxy) throws Exception {
+    @Deprecated
+    public String getLive(String url, ProxyData proxy) {
         // 現時点(2023/5/31)では実装しない
+        return null;
+    }
+
+    @Override
+    public ResultVideoData getLive(RequestVideoData data) {
         return null;
     }
 

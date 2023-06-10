@@ -24,6 +24,6 @@ tasks.test {
 
 shadowJar {
     manifest {
-        attributes 'Main-Class': 'xyz.n7mn.Main'
+        attributes 'Main-Class': 'xyz.n7mn.nico_proxy.TestMain'
     }
 }

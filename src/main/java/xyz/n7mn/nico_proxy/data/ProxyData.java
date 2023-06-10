@@ -1,4 +1,4 @@
-package xyz.n7mn.nico_proxy;
+package xyz.n7mn.nico_proxy.data;
 
 public class ProxyData {
     private String ProxyIP;
