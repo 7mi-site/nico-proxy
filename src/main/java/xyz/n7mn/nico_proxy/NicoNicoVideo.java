@@ -28,9 +28,7 @@ public class NicoNicoVideo implements ShareService {
     private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
     /**
-     * @param url               ニコニコ動画の視聴URL
-     * @param proxy             使用するProxy、公式動画の場合は国内判定されるProxyを指定する
-     * @param AutoHeartBeatSend ハートビート信号を自動で送るようにするか (Trueで自動で送る)
+     * @param data ニコ動URL、接続プロキシ情報
      * @return String[0] 再生用動画URL String[1] ハートビートセッション文字列 String[2] ハートビート信号ID文字列
      * @throws Exception エラーメッセージ
      */
