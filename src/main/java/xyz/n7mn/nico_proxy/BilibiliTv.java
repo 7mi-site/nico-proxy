@@ -5,7 +5,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import xyz.n7mn.nico_proxy.bilibili.BilibiliTvData;
-import xyz.n7mn.nico_proxy.data.ProxyData;
 import xyz.n7mn.nico_proxy.data.RequestVideoData;
 import xyz.n7mn.nico_proxy.data.ResultVideoData;
 

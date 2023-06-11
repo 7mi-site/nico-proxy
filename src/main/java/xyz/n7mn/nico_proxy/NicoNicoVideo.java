@@ -5,10 +5,7 @@ import okhttp3.*;
 import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import xyz.n7mn.nico_proxy.data.ProxyData;
-import xyz.n7mn.nico_proxy.data.RequestVideoData;
-import xyz.n7mn.nico_proxy.data.ResultVideoData;
-import xyz.n7mn.nico_proxy.data.TokenJSON;
+import xyz.n7mn.nico_proxy.data.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -233,7 +230,13 @@ public class NicoNicoVideo implements ShareService {
             throw new Exception("api.dmc.nico PostData Error");
         }
 
-        ResultVideoData result = new ResultVideoData(VideoURL, null, true, hls_encrypted_key != null, false, new Gson().toJson(new TokenJSON("https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT", HeartBeatSession)));
+        ResultVideoData result;
+        if (hls_encrypted_key != null){
+            result = new ResultVideoData(VideoURL, null, true, true, false, new Gson().toJson(new EncryptedTokenJSON(keyUri, "https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT", HeartBeatSession)));
+        } else {
+            result = new ResultVideoData(VideoURL, null, true, false, false, new Gson().toJson(new TokenJSON("https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT", HeartBeatSession)));
+
+        }
         QueueList.remove(id);
         QueueList.put(id, result);
 
