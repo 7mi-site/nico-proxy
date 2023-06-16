@@ -14,10 +14,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,7 +40,7 @@ public class TestMain {
 
         EncryptedTokenJSON json = new Gson().fromJson(video.getTokenJson(), EncryptedTokenJSON.class);
         String encryptedURL = json.getEncryptedURL();
-        System.out.println(encryptedURL);
+        //System.out.println(encryptedURL);
 
         final OkHttpClient client = new OkHttpClient();
 
@@ -98,7 +95,6 @@ public class TestMain {
                     builder.append("\n");
                 }
 
-                // 鍵
                 byte[] key_file = new byte[0];
                 Request request3 = new Request.Builder()
                         .url(encryptedURL)
@@ -112,14 +108,29 @@ public class TestMain {
                 if (response3.body() != null){
                     key_file = response3.body().bytes();
                 }
+                response3.close();
 
                 //System.out.println(m3u8_text);
                 String iv_text = "";
-                Matcher matcher_iv = Pattern.compile("IV=0x(.*)").matcher(m3u8_text);
+                Matcher matcher_iv = Pattern.compile("IV=([a-z0-9A-Z]+)").matcher(m3u8_text);
                 if (matcher_iv.find()){
                     iv_text = matcher_iv.group(1);
                     //System.out.println(matcher_iv.group(1));
                 }
+
+                // 復号化処理するための前処理
+                String s = iv_text.startsWith("0x") ? iv_text.substring(2) : iv_text;
+                byte[] iv = new BigInteger(s, 16).toByteArray();
+                byte[] ivDataEncoded = new byte[16];
+                int offset = iv.length > 16 ? iv.length - 16 : 0;
+                System.arraycopy(
+                        iv,
+                        offset,
+                        ivDataEncoded,
+                        ivDataEncoded.length - iv.length + offset,
+                        iv.length - offset);
+
+                Cipher decrypter = Cipher.getInstance("AES/CBC/NoPadding");
 
                 // 保存
                 String[] split4 = builder.toString().split("\n");
@@ -139,13 +150,21 @@ public class TestMain {
                         if (!new File("./" + tempFolder + "/" + i + ".ts").exists()){
                             new File("./" + tempFolder + "/" + i + ".ts").createNewFile();
                         }
+
+                        decrypter.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key_file, "AES"), new IvParameterSpec(ivDataEncoded));
+
+                        byte[] bytes = response4.body().bytes();
                         FileOutputStream stream = new FileOutputStream("./" + tempFolder + "/" + i + ".ts");
-                        stream.write(response4.body().bytes());
+                        stream.write(decrypter.doFinal(bytes));
                         stream.close();
                     }
                     response4.close();
                     i++;
                 }
+
+
+
+                /*
                 FileOutputStream stream = new FileOutputStream("./" + tempFolder + "/hls.key");
                 stream.write(key_file);
                 stream.close();
@@ -171,6 +190,7 @@ public class TestMain {
                 FileOutputStream stream2 = new FileOutputStream("./" + tempFolder + "/playlist.m3u8");
                 stream2.write(sb.toString().getBytes(StandardCharsets.UTF_8));
                 stream2.close();
+                */
             }
             response1.close();
         } catch (Exception e){

@@ -116,12 +116,14 @@ public class NicoNicoVideo implements ShareService {
         Matcher matcher_hls4 = Pattern.compile(",&quot;trackingId&quot;:&quot;(.*)&quot;},&quot;deliveryLegac").matcher(HtmlText);
 
         if (matcher_hls4.find()) {
-            String key = matcher_hls4.group(1);
+            String key = matcher_hls4.group(1).replaceAll("\\\\","");
+            //System.out.println(key);
 
             Request request_hls = new Request.Builder()
                     .url("https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=" + key)
                     .addHeader("X-Frontend-Id", "6")
                     .addHeader("X-Frontend-Version", "0")
+                    .addHeader("X-Request-With", "https://www.nicovideo.jp")
                     .addHeader("Access-Control-Request-Headers", "x-frontend-id,x-frontend-version")
                     .addHeader("Access-Control-Request-Method", "GET")
                     .addHeader("Origin", "https://www.nicovideo.jp")
