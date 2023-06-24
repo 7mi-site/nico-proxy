@@ -316,16 +316,16 @@ public class NicoNicoVideo implements ShareService {
 
             @Override
             public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-                System.out.println("----");
-                System.out.println(text);
+                //System.out.println("----");
+                //System.out.println(text);
 
                 if (text.startsWith("{\"type\":\"serverTime\",\"data\":{")) {
                     webSocket.send("{\"type\":\"getEventState\",\"data\":{}}");
-                    System.out.println("{\"type\":\"getEventState\",\"data\":{}}");
+                    //System.out.println("{\"type\":\"getEventState\",\"data\":{}}");
                 }
                 if (text.startsWith("{\"type\":\"eventState\",\"data\":{\"commentState\":{\"locked\":false,\"layout\":\"normal\"}}}")) {
                     webSocket.send("{\"type\":\"getAkashic\",\"data\":{\"chasePlay\":false}}");
-                    System.out.println("{\"type\":\"getAkashic\",\"data\":{\"chasePlay\":false}}");
+                    //System.out.println("{\"type\":\"getAkashic\",\"data\":{\"chasePlay\":false}}");
                 }
 
                 if (text.equals("{\"type\":\"ping\"}")) {
@@ -359,7 +359,7 @@ public class NicoNicoVideo implements ShareService {
                             }
                         }
                     }, 30000L, 30000L);
-                    System.out.println("{\"type\":\"keepSeat\"}");
+                    //System.out.println("{\"type\":\"keepSeat\"}");
                 }
 
                 if (text.startsWith("{\"type\":\"disconnect\"")) {
@@ -386,7 +386,7 @@ public class NicoNicoVideo implements ShareService {
                     //System.out.println(temp[0]);
                 }
 
-                System.out.println("----");
+                //System.out.println("----");
             }
 
             @Override
