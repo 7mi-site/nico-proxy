@@ -165,10 +165,6 @@ public class NicoNicoVideo implements ShareService {
         //System.out.println("video_src3 : " + video_src3);
 
         String SendJson = "{\"session\":{\"recipe_id\":\"nicovideo-"+id+"\",\"content_id\":\"out1\",\"content_type\":\"movie\",\"content_src_id_sets\":[{\"content_src_ids\":[{\"src_id_to_mux\":{\"video_src_ids\":["+video_src+"],\"audio_src_ids\":["+split2[0]+"]}},{\"src_id_to_mux\":{\"video_src_ids\":["+split1[split1.length - 1]+"],\"audio_src_ids\":["+split2[0]+"]}}]}],\"timing_constraint\":\"unlimited\",\"keep_method\":{\"heartbeat\":{\"lifetime\":120000}},\"protocol\":{\"name\":\"http\",\"parameters\":{\"http_parameters\":{\"parameters\":{\"hls_parameters\":{\"use_well_known_port\":\"yes\",\"use_ssl\":\"yes\",\"transfer_preset\":\"\",\"segment_duration\":6000,\"encryption\":{\"hls_encryption_v1\":{\"encrypted_key\":\""+hls_encrypted_key+"\",\"key_uri\":\""+keyUri+"\"}}}}}}},\"content_uri\":\"\",\"session_operation_auth\":{\"session_operation_auth_by_signature\":{\"token\":\""+Token+"\",\"signature\":\""+Signature+"\"}},\"content_auth\":{\"auth_type\":\"ht2\",\"content_key_timeout\":600000,\"service_id\":\"nicovideo\",\"service_user_id\":\""+SessionId+"\"},\"client_info\":{\"player_id\":\"nicovideo-"+SessionId+"\"},\"priority\":0.2}}";
-        //throw new Exception(SendJson);
-        // {"session":{"recipe_id":"nicovideo-so42042971","content_id":"out1","content_type":"movie","content_src_id_sets":[{"content_src_ids":[{"src_id_to_mux":{"video_src_ids":["archive_h264_360p","archive_h264_360p_low"],"audio_src_ids":["archive_aac_64kbps"]}},{"src_id_to_mux":{"video_src_ids":["archive_h264_360p_low"],"audio_src_ids":["archive_aac_64kbps"]}}]}],"timing_constraint":"unlimited","keep_method":{"heartbeat":{"lifetime":120000}},"protocol":{"name":"http","parameters":{"http_parameters":{"parameters":{"hls_parameters":{"use_well_known_port":"yes","use_ssl":"yes","transfer_preset":"","segment_duration":6000,"encryption":{"hls_encryption_v1":{"encrypted_key":"Ia3dE1aondUM45mDoMsbDv18888lNtcXqW++uGkzUhL6iYRl2LkwuQBdix63lLHG","key_uri":"https://nvapi.nicovideo.jp/v1/license/hls?h=%242y%2410%24ENyH9bsu11OW0D238nL1U.vegaT6o8grYYtzj3bY1C1D3decrtBoa&_frontendId=6&_frontendVersion=0"      }}}}}}},"content_uri":"","session_operation_auth":{"session_operation_auth_by_signature":{"token":"{\"service_id\":\"nicovideo\",\"player_id\":\"nicovideo-6-Z0uPNxOuAa_1686150612979\",\"recipe_id\":\"nicovideo-so42042971\",\"service_user_id\":\"6-Z0uPNxOuAa_1686150612979\",\"protocols\":[{\"name\":\"hls\",\"auth_type\":\"ht2\"}],\"videos\":[\"archive_h264_360p\",\"archive_h264_360p_low\"],\"audios\":[\"archive_aac_64kbps\"],\"movies\":[],\"created_time\":1686150613000,\"expire_time\":1686237013000,\"content_ids\":[\"out1\"],\"heartbeat_lifetime\":120000,\"content_key_timeout\":600000,\"priority\":0.200000000000000011102230246251565404236316680908203125,\"transfer_presets\":[],\"hls_encryption\":\"hls_encryption_v1\",\"hls_encrypted_key\":\"Ia3dE1aondUM45mDoMsbDv18888lNtcXqW++uGkzUhL6iYRl2LkwuQBdix63lLHG\"}","signature":"82a1f1efa8c779d67d589083cdf00d6513f3dcf01968a12fb776ad22d0f343ed"}},"content_auth":{"auth_type":"ht2","content_key_timeout":600000,"service_id":"nicovideo","service_user_id":"6-Z0uPNxOuAa_1686150612979"},"client_info":{"player_id":"nicovideo-6-Z0uPNxOuAa_1686150612979"},"priority":0.2}}
-        // {"session":{"recipe_id":"nicovideo-so42042971","content_id":"out1","content_type":"movie","content_src_id_sets":[{"content_src_ids":[{"src_id_to_mux":{"video_src_ids":["archive_h264_360p","archive_h264_360p_low"],"audio_src_ids":["archive_aac_64kbps"]}},{"src_id_to_mux":{"video_src_ids":["archive_h264_360p_low"],"audio_src_ids":["archive_aac_64kbps"]}}]}],"timing_constraint":"unlimited","keep_method":{"heartbeat":{"lifetime":120000}},"protocol":{"name":"http","parameters":{"http_parameters":{"parameters":{"hls_parameters":{"use_well_known_port":"yes","use_ssl":"yes","transfer_preset":"","segment_duration":6000,"encryption":{"hls_encryption_v1":{"encrypted_key":"qDjpltjCBdfbsqczqqDndCWq5F84YUfKAdQg2b9Hq6UJVYVPcDVIataw68OTPQ6e","key_uri":"https://nvapi.nicovideo.jp/v1/license/hls?h=%242y%2410%24oDzsfrdU%2F8NG%2FU9O.F%2FcbeT96C.ht81xwzkn7tkPLfmRU13g7lbnq&_frontendId=6&_frontendVersion=0"}}}}}}},"content_uri":"","session_operation_auth":{"session_operation_auth_by_signature":{"token":"{\"service_id\":\"nicovideo\",\"player_id\":\"nicovideo-6-JOTsHCLNv1_1686142284828\",\"recipe_id\":\"nicovideo-so42042971\",\"service_user_id\":\"6-JOTsHCLNv1_1686142284828\",\"protocols\":[{\"name\":\"hls\",\"auth_type\":\"ht2\"}],\"videos\":[\"archive_h264_360p\",\"archive_h264_360p_low\"],\"audios\":[\"archive_aac_64kbps\"],\"movies\":[],\"created_time\":1686142284000,\"expire_time\":1686228684000,\"content_ids\":[\"out1\"],\"heartbeat_lifetime\":120000,\"content_key_timeout\":600000,\"priority\":0.200000000000000011102230246251565404236316680908203125,\"transfer_presets\":[],\"hls_encryption\":\"hls_encryption_v1\",\"hls_encrypted_key\":\"qDjpltjCBdfbsqczqqDndCWq5F84YUfKAdQg2b9Hq6UJVYVPcDVIataw68OTPQ6e\"}","signature":"d372f903be9095cc9fa4ff42970482f9cbd1e3dc8b588d492949022b315c2ec0"}},"content_auth":{"auth_type":"ht2","content_key_timeout":600000,"service_id":"nicovideo","service_user_id":"6-JOTsHCLNv1_1686142284828"},"client_info":{"player_id":"nicovideo-6-JOTsHCLNv1_1686142284828"},"priority":0.2}}
-        ///*
         if (hls_encrypted_key == null) {
             SendJson = "{\"session\":{\"recipe_id\":\"nicovideo-" + id + "\",\"content_id\":\"out1\",\"content_type\":\"movie\",\"content_src_id_sets\":[{\"content_src_ids\":[{\"src_id_to_mux\":{\"video_src_ids\":[" + video_src + "],\"audio_src_ids\":[" + split2[0] + "]}},{\"src_id_to_mux\":{\"video_src_ids\":[" + (id.startsWith("so") ? video_src2 : split1[split1.length - 1]) + "],\"audio_src_ids\":[" + split2[0] + "]}}]}],\"timing_constraint\":\"unlimited\",\"keep_method\":{\"heartbeat\":{\"lifetime\":120000}},\"protocol\":{\"name\":\"http\",\"parameters\":{\"http_parameters\":{\"parameters\":{\"hls_parameters\":{\"use_well_known_port\":\"yes\",\"use_ssl\":\"yes\",\"transfer_preset\":\"\",\"segment_duration\":6000}}}}},\"content_uri\":\"\",\"session_operation_auth\":{\"session_operation_auth_by_signature\":{\"token\":\"" + Token + "\",\"signature\":\"" + Signature + "\"}},\"content_auth\":{\"auth_type\":\"ht2\",\"content_key_timeout\":600000,\"service_id\":\"nicovideo\",\"service_user_id\":\"" + SessionId + "\"},\"client_info\":{\"player_id\":\"nicovideo-" + SessionId + "\"},\"priority\":" + (id.startsWith("so") ? "0.2" : "0") + "}}";
             // {"session":{"recipe_id":"nicovideo-sm*****","content_id":"out1","content_type":"movie","content_src_id_sets":[{"content_src_ids":[{"src_id_to_mux":{"video_src_ids":["archive_h264_360p","archive_h264_360p_low"],"audio_src_ids":["archive_aac_64kbps"]}},{"src_id_to_mux":{"video_src_ids":["archive_h264_360p_low"],"audio_src_ids":["archive_aac_64kbps"]}}]}],"timing_constraint":"unlimited","keep_method":{"heartbeat":{"lifetime":120000}},"protocol":{"name":"http","parameters":{"http_parameters":{"parameters":{"hls_parameters":{"use_well_known_port":"yes","use_ssl":"yes","transfer_preset":"","segment_duration":6000}}}}},"content_uri":"","session_operation_auth":{"session_operation_auth_by_signature":{"token":"{\"service_id\":\"nicovideo\",\"player_id\":\"nicovideo-6-h9V9x02JtS_1685101570190\",\"recipe_id\":\"nicovideo-sm500873\",\"service_user_id\":\"6-h9V9x02JtS_1685101570190\",\"protocols\":[{\"name\":\"http\",\"auth_type\":\"ht2\"},{\"name\":\"hls\",\"auth_type\":\"ht2\"}],\"videos\":[\"archive_h264_360p\",\"archive_h264_360p_low\"],\"audios\":[\"archive_aac_64kbps\"],\"movies\":[],\"created_time\":1685101570000,\"expire_time\":1685187970000,\"content_ids\":[\"out1\"],\"heartbeat_lifetime\":120000,\"content_key_timeout\":600000,\"priority\":0,\"transfer_presets\":[]}","signature":"491ecff65d053d7a46976f17c85c291e43a3d845f3c2d59b277712edf25953af"}},"content_auth":{"auth_type":"ht2","content_key_timeout":600000,"service_id":"nicovideo","service_user_id":"6-h9V9x02JtS_1685101570190"},"client_info":{"player_id":"nicovideo-6-h9V9x02JtS_1685101570190"},"priority":0}}
@@ -294,6 +290,7 @@ public class NicoNicoVideo implements ShareService {
         String[] temp = new String[]{"wait", ""};
         webSocket = client.newWebSocket(request, new WebSocketListener() {
             private final Timer timer = new Timer();
+            private String liveUrl = "";
 
             @Override
             public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
@@ -319,13 +316,16 @@ public class NicoNicoVideo implements ShareService {
 
             @Override
             public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+                System.out.println("----");
+                System.out.println(text);
+
                 if (text.startsWith("{\"type\":\"serverTime\",\"data\":{")) {
                     webSocket.send("{\"type\":\"getEventState\",\"data\":{}}");
-                    //System.out.println("{\"type\":\"getEventState\",\"data\":{}}");
+                    System.out.println("{\"type\":\"getEventState\",\"data\":{}}");
                 }
                 if (text.startsWith("{\"type\":\"eventState\",\"data\":{\"commentState\":{\"locked\":false,\"layout\":\"normal\"}}}")) {
                     webSocket.send("{\"type\":\"getAkashic\",\"data\":{\"chasePlay\":false}}");
-                    //System.out.println("{\"type\":\"getAkashic\",\"data\":{\"chasePlay\":false}}");
+                    System.out.println("{\"type\":\"getAkashic\",\"data\":{\"chasePlay\":false}}");
                 }
 
                 if (text.equals("{\"type\":\"ping\"}")) {
@@ -339,9 +339,27 @@ public class NicoNicoVideo implements ShareService {
                         public void run() {
                             webSocket.send("{\"type\":\"keepSeat\"}");
                             //System.out.println("{\"type\":\"keepSeat\"}");
+                            Request request = new Request.Builder()
+                                    .url(liveUrl)
+                                    .build();
+                            try {
+                                Response response = client.newCall(request).execute();
+                                if (response.code() == 403 || response.code() == 404){
+                                    QueueList.remove(id);
+                                    timer.cancel();
+                                    webSocket.cancel();
+                                    response.close();
+                                }
+                                response.close();
+                            } catch (Exception e){
+                                QueueList.remove(id);
+                                timer.cancel();
+                                webSocket.cancel();
+                                //e.printStackTrace();
+                            }
                         }
                     }, 30000L, 30000L);
-                    //System.out.println("{\"type\":\"keepSeat\"}");
+                    System.out.println("{\"type\":\"keepSeat\"}");
                 }
 
                 if (text.startsWith("{\"type\":\"disconnect\"")) {
@@ -359,6 +377,7 @@ public class NicoNicoVideo implements ShareService {
                         //System.out.println("url get ok");
                         temp[0] = matcher.group(1);
                         QueueList.put(id, new ResultVideoData(temp[0], null, true, false, true, null));
+                        liveUrl = temp[0];
                     } else {
                         temp[0] = "Error";
                         webSocket.cancel();
@@ -366,6 +385,8 @@ public class NicoNicoVideo implements ShareService {
 
                     //System.out.println(temp[0]);
                 }
+
+                System.out.println("----");
             }
 
             @Override
