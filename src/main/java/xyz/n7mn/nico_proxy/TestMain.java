@@ -1,9 +1,7 @@
 package xyz.n7mn.nico_proxy;
 
 import com.google.gson.Gson;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import xyz.n7mn.nico_proxy.data.EncryptedTokenJSON;
 import xyz.n7mn.nico_proxy.data.RequestVideoData;
 import xyz.n7mn.nico_proxy.data.ResultVideoData;
@@ -13,126 +11,144 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 public class TestMain {
     public static void main(String[] args)  {
-        /*
-        ニコ生
-         */
+
         ShareService service = new NicoNicoVideo();
         ResultVideoData video;
-        String URL;
+        String URL = null;
         try {
-            video = service.getLive(new RequestVideoData("https://live.nicovideo.jp/watch/lv341857869", null));
-            URL = video.getVideoURL();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        /*
-
-        暗号化されたhlsを落としてくるテスト実装
-
-         */
-/*
-        ShareService service = new NicoNicoVideo();
-        ResultVideoData video;
-        String URL;
-        try {
-            video = service.getVideo(new RequestVideoData("https://www.nicovideo.jp/watch/so42348316", null));
-            URL = video.getVideoURL();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println(URL);
-
-        EncryptedTokenJSON json = new Gson().fromJson(video.getTokenJson(), EncryptedTokenJSON.class);
-        String encryptedURL = json.getEncryptedURL();
-        //System.out.println(encryptedURL);
-
-        final OkHttpClient client = new OkHttpClient();
-
-        try {
-            // master.m3u8の中身を見る
-            Request request1 = new Request.Builder()
-                    .url(URL)
-                    .build();
-            Response response1 = client.newCall(request1).execute();
-
-            // 予めURL分解しておく
-            String[] split1 = URL.split("/");
-            StringBuilder s1 = new StringBuilder();
-            for (int i = 0; i < split1.length - 1; i++){
-                s1.append(split1[i]);
-                s1.append("/");
+            video = service.getVideo(new RequestVideoData("https://www.nicovideo.jp/watch/so38016254", null));
+            if (video == null){
+                return;
             }
-            //System.out.println(URL);
-            //System.out.println(s1);
+            URL = video.getVideoURL();
 
-            if (response1.body() != null){
-                String[] split2 = response1.body().string().split("\n");
-                // s1+split2[2] -> m3u8
-                // s1+"1/ts/" -> ts
+            EncryptedTokenJSON json = new Gson().fromJson(video.getTokenJson(), EncryptedTokenJSON.class);
 
-                // playlist.m3u8の中身を覗く
-                Request request2 = new Request.Builder()
-                        .url(s1+split2[2])
+            System.out.println(URL);
+
+            if (video.isEncrypted()){
+                final OkHttpClient client = new OkHttpClient();
+
+                Timer timer = new Timer();
+                timer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+
+                        RequestBody body = RequestBody.create(json.getTokenValue(), MediaType.get("application/json; charset=utf-8"));
+                        Request request1 = new Request.Builder()
+                                .url(json.getTokenSendURL())
+                                .post(body)
+                                .build();
+                        try {
+                            Response response1 = client.newCall(request1).execute();
+                            //System.out.println(response.body().string());
+                            response1.close();
+                        } catch (IOException e) {
+                            // e.printStackTrace();
+                            return;
+                        }
+                    }
+                }, 0L, 40000L);
+
+                Request request_hls = new Request.Builder()
+                        .url(URL)
                         .build();
 
-                Response response2 = client.newCall(request2).execute();
-                String m3u8_text = "";
-                if (response2.body() != null){
-                    m3u8_text = response2.body().string();
-                    System.out.println(m3u8_text);
-                }
-                response2.close();
 
-                String[] split3 = m3u8_text.split("\n");
-                StringBuilder builder = new StringBuilder();
-                for (String str : split3){
-                    if (str.startsWith("#")){
-                        continue;
-                    }
-
-                    if (str.length() == 0){
-                        continue;
-                    }
-                    builder.append(s1);
-                    builder.append("1/ts/");
-                    builder.append(str);
-                    builder.append("\n");
+                Matcher matcher = Pattern.compile("(.*)master.m3u8").matcher(URL);
+                String baseURL = "";
+                if (matcher.find()){
+                    baseURL = matcher.group(1);
                 }
 
-                byte[] key_file = new byte[0];
-                Request request3 = new Request.Builder()
-                        .url(encryptedURL)
+                Response response_hls = client.newCall(request_hls).execute();
+
+                String MasterHls = null;
+                if (response_hls.body() != null){
+                    MasterHls = response_hls.body().string();
+                }
+                response_hls.close();
+
+                String videoHls = null;
+                if (MasterHls != null){
+                    String[] split = MasterHls.split("\n");
+                    for (String str : split){
+                        if (!str.startsWith("#")){
+                            videoHls = baseURL+str;
+                            break;
+                        }
+                    }
+                }
+
+                StringBuilder hls = new StringBuilder();
+                String ivText = "";
+                String keyURL = "";
+                String baseTsUrl = null;
+
+                if (videoHls != null){
+                    System.out.println(videoHls);
+                    Matcher matcher2 = Pattern.compile("(.*)playlist.m3u8").matcher(videoHls);
+
+                    if (matcher2.find()){
+                        baseTsUrl = matcher2.group(1);
+                    }
+                    if (baseTsUrl == null){
+                        return;
+                    }
+                    Request request_hls2 = new Request.Builder()
+                            .url(videoHls)
+                            .build();
+                    Response response_hls2 = client.newCall(request_hls2).execute();
+                    if (response_hls2.body() != null){
+                        String s = response_hls2.body().string();
+                        System.out.println(s);
+                        String[] split = s.split("\n");
+                        for (String str : split){
+                            if (str.startsWith("#EXT-X-KEY")){
+                                Matcher matcher_key = Pattern.compile("URI=\"(.*)\",IV=").matcher(str);
+                                Matcher matcher_iv = Pattern.compile("IV=([a-z0-9A-Z]+)").matcher(str);
+                                if (matcher_iv.find()){
+                                    ivText = matcher_iv.group(1);
+                                }
+                                if (matcher_key.find()){
+                                    keyURL = matcher_key.group(1);
+                                }
+                                continue;
+                            }
+
+                            hls.append(str);
+                            hls.append("\n");
+                        }
+                    }
+                    response_hls2.close();
+                }
+
+                Request request_hls3 = new Request.Builder()
+                        .url(keyURL)
                         .addHeader("X-Frontend-Id", "6")
                         .addHeader("X-Frontend-Version", "0")
                         .addHeader("Access-Control-Request-Headers", "x-frontend-id,x-frontend-version")
                         .addHeader("Access-Control-Request-Method", "GET")
+                        .addHeader("Origin", "https://www.nicovideo.jp")
+                        .addHeader("Referer", "https://www.nicovideo.jp/")
+                        .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 nico-proxy/1.0 Safari/537.3")
                         .build();
+                Response response_hls3 = client.newCall(request_hls3).execute();
 
-                Response response3 = client.newCall(request3).execute();
-                if (response3.body() != null){
-                    key_file = response3.body().bytes();
-                }
-                response3.close();
-
-                //System.out.println(m3u8_text);
-                String iv_text = "";
-                Matcher matcher_iv = Pattern.compile("IV=([a-z0-9A-Z]+)").matcher(m3u8_text);
-                if (matcher_iv.find()){
-                    iv_text = matcher_iv.group(1);
-                    //System.out.println(matcher_iv.group(1));
-                }
-
-                // 復号化処理するための前処理
-                String s = iv_text.startsWith("0x") ? iv_text.substring(2) : iv_text;
+                System.out.println(ivText);
+                String s = ivText.startsWith("0x") ? ivText.substring(2) : ivText;
                 byte[] iv = new BigInteger(s, 16).toByteArray();
                 byte[] ivDataEncoded = new byte[16];
                 int offset = iv.length > 16 ? iv.length - 16 : 0;
@@ -143,43 +159,60 @@ public class TestMain {
                         ivDataEncoded.length - iv.length + offset,
                         iv.length - offset);
 
-                Cipher decrypter = Cipher.getInstance("AES/CBC/NoPadding");
+                Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+                cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(response_hls3.body().bytes(), "AES"), new IvParameterSpec(ivDataEncoded));
 
-                // 保存
-                String[] split4 = builder.toString().split("\n");
-                int i = 1;
-                String tempFolder = "./temp_"+new Date().getTime();
-                for (String url : split4){
-                    //System.out.println(url);
-                    Request request4 = new Request.Builder()
-                            .url(url)
-                            .build();
-                    Response response4 = client.newCall(request4).execute();
-                    if (response4.body() != null){
-                        if (!new File(tempFolder).exists()){
-                            new File(tempFolder).mkdir();
+                String tempFolder = "temp_"+new Date().getTime();
+                if (new File("./"+tempFolder).mkdir()){
+                    byte[] bytes = hls.toString().getBytes(StandardCharsets.UTF_8);
+                    FileOutputStream stream = new FileOutputStream("./" + tempFolder + "/play.m3u8");
+                    stream.write(bytes);
+                    stream.close();
+                    String[] split = hls.toString().split("\n");
+                    hls = new StringBuilder();
+
+                    int i = 1;
+                    for (String str : split){
+                        hls.append(str.split("\n")[0]);
+                        hls.append("\n");
+
+                        if (str.startsWith("#")){
+                            continue;
+                        }
+                        if (str.length() == 0){
+                            continue;
                         }
 
-                        if (!new File("./" + tempFolder + "/" + i + ".ts").exists()){
-                            new File("./" + tempFolder + "/" + i + ".ts").createNewFile();
+                        Request request_hls4 = new Request.Builder()
+                                .url(baseTsUrl + str)
+                                .addHeader("X-Frontend-Id", "6")
+                                .addHeader("X-Frontend-Version", "0")
+                                .addHeader("Access-Control-Request-Headers", "x-frontend-id,x-frontend-version")
+                                .addHeader("Access-Control-Request-Method", "GET")
+                                .addHeader("Origin", "https://www.nicovideo.jp")
+                                .addHeader("Referer", "https://www.nicovideo.jp/")
+                                .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 nico-proxy/1.0 Safari/537.3")
+                                .build();
+                        Response response_hls4 = client.newCall(request_hls4).execute();
+
+                        byte[] bytes2 = response_hls4.body().bytes();
+
+                        FileOutputStream stream2 = new FileOutputStream("./" + tempFolder + "/" + str.split("\\?")[0]);
+                        stream2.write(cipher.doFinal(bytes2));
+                        stream2.close();
+                        response_hls4.close();
+                        if (i % 5 == 0){
+                            Thread.sleep(12000L);
                         }
-
-                        decrypter.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key_file, "AES"), new IvParameterSpec(ivDataEncoded));
-
-                        byte[] bytes = response4.body().bytes();
-                        FileOutputStream stream = new FileOutputStream("./" + tempFolder + "/" + i + ".ts");
-                        stream.write(decrypter.doFinal(bytes));
-                        stream.close();
+                        i++;
                     }
-                    response4.close();
-                    i++;
+                    timer.cancel();
                 }
-
             }
-            response1.close();
-        } catch (Exception e){
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
-*/
+
     }
 }
