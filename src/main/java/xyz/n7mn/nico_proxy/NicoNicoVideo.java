@@ -124,11 +124,9 @@ public class NicoNicoVideo implements ShareService {
                     .addHeader("X-Frontend-Id", "6")
                     .addHeader("X-Frontend-Version", "0")
                     .addHeader("X-Request-With", "https://www.nicovideo.jp")
-                    .addHeader("Access-Control-Request-Headers", "x-frontend-id,x-frontend-version")
-                    .addHeader("Access-Control-Request-Method", "GET")
                     .addHeader("Origin", "https://www.nicovideo.jp")
                     .addHeader("Referer", "https://www.nicovideo.jp/")
-                    .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 nico-proxy/1.0 Safari/537.3")
+                    .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
                     .build();
             Response response_hls = client.newCall(request_hls).execute();
             //System.out.println(response_hls.body().string());
@@ -183,7 +181,7 @@ public class NicoNicoVideo implements ShareService {
             if (response2.body() != null){
                 ResponseJson = response2.body().string();
             }
-            //System.out.println(ResponseJson);
+            System.out.println(ResponseJson);
             response2.close();
         } catch (IOException e) {
             if (data.getProxy() != null){
