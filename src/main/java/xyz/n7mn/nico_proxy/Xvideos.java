@@ -23,14 +23,18 @@ public class Xvideos implements ShareService{
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
         String HtmlText = "";
-        Request request_html = new Request.Builder()
-                .url(url)
-                .build();
-        Response response = client.newCall(request_html).execute();
-        if (response.body() != null){
-            HtmlText = response.body().string();
+        try {
+            Request request_html = new Request.Builder()
+                    .url(url)
+                    .build();
+            Response response = client.newCall(request_html).execute();
+            if (response.body() != null){
+                HtmlText = response.body().string();
+            }
+            response.close();
+        } catch (Exception e){
+            throw new Exception(e.getMessage());
         }
-        response.close();
 
         Matcher matcher = Pattern.compile("html5player\\.setVideoUrlHigh\\('(.*)'\\)").matcher(HtmlText);
         if (matcher.find()){
