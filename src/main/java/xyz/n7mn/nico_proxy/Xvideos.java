@@ -37,7 +37,7 @@ public class Xvideos implements ShareService{
             return new ResultVideoData(matcher.group(1), "", false, false, false, "");
         }
 
-        return null;
+        throw new Exception("VideoURL Not Found");
     }
 
     @Override
