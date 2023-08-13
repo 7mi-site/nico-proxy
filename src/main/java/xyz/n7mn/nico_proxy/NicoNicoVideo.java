@@ -181,7 +181,7 @@ public class NicoNicoVideo implements ShareService {
             if (response2.body() != null){
                 ResponseJson = response2.body().string();
             }
-            System.out.println(ResponseJson);
+            //System.out.println(ResponseJson);
             response2.close();
         } catch (IOException e) {
             if (data.getProxy() != null){
