@@ -52,7 +52,7 @@ public class Twitter implements ShareService{
                     .build();
 
             Response response = client.newCall(build).execute();
-            System.out.println(response.code());
+            //System.out.println(response.code());
             if (response.body() != null){
                 HtmlText = response.body().string();
             }
@@ -94,7 +94,7 @@ public class Twitter implements ShareService{
 
     @Override
     public String getServiceName() {
-        return "TikTok";
+        return "Twitter";
     }
 
     @Override
