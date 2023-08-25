@@ -7,11 +7,10 @@ import okhttp3.Request;
 import okhttp3.Response;
 import xyz.n7mn.nico_proxy.data.RequestVideoData;
 import xyz.n7mn.nico_proxy.data.ResultVideoData;
+import xyz.n7mn.nico_proxy.twitter.variants;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class Twitter implements ShareService{
@@ -48,7 +47,7 @@ public class Twitter implements ShareService{
                     .header("X-Twitter-Auth-Type", "OAuth2Session")
                     .header("x-twitter-active-user", "true")
                     .header("x-twitter-client-language","ja")
-                    .header("cookie","_ga=GA1.2.1260948033.1690009510; _ga_34PHSZMC42=GS1.1.1692506386.6.0.1692506389.0.0.0; _ga_BYKEBDM7DS=GS1.1.1692449197.3.0.1692449197.0.0.0; _gcl_au=1.1.392881126.1692453868; _gid=GA1.2.1613538658.1691676915; ads_prefs=\"HBESAAA=\"; auth_multi=\"1678721370526724096:a08de7549dff7ee5ab5978918dcc649ce0c6aa49|870902081623805953:36e990f954d561ab7e21fe765e69d68bd0e0fda2\"; auth_token=06b47828860aeede3637b571ee19a7822df6d5b2; ct0=174097c3ada3e824616d5338c210941c2bed55939b4d212fb02f3020971a5317c67b03f0e87dbe91c0dea06c7e53d87e3fa4ccc86dace2c3d4aa84076326737ff8750c007cae988006707d844e200e45; des_opt_in=Y; dnt=1; guest_id=v1%3A169253002497683811; guest_id_ads=v1%3A169253002497683811; guest_id_marketing=v1%3A169253002497683811; kdt=0tP2Nv808a1bb48csUnHNdNag4bfWSRyYFT1nikG; lv-uid=AAAAEIAhSF8rpp4eBW5we0k_eL6F2dH5jdAWisXImElAWJ-gnIKQrULhZXr5Jds1; mbox=PC#ae60c067e1624b62b343b53d292776e2.32_0#1755751186|session#dea5174e5a7f4e068f13ce12264841f1#1692508246; personalization_id=\"v1_LCrfJSzv7EPvAb2doPhaDg==\"; twid=u%3D1548673979992670209\\r\\n")
+                    .header("cookie","ads_prefs=\"HBESAAA=\"; auth_multi=\"1678721370526724096:a08de7549dff7ee5ab5978918dcc649ce0c6aa49|870902081623805953:36e990f954d561ab7e21fe765e69d68bd0e0fda2\"; auth_token=06b47828860aeede3637b571ee19a7822df6d5b2; ct0=174097c3ada3e824616d5338c210941c2bed55939b4d212fb02f3020971a5317c67b03f0e87dbe91c0dea06c7e53d87e3fa4ccc86dace2c3d4aa84076326737ff8750c007cae988006707d844e200e45; des_opt_in=Y; dnt=1; guest_id=v1%3A169253002497683811; guest_id_ads=v1%3A169253002497683811; guest_id_marketing=v1%3A169253002497683811; kdt=0tP2Nv808a1bb48csUnHNdNag4bfWSRyYFT1nikG; lv-uid=AAAAEIAhSF8rpp4eBW5we0k_eL6F2dH5jdAWisXImElAWJ-gnIKQrULhZXr5Jds1; mbox=PC#ae60c067e1624b62b343b53d292776e2.32_0#1755751186|session#dea5174e5a7f4e068f13ce12264841f1#1692508246; personalization_id=\"v1_LCrfJSzv7EPvAb2doPhaDg==\"; twid=u%3D1548673979992670209\\r\\n")
                     .build();
 
             Response response = client.newCall(build).execute();
@@ -68,19 +67,28 @@ public class Twitter implements ShareService{
         try {
             JsonElement element = json.getAsJsonObject().getAsJsonObject().get("data").getAsJsonObject().getAsJsonObject("threaded_conversation_with_injections_v2").getAsJsonArray("instructions").get(0).getAsJsonObject().getAsJsonArray("entries").get(0).getAsJsonObject().getAsJsonObject("content")
                     .getAsJsonObject("itemContent").getAsJsonObject("tweet_results").getAsJsonObject("result").getAsJsonObject("legacy")
-                    .getAsJsonObject("extended_entities").getAsJsonArray("media").get(0).getAsJsonObject().getAsJsonObject("video_info").getAsJsonArray("variants").get(0).getAsJsonObject().getAsJsonObject();
+                    .getAsJsonObject("extended_entities").getAsJsonArray("media").get(0).getAsJsonObject().getAsJsonObject("video_info").getAsJsonArray("variants");//.get(0).getAsJsonObject().getAsJsonObject();
             String tempJson = element.toString();
 
-            Matcher matcher = Pattern.compile("\"url\":\"(.*)\"").matcher(tempJson);
-            if (matcher.find()){
-                String VideoUrl = matcher.group(1);
-                //System.out.println(VideoUrl);
+            variants[] variants = new Gson().fromJson(tempJson, variants[].class);
 
-                return new ResultVideoData(VideoUrl,"", false, false, false, "");
+            int maxCount = -1;
+            int maxBitrate = -1;
+
+            int count = 0;
+            for (variants var : variants){
+                if (var.getBitrate() >= maxBitrate && var.getBitrate() > 0){
+                    maxCount = count;
+                    maxBitrate = var.getBitrate();
+                }
+                if (var.getBitrate() == 0 && var.getContent_type().equals("application/x-mpegURL")){
+                    maxCount = count;
+                    break;
+                }
+                count++;
             }
 
-            throw new Exception("Tweet is Not VideoTweet");
-            //
+            return new ResultVideoData(variants[maxCount].getUrl(),"", false, false, false, "");
         } catch (Exception e){
             throw new Exception("Tweet is Not VideoTweet");
         }
@@ -99,6 +107,6 @@ public class Twitter implements ShareService{
 
     @Override
     public String getVersion() {
-        return "20230821";
+        return "20230825";
     }
 }
