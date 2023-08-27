@@ -81,10 +81,10 @@ public class Twitter implements ShareService{
                     maxCount = count;
                     maxBitrate = var.getBitrate();
                 }
-                if (var.getBitrate() == 0 && var.getContent_type().equals("application/x-mpegURL")){
-                    maxCount = count;
-                    break;
-                }
+                //if (var.getBitrate() == 0 && var.getContent_type().equals("application/x-mpegURL")){
+                //    maxCount = count;
+                //    break;
+                //}
                 count++;
             }
 
