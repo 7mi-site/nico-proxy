@@ -2,6 +2,8 @@ package xyz.n7mn.nico_proxy;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -11,6 +13,8 @@ import xyz.n7mn.nico_proxy.data.ResultVideoData;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,8 +36,9 @@ public class BilibiliCom implements ShareService{
 
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
         final String HtmlText;
+
         Request request_html = new Request.Builder()
-                .url("https://api.bilibili.com/x/web-interface/view?bvid="+id)
+                .url("https://www.bilibili.com/video/"+id+"/")
                 .build();
 
         try {
@@ -45,70 +50,157 @@ public class BilibiliCom implements ShareService{
             }
             response.close();
         } catch (IOException e) {
-            throw new Exception("api.bilibili.com/x/web-interface " + e.getMessage() + (data.getProxy() == null ? "" : "(Use Proxy : "+data.getProxy().getProxyIP()+")"));
+            throw new Exception("bilibili.com " + e.getMessage() + (data.getProxy() == null ? "" : "(Use Proxy : "+data.getProxy().getProxyIP()+")"));
         }
 
-        //
-        Matcher matcher = Pattern.compile("\"cid\":(\\d+),").matcher(HtmlText);
+        //System.out.println(HtmlText);
+        Matcher matcher3 = Pattern.compile("window.__playinfo__=\\{(.*)\\}</script><script>window.__INITIAL_STATE__=\\{").matcher(HtmlText);
+        if (!matcher3.find()){
+            throw new Exception("bilibili.com Not Found");
+        }
+
+        Matcher matcher = Pattern.compile("\"aid\":(\\d+)").matcher(HtmlText);
         if (!matcher.find()){
-            throw new Exception("api.bilibili.com (Not cid Found)");
+            throw new Exception("bilibili.com Not aid");
         }
 
-        String cid = matcher.group(1);
+        final String aid = matcher.group(1);
 
-        //System.out.println(cid);
-
-        final String ResultText;
-        Request request_api = new Request.Builder()
-                .url("https://api.bilibili.com/x/player/playurl?bvid="+id+"&cid="+cid)
+        final String responseText;
+        Request request_api1 = new Request.Builder()
+                .url("https://api.bilibili.com/x/player/pagelist?bvid="+id+"&jsonp=jsonp")
                 .build();
 
         try {
-            Response response2 = client.newCall(request_api).execute();
-            if (response2.body() != null){
-                ResultText = response2.body().string();
+            Response response = client.newCall(request_api1).execute();
+            if (response.body() != null){
+                responseText = response.body().string();
             } else {
-                ResultText = "";
+                responseText = "";
             }
-            response2.close();
+            response.close();
         } catch (IOException e) {
-            throw new Exception("api.bilibili.com/x/player " + e.getMessage() + (data.getProxy() == null ? "" : "(Use Proxy : "+data.getProxy().getProxyIP()+")"));
+            throw new Exception("api.bilibili.com/x/player/pagelist " + e.getMessage() + (data.getProxy() == null ? "" : "(Use Proxy : "+data.getProxy().getProxyIP()+")"));
         }
 
-        Matcher matcher2 = Pattern.compile("\"url\":\"(.*)\",\"backup_url\"").matcher(ResultText);
-        Matcher matcher3 = Pattern.compile(",\"backup_url\":(.*)\\}\\],\"support_formats\":").matcher(ResultText);
-        final String temp_url;
-        if (matcher2.find()){
-            temp_url = matcher2.group(1).replaceAll("\\\\u0026","&");
-        } else {
-            temp_url = null;
+        //System.out.println(responseText);
+
+        Matcher matcher2 = Pattern.compile("\"cid\":(\\d+)").matcher(responseText);
+
+        if (!matcher2.find()){
+            throw new Exception("bilibili.com Not cid");
         }
 
-        String temp = null;
-        if (matcher3.find()){
-            temp = matcher3.group(1).replaceAll("\\\\u0026", "&");
+        Request request_api2 = new Request.Builder()
+                .url("https://api.bilibili.com/x/player/v2?aid="+aid+"&cid="+matcher2.group(1))
+                .build();
+
+        final String response2Text;
+        try {
+            Response response = client.newCall(request_api2).execute();
+            if (response.body() != null){
+                response2Text = response.body().string();
+            } else {
+                response2Text = "";
+            }
+            response.close();
+        } catch (IOException e) {
+            throw new Exception("api.bilibili.com/x/player/v2 " + e.getMessage() + (data.getProxy() == null ? "" : "(Use Proxy : "+data.getProxy().getProxyIP()+")"));
         }
 
-        String temp_backupUrl = "";
-        //System.out.println(temp);
-        if (temp != null && temp.startsWith("[")){
+        //System.out.println(response2Text);
 
-            JsonArray json = new Gson().fromJson(temp, JsonArray.class);
-            for (int i = 0; i < json.size(); i++){
-                String str = json.get(i).getAsString();
-                if (str.startsWith("https://upos-hz-mirrorakam.akamaized.net/")){
-                    temp_backupUrl = str.replaceAll("\\\\u003d", "=");
+        String json = "{" + matcher3.group(1) + "}";
+        //System.out.println(json);
+
+        JsonObject result = new Gson().fromJson(json, JsonElement.class).getAsJsonObject();
+        JsonArray array = result.getAsJsonObject("data").getAsJsonObject("dash").getAsJsonArray("video");
+
+        List<String> videoUrl = new ArrayList<>();
+        array.forEach((a)->{
+            // a.getAsJsonObject().get("baseUrl").getAsString()
+            Request request_video = new Request.Builder()
+                    .url(a.getAsJsonObject().get("baseUrl").getAsString())
+                    .addHeader("Referer","https://www.bilibili.com/")
+                    .build();
+
+            boolean is403 = false;
+            try {
+                Response response = client.newCall(request_video).execute();
+                if (response.code() == 200){
+                    videoUrl.add(a.getAsJsonObject().get("baseUrl").getAsString());
+                } else {
+                    is403 = true;
+                }
+                response.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (is403){
+                request_video = new Request.Builder()
+                        .url(a.getAsJsonObject().get("backupUrl").getAsString())
+                        .addHeader("Referer","https://www.bilibili.com/")
+                        .build();
+
+                try {
+                    Response response = client.newCall(request_video).execute();
+                    //System.out.println(response.code());
+                    if (response.code() == 200){
+                        videoUrl.add(a.getAsJsonObject().get("backupUrl").getAsString());
+                    }
+                    response.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
-        }
 
+        });
 
-        //System.out.println("temp : "+temp_url);
-        if (temp_url != null && !temp_url.startsWith("https://upos-hz-mirrorakam.akamaized.net/")){
-            return new ResultVideoData(temp_backupUrl, null, false, false, false, null);
-        }
+        JsonArray array2 = result.getAsJsonObject("data").getAsJsonObject("dash").getAsJsonArray("audio");
 
-        return new ResultVideoData(temp_url, null, false, false, false, null);
+        List<String> audioUrl = new ArrayList<>();
+        array2.forEach((a)->{
+            // a.getAsJsonObject().get("baseUrl").getAsString()
+            Request request_audio = new Request.Builder()
+                    .url(a.getAsJsonObject().get("baseUrl").getAsString())
+                    .addHeader("Referer","https://www.bilibili.com/")
+                    .build();
+
+            boolean is403 = false;
+            try {
+                Response response = client.newCall(request_audio).execute();
+                if (response.code() == 200){
+                    audioUrl.add(a.getAsJsonObject().get("baseUrl").getAsString());
+                } else {
+                    is403 = true;
+                }
+                response.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (is403){
+                request_audio = new Request.Builder()
+                        .url(a.getAsJsonObject().get("backupUrl").getAsString())
+                        .addHeader("Referer","https://www.bilibili.com/")
+                        .build();
+
+                try {
+                    Response response = client.newCall(request_audio).execute();
+                    //System.out.println(response.code());
+                    if (response.code() == 200){
+                        audioUrl.add(a.getAsJsonObject().get("backupUrl").getAsString());
+                    }
+                    response.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        });
+
+        return new ResultVideoData(videoUrl.get(videoUrl.size() - 1), audioUrl.get(audioUrl.size() - 1), false, false, false, null);
     }
 
 
@@ -119,11 +211,11 @@ public class BilibiliCom implements ShareService{
 
     @Override
     public String getServiceName() {
-        return "bilibili";
+        return "bilibili.com";
     }
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 }
