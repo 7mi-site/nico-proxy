@@ -103,7 +103,7 @@ public class BilibiliCom implements ShareService{
         }
 
 
-        System.out.println("temp : "+temp_url);
+        //System.out.println("temp : "+temp_url);
         if (temp_url != null && !temp_url.startsWith("https://upos-hz-mirrorakam.akamaized.net/")){
             return new ResultVideoData(temp_backupUrl, null, false, false, false, null);
         }
