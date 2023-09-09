@@ -1,6 +1,7 @@
 package xyz.n7mn.nico_proxy;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import okhttp3.*;
 import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
@@ -438,13 +439,75 @@ public class NicoNicoVideo implements ShareService {
     }
 
     @Override
+    public String getTitle(RequestVideoData data) throws Exception {
+        String id = getId(data.getURL());
+        String title = "";
+
+        final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
+
+        String HtmlText = "";
+        if (!Pattern.compile("lv").matcher(data.getURL()).find()) {
+            //System.out.println("video");
+            try {
+                Request request_html = new Request.Builder()
+                        .url("https://www.nicovideo.jp/watch/" + id)
+                        .build();
+                Response response = client.newCall(request_html).execute();
+                if (response.body() != null) {
+                    HtmlText = response.body().string();
+                }
+                response.close();
+
+            } catch (Exception e) {
+                return "";
+            }
+        } else {
+            try {
+                Request request_html = new Request.Builder()
+                        .url("https://live.nicovideo.jp/watch/" + id)
+                        .build();
+                Response response = client.newCall(request_html).execute();
+                if (response.body() != null) {
+                    HtmlText = response.body().string();
+                }
+                response.close();
+
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
+        //System.out.println(HtmlText);
+        Matcher matcher = Pattern.compile("<script type=\"application/ld\\+json\" class=\"LdJson\">\\{(.*)\\}").matcher(HtmlText);
+
+        if (Pattern.compile("lv").matcher(data.getURL()).find()){
+            matcher = Pattern.compile("<script type=\"application/ld\\+json\">\\{(.*)\\}").matcher(HtmlText);
+        }
+
+        if (!matcher.find()){
+            return "";
+        }
+        //System.out.println("found");
+
+        String jsonText = "{"+matcher.group(1)+"}";
+        jsonText = jsonText.replaceAll("&quot;", "\"");
+        //System.out.println(jsonText);
+
+        JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
+        title = json.getAsJsonObject().get("name").getAsString();
+
+
+        return title;
+    }
+
+    @Override
     public String getServiceName() {
         return "ニコニコ動画";
     }
 
     @Override
     public String getVersion() {
-        return "1.0-20230602";
+        return "1.0-20230909";
     }
 
     private String getId(String text){

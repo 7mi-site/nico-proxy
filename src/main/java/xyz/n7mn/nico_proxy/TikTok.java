@@ -11,6 +11,8 @@ import xyz.n7mn.nico_proxy.data.ResultVideoData;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TikTok implements ShareService{
     @Override
@@ -65,12 +67,49 @@ public class TikTok implements ShareService{
     }
 
     @Override
+    public String getTitle(RequestVideoData data) throws Exception {
+        final OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
+
+        String title = "";
+
+        String HtmlText = "";
+        Request request_html = new Request.Builder()
+                .url(data.getURL())
+                .build();
+        try {
+            Response response = client.newCall(request_html).execute();
+            if (response.body() != null) {
+                HtmlText = response.body().string();
+            }
+            response.close();
+        } catch (Exception e){
+            return "";
+        }
+
+        Matcher matcher = Pattern.compile("<script type=\"application/ld\\+json\" id=\"BreadcrumbList\">\\{(.*)\\}</script><style data-emotion=\"tiktok").matcher(HtmlText);
+
+        if (!matcher.find()){
+            return "";
+        }
+
+        String jsonText = "{"+matcher.group(1)+"}";
+        //System.out.println(jsonText);
+
+        JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
+        title = json.getAsJsonObject().getAsJsonArray("itemListElement").get(2).getAsJsonObject().get("item").getAsJsonObject().get("name").getAsString();
+        title = title.split(" \\| TikTok")[0];
+
+        return title;
+    }
+
+    @Override
     public String getServiceName() {
         return "TikTok";
     }
 
     @Override
     public String getVersion() {
-        return "20230729";
+        return "20230909";
     }
 }

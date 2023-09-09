@@ -81,12 +81,53 @@ public class OPENREC implements ShareService{
     }
 
     @Override
+    public String getTitle(RequestVideoData data) throws Exception {
+        String title = "";
+        // 田丸篤志のラジオ・おもちゃのたまや（第28回）
+        final OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
+
+        Request build = new Request.Builder()
+                .url(data.getURL())
+                .build();
+
+        String HtmlText = "";
+        try {
+            Response response = client.newCall(build).execute();
+
+            if (response.body() != null){
+                HtmlText = response.body().string();
+            }
+            response.close();
+        } catch (Exception e){
+            return "";
+        }
+
+        //System.out.println(HtmlText);
+
+        Matcher matcher = Pattern.compile("<script type=\"application/ld\\+json\">\\{(.*)\\}").matcher(HtmlText);
+
+        if (!matcher.find()){
+            return "";
+        }
+
+        String jsonText = "{"+matcher.group(1)+"}";
+        jsonText = jsonText.replaceAll("&quot;", "\"");
+        //System.out.println(jsonText);
+
+        JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
+        title = json.getAsJsonObject().get("name").getAsString();
+
+        return title;
+    }
+
+    @Override
     public String getServiceName() {
         return "Openrec";
     }
 
     @Override
     public String getVersion() {
-        return "20230822";
+        return "20230909";
     }
 }

@@ -1,6 +1,7 @@
 package xyz.n7mn.nico_proxy;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -10,6 +11,8 @@ import xyz.n7mn.nico_proxy.data.ResultVideoData;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BilibiliTv implements ShareService{
 
@@ -20,7 +23,7 @@ public class BilibiliTv implements ShareService{
         String s = data.getURL().split("\\?")[0];
         String[] strings = s.split("/");
         String id = strings[strings.length - 1];
-        if (id.length() == 0){
+        if (id.isEmpty()){
             id = strings[strings.length - 2];
         }
         Request api = new Request.Builder()
@@ -61,12 +64,49 @@ public class BilibiliTv implements ShareService{
     }
 
     @Override
+    public String getTitle(RequestVideoData data) throws Exception {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
+
+        String title = "";
+
+        Request html = new Request.Builder()
+                .url(data.getURL())
+                .build();
+
+        String string = "";
+        try {
+            Response response = client.newCall(html).execute();
+            if (response.body() != null){
+                string = response.body().string();
+            }
+            response.close();
+        } catch (Exception e){
+            return "";
+        }
+
+        //System.out.println(string);
+
+        Matcher matcher = Pattern.compile("<script type=\"application/ld\\+json\">\\[(.*)\\]").matcher(string);
+        if (!matcher.find()){
+            return "";
+        }
+
+        String jsonText = "["+matcher.group(1)+"]";
+        //System.out.println(jsonText);
+        JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
+        title = json.getAsJsonArray().get(2).getAsJsonObject().get("name").getAsString().split(" - ")[0];
+
+        return title;
+    }
+
+    @Override
     public String getServiceName() {
         return "bilibili.tv";
     }
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 }

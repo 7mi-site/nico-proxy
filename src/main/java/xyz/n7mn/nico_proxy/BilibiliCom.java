@@ -26,7 +26,7 @@ public class BilibiliCom implements ShareService{
         String s = data.getURL().split("\\?")[0];
         String[] strings = s.split("/");
         String id = strings[strings.length - 1];
-        if (id.length() == 0 || id.startsWith("?")){
+        if (id.isEmpty() || id.startsWith("?")){
             id = strings[strings.length - 2];
         }
 
@@ -207,6 +207,45 @@ public class BilibiliCom implements ShareService{
     @Override
     public ResultVideoData getLive(RequestVideoData data) {
         return null;
+    }
+
+    @Override
+    public String getTitle(RequestVideoData data) {
+        String title = "";
+
+        String s = data.getURL().split("\\?")[0];
+        String[] strings = s.split("/");
+        String id = strings[strings.length - 1];
+        if (id.isEmpty() || id.startsWith("?")){
+            id = strings[strings.length - 2];
+        }
+
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
+        final String HtmlText;
+
+        Request request_html = new Request.Builder()
+                .url("https://www.bilibili.com/video/"+id+"/")
+                .build();
+
+        try {
+            Response response = client.newCall(request_html).execute();
+            if (response.body() != null){
+                HtmlText = response.body().string();
+            } else {
+                HtmlText = "";
+            }
+            response.close();
+        } catch (IOException e) {
+            return "";
+        }
+
+        Matcher matcher = Pattern.compile("<h1 title=\"(.*)\" class=\"video-title\"").matcher(HtmlText);
+        if (matcher.find()){
+            title = matcher.group(1);
+        }
+
+        return title;
     }
 
     @Override

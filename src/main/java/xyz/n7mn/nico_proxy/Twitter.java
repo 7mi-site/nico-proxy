@@ -101,12 +101,17 @@ public class Twitter implements ShareService{
     }
 
     @Override
+    public String getTitle(RequestVideoData data) throws Exception {
+        return "";
+    }
+
+    @Override
     public String getServiceName() {
         return "Twitter";
     }
 
     @Override
     public String getVersion() {
-        return "20230825";
+        return "20230909";
     }
 }

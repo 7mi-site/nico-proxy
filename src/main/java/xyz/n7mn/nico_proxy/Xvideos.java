@@ -51,12 +51,45 @@ public class Xvideos implements ShareService{
     }
 
     @Override
+    public String getTitle(RequestVideoData data) throws Exception {
+        String title = "";
+        final OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
+
+        String HtmlText = "";
+        try {
+            Request request_html = new Request.Builder()
+                    .url(data.getURL())
+                    .build();
+            Response response = client.newCall(request_html).execute();
+            if (response.body() != null){
+                HtmlText = response.body().string();
+            }
+            response.close();
+        } catch (Exception e){
+            throw new Exception(e.getMessage());
+        }
+
+        //System.out.println(HtmlText);
+
+        Matcher matcher = Pattern.compile("html5player.setVideoTitle\\('(.*)'\\);").matcher(HtmlText);
+
+        if (!matcher.find()){
+            return "";
+        }
+
+        title = matcher.group(1);
+
+        return title;
+    }
+
+    @Override
     public String getServiceName() {
         return "XVIDEOS.com";
     }
 
     @Override
     public String getVersion() {
-        return "20230729";
+        return "20230909";
     }
 }

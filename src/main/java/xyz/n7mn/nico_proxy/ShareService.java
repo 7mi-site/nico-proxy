@@ -9,6 +9,8 @@ public interface ShareService {
 
     ResultVideoData getLive(RequestVideoData data) throws Exception;
 
+    String getTitle(RequestVideoData data) throws Exception;
+
     String getServiceName();
     String getVersion();
 
