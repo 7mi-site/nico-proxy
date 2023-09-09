@@ -97,7 +97,7 @@ public class BilibiliCom implements ShareService{
             for (int i = 0; i < json.size(); i++){
                 String str = json.get(i).getAsString();
                 if (str.startsWith("https://upos-hz-mirrorakam.akamaized.net/")){
-                    temp_backupUrl = str;
+                    temp_backupUrl = str.replaceAll("\\\\u003d", "=");
                 }
             }
         }
