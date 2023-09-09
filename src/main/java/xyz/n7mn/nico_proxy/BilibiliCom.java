@@ -1,5 +1,7 @@
 package xyz.n7mn.nico_proxy;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -74,7 +76,7 @@ public class BilibiliCom implements ShareService{
         }
 
         Matcher matcher2 = Pattern.compile("\"url\":\"(.*)\",\"backup_url\"").matcher(ResultText);
-        Matcher matcher3 = Pattern.compile(",\"backup_url\":\\[(.*)\\]\\}\\],\"support_formats\":").matcher(ResultText);
+        Matcher matcher3 = Pattern.compile(",\"backup_url\":(.*)\\}\\],\"support_formats\":").matcher(ResultText);
         final String temp_url;
         if (matcher2.find()){
             temp_url = matcher2.group(1).replaceAll("\\\\u0026","&");
@@ -87,14 +89,23 @@ public class BilibiliCom implements ShareService{
             temp = matcher3.group(1).replaceAll("\\\\u0026", "&");
         }
 
-        if (temp != null){
-            temp = temp.split("\"")[1];
-            //System.out.println(temp);
+        String temp_backupUrl = "";
+        //System.out.println(temp);
+        if (temp != null && temp.startsWith("[")){
+
+            JsonArray json = new Gson().fromJson(temp, JsonArray.class);
+            for (int i = 0; i < json.size(); i++){
+                String str = json.get(i).getAsString();
+                if (str.startsWith("https://upos-hz-mirrorakam.akamaized.net/")){
+                    temp_backupUrl = str;
+                }
+            }
         }
 
 
+        System.out.println("temp : "+temp_url);
         if (temp_url != null && !temp_url.startsWith("https://upos-hz-mirrorakam.akamaized.net/")){
-            return new ResultVideoData(temp, null, false, false, false, null);
+            return new ResultVideoData(temp_backupUrl, null, false, false, false, null);
         }
 
         return new ResultVideoData(temp_url, null, false, false, false, null);
