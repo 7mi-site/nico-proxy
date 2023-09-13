@@ -117,28 +117,32 @@ public class BilibiliCom implements ShareService{
         JsonArray array = result.getAsJsonObject("data").getAsJsonObject("dash").getAsJsonArray("video");
 
         List<String> videoUrl = new ArrayList<>();
-        array.forEach((a)->{
-            // a.getAsJsonObject().get("baseUrl").getAsString()
-            Request request_video = new Request.Builder()
-                    .url(a.getAsJsonObject().get("baseUrl").getAsString())
-                    .addHeader("Referer","https://www.bilibili.com/")
-                    .build();
 
-            boolean is403 = false;
-            try {
-                Response response = client.newCall(request_video).execute();
-                if (response.code() == 200){
-                    videoUrl.add(a.getAsJsonObject().get("baseUrl").getAsString());
-                } else {
-                    is403 = true;
+        boolean[] is403 = {false};
+        array.forEach((a)->{
+            if (!is403[0]){
+                // a.getAsJsonObject().get("baseUrl").getAsString()
+                Request request_video = new Request.Builder()
+                        .url(a.getAsJsonObject().get("baseUrl").getAsString())
+                        .addHeader("Referer","https://www.bilibili.com/")
+                        .build();
+
+                try {
+                    Response response = client.newCall(request_video).execute();
+                    if (response.code() == 200){
+                        videoUrl.add(a.getAsJsonObject().get("baseUrl").getAsString());
+                    } else {
+                        is403[0] = true;
+                    }
+                    response.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    is403[0] = true;
                 }
-                response.close();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
 
-            if (is403){
-                request_video = new Request.Builder()
+            if (is403[0]){
+                Request request_video = new Request.Builder()
                         .url(a.getAsJsonObject().get("backupUrl").getAsString())
                         .addHeader("Referer","https://www.bilibili.com/")
                         .build();
@@ -154,7 +158,6 @@ public class BilibiliCom implements ShareService{
                     e.printStackTrace();
                 }
             }
-
         });
 
         JsonArray array2 = result.getAsJsonObject("data").getAsJsonObject("dash").getAsJsonArray("audio");
