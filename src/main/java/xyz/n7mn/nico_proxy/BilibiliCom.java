@@ -160,31 +160,33 @@ public class BilibiliCom implements ShareService{
             }
         });
 
+        is403[0] = false;
         JsonArray array2 = result.getAsJsonObject("data").getAsJsonObject("dash").getAsJsonArray("audio");
 
         List<String> audioUrl = new ArrayList<>();
         array2.forEach((a)->{
             // a.getAsJsonObject().get("baseUrl").getAsString()
-            Request request_audio = new Request.Builder()
-                    .url(a.getAsJsonObject().get("baseUrl").getAsString())
-                    .addHeader("Referer","https://www.bilibili.com/")
-                    .build();
+            if (!is403[0]){
+                Request request_audio = new Request.Builder()
+                        .url(a.getAsJsonObject().get("baseUrl").getAsString())
+                        .addHeader("Referer","https://www.bilibili.com/")
+                        .build();
 
-            boolean is403 = false;
-            try {
-                Response response = client.newCall(request_audio).execute();
-                if (response.code() == 200){
-                    audioUrl.add(a.getAsJsonObject().get("baseUrl").getAsString());
-                } else {
-                    is403 = true;
+                try {
+                    Response response = client.newCall(request_audio).execute();
+                    if (response.code() == 200){
+                        audioUrl.add(a.getAsJsonObject().get("baseUrl").getAsString());
+                    } else {
+                        is403[0] = true;
+                    }
+                    response.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                response.close();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
 
-            if (is403){
-                request_audio = new Request.Builder()
+            if (is403[0]){
+                Request request_audio = new Request.Builder()
                         .url(a.getAsJsonObject().get("backupUrl").getAsString())
                         .addHeader("Referer","https://www.bilibili.com/")
                         .build();
