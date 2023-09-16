@@ -118,91 +118,55 @@ public class BilibiliCom implements ShareService{
 
         List<String> videoUrl = new ArrayList<>();
 
-        boolean[] is403 = {false};
-        array.forEach((a)->{
-            if (!is403[0]){
-                // a.getAsJsonObject().get("baseUrl").getAsString()
-                Request request_video = new Request.Builder()
-                        .url(a.getAsJsonObject().get("baseUrl").getAsString())
-                        .addHeader("Referer","https://www.bilibili.com/")
-                        .build();
+        final boolean is403;
+        boolean is40;
 
-                try {
-                    Response response = client.newCall(request_video).execute();
-                    if (response.code() == 200){
-                        videoUrl.add(a.getAsJsonObject().get("baseUrl").getAsString());
-                    } else {
-                        is403[0] = true;
-                    }
-                    response.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    is403[0] = true;
-                }
+        Request request_video = new Request.Builder()
+                .url(array.get(0).getAsJsonObject().get("baseUrl").getAsString())
+                .addHeader("Referer","https://www.bilibili.com/")
+                .build();
+
+        try {
+            Response response = client.newCall(request_video).execute();
+            if (response.code() == 200){
+                videoUrl.add(array.get(0).getAsJsonObject().get("baseUrl").getAsString());
+                is40 = false;
+            } else {
+                videoUrl.add(array.get(0).getAsJsonObject().get("backupUrl").getAsString());
+                is40 = true;
             }
+            response.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            is40 = true;
+        }
+        is403 = is40;
 
-            if (is403[0]){
-                Request request_video = new Request.Builder()
-                        .url(a.getAsJsonObject().get("backupUrl").getAsString())
-                        .addHeader("Referer","https://www.bilibili.com/")
-                        .build();
-
-                try {
-                    Response response = client.newCall(request_video).execute();
-                    //System.out.println(response.code());
-                    if (response.code() == 200){
-                        videoUrl.add(a.getAsJsonObject().get("backupUrl").getAsString());
-                    }
-                    response.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+        int[] i = {0};
+        array.forEach((a)->{
+            if (i[0] == 0){
+                i[0]++;
+            } else {
+                if (!is403){
+                    videoUrl.add(a.getAsJsonObject().get("baseUrl").getAsString());
+                } else {
+                    videoUrl.add(a.getAsJsonObject().get("backupUrl").getAsString());
                 }
+
+                i[0]++;
             }
         });
 
-        is403[0] = false;
         JsonArray array2 = result.getAsJsonObject("data").getAsJsonObject("dash").getAsJsonArray("audio");
 
         List<String> audioUrl = new ArrayList<>();
         array2.forEach((a)->{
             // a.getAsJsonObject().get("baseUrl").getAsString()
-            if (!is403[0]){
-                Request request_audio = new Request.Builder()
-                        .url(a.getAsJsonObject().get("baseUrl").getAsString())
-                        .addHeader("Referer","https://www.bilibili.com/")
-                        .build();
-
-                try {
-                    Response response = client.newCall(request_audio).execute();
-                    if (response.code() == 200){
-                        audioUrl.add(a.getAsJsonObject().get("baseUrl").getAsString());
-                    } else {
-                        is403[0] = true;
-                    }
-                    response.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            if (!is403){
+                audioUrl.add(a.getAsJsonObject().get("baseUrl").getAsString());
+            } else {
+                audioUrl.add(a.getAsJsonObject().get("backupUrl").getAsString());
             }
-
-            if (is403[0]){
-                Request request_audio = new Request.Builder()
-                        .url(a.getAsJsonObject().get("backupUrl").getAsString())
-                        .addHeader("Referer","https://www.bilibili.com/")
-                        .build();
-
-                try {
-                    Response response = client.newCall(request_audio).execute();
-                    //System.out.println(response.code());
-                    if (response.code() == 200){
-                        audioUrl.add(a.getAsJsonObject().get("backupUrl").getAsString());
-                    }
-                    response.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
         });
 
         return new ResultVideoData(videoUrl.get(videoUrl.size() - 1), audioUrl.get(audioUrl.size() - 1), false, false, false, null);
