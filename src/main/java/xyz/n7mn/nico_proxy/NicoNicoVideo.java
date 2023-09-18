@@ -126,7 +126,7 @@ public class NicoNicoVideo implements ShareService {
         if (matcher_hls4.find()) {
             String key = matcher_hls4.group(1).replaceAll("\\\\","");
             //System.out.println(key);
-            System.out.println("https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=" + URLEncoder.encode(key, StandardCharsets.UTF_8));
+            //System.out.println("https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=" + URLEncoder.encode(key, StandardCharsets.UTF_8));
             Request request_hls = new Request.Builder()
                     .url("https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=" + URLEncoder.encode(key, StandardCharsets.UTF_8))
                     .addHeader("X-Frontend-Id", "6")
