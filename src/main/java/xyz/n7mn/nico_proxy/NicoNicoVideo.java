@@ -11,6 +11,8 @@ import xyz.n7mn.nico_proxy.data.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -46,11 +48,16 @@ public class NicoNicoVideo implements ShareService {
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
         String HtmlText = "";
+        String nico_sid = "";
         try {
             Request request_html = new Request.Builder()
                     .url("https://www.nicovideo.jp/watch/" + id)
+                    .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
                     .build();
             Response response = client.newCall(request_html).execute();
+            if (response.header("X-niconico-sid") != null){
+                nico_sid = response.header("X-niconico-sid");
+            }
             if (response.body() != null){
                 HtmlText = response.body().string();
             }
@@ -119,15 +126,17 @@ public class NicoNicoVideo implements ShareService {
         if (matcher_hls4.find()) {
             String key = matcher_hls4.group(1).replaceAll("\\\\","");
             //System.out.println(key);
-
+            System.out.println("https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=" + URLEncoder.encode(key, StandardCharsets.UTF_8));
             Request request_hls = new Request.Builder()
-                    .url("https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=" + key)
+                    .url("https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=" + URLEncoder.encode(key, StandardCharsets.UTF_8))
                     .addHeader("X-Frontend-Id", "6")
                     .addHeader("X-Frontend-Version", "0")
+                    .addHeader("Cookie", "nicosid="+nico_sid)
+                    .addHeader("X-Niconico-Language", "en-us")
                     .addHeader("X-Request-With", "https://www.nicovideo.jp")
                     .addHeader("Origin", "https://www.nicovideo.jp")
                     .addHeader("Referer", "https://www.nicovideo.jp/")
-                    .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
+                    .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
                     .build();
             Response response_hls = client.newCall(request_hls).execute();
             //System.out.println(response_hls.body().string());
@@ -173,6 +182,7 @@ public class NicoNicoVideo implements ShareService {
 
         Request request2 = new Request.Builder()
                 .url("https://api.dmc.nico/api/sessions?_format=json")
+                .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
                 .post(body)
                 .build();
 
@@ -507,7 +517,7 @@ public class NicoNicoVideo implements ShareService {
 
     @Override
     public String getVersion() {
-        return "1.0-20230909";
+        return "1.0-20230918";
     }
 
     private String getId(String text){
