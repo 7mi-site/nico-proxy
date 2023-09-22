@@ -60,7 +60,7 @@ public class Twitter implements ShareService{
             throw new Exception("APIError : " + e.getMessage());
         }
 
-        System.out.println(HtmlText);
+        //System.out.println(HtmlText);
         //return null;
 
         JsonElement json = new Gson().fromJson(HtmlText, JsonElement.class);
