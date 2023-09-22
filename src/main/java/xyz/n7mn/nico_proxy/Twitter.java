@@ -60,7 +60,7 @@ public class Twitter implements ShareService{
             throw new Exception("APIError : " + e.getMessage());
         }
 
-        //System.out.println(HtmlText);
+        System.out.println(HtmlText);
         //return null;
 
         JsonElement json = new Gson().fromJson(HtmlText, JsonElement.class);
@@ -77,7 +77,7 @@ public class Twitter implements ShareService{
 
             int count = 0;
             for (variants var : variants){
-                if (var.getBitrate() >= maxBitrate && var.getBitrate() > 0){
+                if (var.getBitrate() >= maxBitrate && var.getBitrate() >= 0){
                     maxCount = count;
                     maxBitrate = var.getBitrate();
                 }
@@ -112,6 +112,6 @@ public class Twitter implements ShareService{
 
     @Override
     public String getVersion() {
-        return "20230909";
+        return "20230922";
     }
 }
