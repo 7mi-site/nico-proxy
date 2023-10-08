@@ -11,6 +11,7 @@ import xyz.n7mn.nico_proxy.twitter.variants;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.util.regex.Pattern;
 
 
 public class Twitter implements ShareService{
@@ -60,14 +61,45 @@ public class Twitter implements ShareService{
             throw new Exception("APIError : " + e.getMessage());
         }
 
+        boolean isTweet2 = false;
+        if (Pattern.compile("Could not authenticate you").matcher(HtmlText).find()){
+            isTweet2 = true;
+            try {
+
+                Request build = new Request.Builder()
+                        .url("https://twitter.com/i/api/graphql/mbnjGF4gOwo5gyp9pe5s4A/TweetResultByRestId?variables=%7B%22tweetId%22%3A%22"+id+"%22%2C%22withCommunity%22%3Afalse%2C%22includePromotedContent%22%3Afalse%2C%22withVoice%22%3Afalse%7D&features=%7B%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22tweetypie_unmention_optimization_enabled%22%3Atrue%2C%22responsive_web_edit_tweet_api_enabled%22%3Atrue%2C%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Atrue%2C%22view_counts_everywhere_api_enabled%22%3Atrue%2C%22longform_notetweets_consumption_enabled%22%3Atrue%2C%22responsive_web_twitter_article_tweet_consumption_enabled%22%3Afalse%2C%22tweet_awards_web_tipping_enabled%22%3Afalse%2C%22responsive_web_home_pinned_timelines_enabled%22%3Afalse%2C%22freedom_of_speech_not_reach_fetch_enabled%22%3Atrue%2C%22standardized_nudges_misinfo%22%3Atrue%2C%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Atrue%2C%22longform_notetweets_rich_text_read_enabled%22%3Atrue%2C%22longform_notetweets_inline_media_enabled%22%3Atrue%2C%22responsive_web_graphql_exclude_directive_enabled%22%3Atrue%2C%22verified_phone_label_enabled%22%3Afalse%2C%22responsive_web_media_download_video_enabled%22%3Afalse%2C%22responsive_web_graphql_skip_user_profile_image_extensions_enabled%22%3Afalse%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%2C%22responsive_web_enhance_cards_enabled%22%3Afalse%7D")
+                        .header("Authorization", "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA")
+                        .header("X-Client-Transaction-Id", "ozoi3NmSR6Q+mm10a6SD6Ip273gbYKGGhsUVW72QUk6s1chfi1qeS14PIS0fkt/XDlZCcaNY2e8U09ILFtFf++WNxmR3og")
+                        .header("x-guest-token", "1710897623740322249")
+                        .header("x-twitter-active-user", "yes")
+                        .header("x-twitter-client-language","ja")
+                        .header("cookie", "guest_id_marketing=v1%3A169674475483006773; guest_id_ads=v1%3A169674475483006773; personalization_id=\"v1_IN9WfC2t02KPvj8nTdejeQ==\"; guest_id=v1%3A169674475483006773; gt=1710897623740322249")
+                        .build();
+
+                Response response = client.newCall(build).execute();
+                //System.out.println(response.code());
+                if (response.body() != null){
+                    HtmlText = response.body().string();
+                }
+                response.close();
+            } catch (Exception e){
+                throw new Exception("APIError : " + e.getMessage());
+            }
+        }
         //System.out.println(HtmlText);
         //return null;
-
+///*
         JsonElement json = new Gson().fromJson(HtmlText, JsonElement.class);
         try {
-            JsonElement element = json.getAsJsonObject().getAsJsonObject().get("data").getAsJsonObject().getAsJsonObject("threaded_conversation_with_injections_v2").getAsJsonArray("instructions").get(0).getAsJsonObject().getAsJsonArray("entries").get(0).getAsJsonObject().getAsJsonObject("content")
-                    .getAsJsonObject("itemContent").getAsJsonObject("tweet_results").getAsJsonObject("result").getAsJsonObject("legacy")
-                    .getAsJsonObject("extended_entities").getAsJsonArray("media").get(0).getAsJsonObject().getAsJsonObject("video_info").getAsJsonArray("variants");//.get(0).getAsJsonObject().getAsJsonObject();
+            JsonElement element;
+            if (!isTweet2){
+                element = json.getAsJsonObject().getAsJsonObject().get("data").getAsJsonObject().getAsJsonObject("threaded_conversation_with_injections_v2").getAsJsonArray("instructions").get(0).getAsJsonObject().getAsJsonArray("entries").get(0).getAsJsonObject().getAsJsonObject("content")
+                        .getAsJsonObject("itemContent").getAsJsonObject("tweet_results").getAsJsonObject("result").getAsJsonObject("legacy")
+                        .getAsJsonObject("extended_entities").getAsJsonArray("media").get(0).getAsJsonObject().getAsJsonObject("video_info").getAsJsonArray("variants");//.get(0).getAsJsonObject().getAsJsonObject();
+            } else {
+                element = json.getAsJsonObject().getAsJsonObject("data").getAsJsonObject("tweetResult").getAsJsonObject("result").getAsJsonObject("legacy").getAsJsonObject("entities").getAsJsonArray("media").get(0).getAsJsonObject().getAsJsonObject("video_info").getAsJsonArray("variants");
+            }
+
             String tempJson = element.toString();
 
             variants[] variants = new Gson().fromJson(tempJson, variants[].class);
@@ -92,6 +124,7 @@ public class Twitter implements ShareService{
         } catch (Exception e){
             throw new Exception("Tweet is Not VideoTweet");
         }
+ //*/
     }
 
     @Override
@@ -112,6 +145,6 @@ public class Twitter implements ShareService{
 
     @Override
     public String getVersion() {
-        return "20230922";
+        return "20231008";
     }
 }
