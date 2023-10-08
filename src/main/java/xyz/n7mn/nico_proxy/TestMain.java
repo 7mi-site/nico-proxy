@@ -29,9 +29,9 @@ public class TestMain {
 
         try{
 
-            ResultVideoData video = new Twitter().getVideo(new RequestVideoData("https://twitter.com/LitSilium/status/1694742897453895951", null));
-
+            ResultVideoData video = new Twitter().getVideo(new RequestVideoData("https://twitter.com/Focke_3/status/1596496780572889088", null));
             System.out.println(video.getVideoURL());
+            //System.out.println(new Abema().getTitle(new RequestVideoData("https://abema.tv/now-on-air/abema-news", null)));
 
 
         } catch (Exception e){

@@ -4,7 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.MediaType;
 import xyz.n7mn.nico_proxy.data.RequestVideoData;
 import xyz.n7mn.nico_proxy.data.ResultVideoData;
 import xyz.n7mn.nico_proxy.twitter.variants;
@@ -40,7 +42,6 @@ public class Twitter implements ShareService{
 
         String HtmlText = "";
         try {
-
             Request build = new Request.Builder()
                     .url("https://twitter.com/i/api/graphql/zZXycP0V6H7m-2r0mOnFcA/TweetDetail?variables=%7B%22focalTweetId%22%3A%22"+id+"%22%2C%22includePromotedContent%22%3Atrue%2C%22with_rux_injections%22%3Afalse%2C%22withBirdwatchNotes%22%3Atrue%2C%22withCommunity%22%3Atrue%2C%22withDownvotePerspective%22%3Afalse%2C%22withQuickPromoteEligibilityTweetFields%22%3Atrue%2C%22withReactionsMetadata%22%3Afalse%2C%22withReactionsPerspective%22%3Afalse%2C%22withSuperFollowsTweetFields%22%3Atrue%2C%22withSuperFollowsUserFields%22%3Atrue%2C%22withV2Timeline%22%3Atrue%2C%22withVoice%22%3Atrue%7D&features=%7B%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Afalse%2C%22interactive_text_enabled%22%3Atrue%2C%22responsive_web_edit_tweet_api_enabled%22%3Atrue%2C%22responsive_web_enhance_cards_enabled%22%3Atrue%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Afalse%2C%22responsive_web_text_conversations_enabled%22%3Afalse%2C%22responsive_web_uc_gql_enabled%22%3Atrue%2C%22standardized_nudges_misinfo%22%3Atrue%2C%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Afalse%2C%22tweetypie_unmention_optimization_enabled%22%3Atrue%2C%22unified_cards_ad_metadata_container_dynamic_card_content_query_enabled%22%3Atrue%2C%22verified_phone_label_enabled%22%3Afalse%2C%22vibe_api_enabled%22%3Atrue%7D")
                     .header("Authorization", "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA")
@@ -61,19 +62,39 @@ public class Twitter implements ShareService{
             throw new Exception("APIError : " + e.getMessage());
         }
 
+        //System.out.println(HtmlText);
+
         boolean isTweet2 = false;
-        if (Pattern.compile("Could not authenticate you").matcher(HtmlText).find()){
+        if (Pattern.compile("(Could not authenticate you|errors)").matcher(HtmlText).find()){
             isTweet2 = true;
+
+            final MediaType JSON = MediaType.get("application/json; charset=utf-8");
+            RequestBody body = RequestBody.create("", JSON);
+            Request getGuest = new Request.Builder()
+                    .url("https://api.twitter.com/1.1/guest/activate.json")
+                    .header("Authorization", "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA")
+                    .post(body)
+                    .build();
+            Response response1 = client.newCall(getGuest).execute();
+            //System.out.println(response.code());
+            if (response1.body() != null){
+                HtmlText = response1.body().string();
+            }
+
+            //System.out.println(HtmlText);
+            JsonElement guestTokenJson = new Gson().fromJson(HtmlText, JsonElement.class);
+            String token = guestTokenJson.getAsJsonObject().get("guest_token").getAsString();
+
             try {
 
                 Request build = new Request.Builder()
                         .url("https://twitter.com/i/api/graphql/mbnjGF4gOwo5gyp9pe5s4A/TweetResultByRestId?variables=%7B%22tweetId%22%3A%22"+id+"%22%2C%22withCommunity%22%3Afalse%2C%22includePromotedContent%22%3Afalse%2C%22withVoice%22%3Afalse%7D&features=%7B%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22tweetypie_unmention_optimization_enabled%22%3Atrue%2C%22responsive_web_edit_tweet_api_enabled%22%3Atrue%2C%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Atrue%2C%22view_counts_everywhere_api_enabled%22%3Atrue%2C%22longform_notetweets_consumption_enabled%22%3Atrue%2C%22responsive_web_twitter_article_tweet_consumption_enabled%22%3Afalse%2C%22tweet_awards_web_tipping_enabled%22%3Afalse%2C%22responsive_web_home_pinned_timelines_enabled%22%3Afalse%2C%22freedom_of_speech_not_reach_fetch_enabled%22%3Atrue%2C%22standardized_nudges_misinfo%22%3Atrue%2C%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Atrue%2C%22longform_notetweets_rich_text_read_enabled%22%3Atrue%2C%22longform_notetweets_inline_media_enabled%22%3Atrue%2C%22responsive_web_graphql_exclude_directive_enabled%22%3Atrue%2C%22verified_phone_label_enabled%22%3Afalse%2C%22responsive_web_media_download_video_enabled%22%3Afalse%2C%22responsive_web_graphql_skip_user_profile_image_extensions_enabled%22%3Afalse%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%2C%22responsive_web_enhance_cards_enabled%22%3Afalse%7D")
                         .header("Authorization", "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA")
                         .header("X-Client-Transaction-Id", "ozoi3NmSR6Q+mm10a6SD6Ip273gbYKGGhsUVW72QUk6s1chfi1qeS14PIS0fkt/XDlZCcaNY2e8U09ILFtFf++WNxmR3og")
-                        .header("x-guest-token", "1710897623740322249")
+                        .header("x-guest-token", token)
                         .header("x-twitter-active-user", "yes")
                         .header("x-twitter-client-language","ja")
-                        .header("cookie", "guest_id_marketing=v1%3A169674475483006773; guest_id_ads=v1%3A169674475483006773; personalization_id=\"v1_IN9WfC2t02KPvj8nTdejeQ==\"; guest_id=v1%3A169674475483006773; gt=1710897623740322249")
+                        .header("cookie", "guest_id_marketing=v1%3A169674475483006773; guest_id_ads=v1%3A169674475483006773; personalization_id=\"v1_IN9WfC2t02KPvj8nTdejeQ==\"; guest_id=v1%3A169674475483006773; gt="+token)
                         .build();
 
                 Response response = client.newCall(build).execute();
