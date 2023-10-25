@@ -2,6 +2,7 @@ package xyz.n7mn.nico_proxy;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -20,7 +21,7 @@ public class Pornhub implements ShareService{
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
 
-        Matcher matcher = Pattern.compile("https://(.*).pornhub.com/view_video.php\\?viewkey=(.*)").matcher(data.getURL());
+        Matcher matcher = Pattern.compile("https://(.*)\\.pornhub\\.com/view_video\\.php\\?viewkey=(.*)").matcher(data.getURL());
         if (!matcher.find()){
             throw new Exception("Not Found");
         }
@@ -46,61 +47,21 @@ public class Pornhub implements ShareService{
         }
 
         //System.out.println(HtmlText);
-        Matcher matcher1 = Pattern.compile("var media_0=(.*);flashvars_(\\d+)\\['mediaDefinitions'\\]\\[0\\]").matcher(HtmlText);
+        Matcher matcher1 = Pattern.compile("var flashvars_(\\d+) = \\{(.*)\\}\\;").matcher(HtmlText);
 
         if (!matcher1.find()){
-            throw new Exception("Not Found");
+            //throw new Exception("Not Found");
+            return null;
         }
 
-        String mediaUrlTemp = matcher1.group(1);
+        String mediaUrlTemp = "{"+matcher1.group(2)+"}";
         //System.out.println(mediaUrlTemp);
 
-        List<String> strName = new ArrayList<>();
+        JsonElement json = new Gson().fromJson(mediaUrlTemp, JsonElement.class);
+        JsonElement url = json.getAsJsonObject().getAsJsonArray("mediaDefinitions").get(0).getAsJsonObject().get("videoUrl");
 
-        boolean skip = false;
-        for (String str : mediaUrlTemp.split(" ")){
-            if (skip){
-                if (str.startsWith("*/")){
-                    skip = false;
-                    strName.add(str.replaceAll("\\*/", "").split(";")[0]);
-                }
 
-                continue;
-            }
-
-            if (str.equals("/*")){
-                skip = true;
-                continue;
-            }
-
-            if (str.equals("+")){
-                continue;
-            }
-            strName.add(str.split(";")[0]);
-        }
-
-        //System.out.println(strName.size());
-        StringBuffer sb = new StringBuffer();
-        Matcher matcher2 = Pattern.compile("var ([a-zA-Z0-9]+)=\"(.{0,16})\";").matcher(HtmlText);
-        HashMap<String, String> tempStrList = new HashMap<>();
-        while (matcher2.find()){
-            //String group = matcher2.group();
-            String group1 = matcher2.group(1);
-            String group2 = matcher2.group(2);
-            tempStrList.put(group1, group2);
-            //System.out.println(group+" : " + group1 + " / " + group2);
-        }
-
-        for (String str : strName){
-            if (tempStrList.get(str) != null){
-                sb.append(tempStrList.get(str));
-            }
-
-        }
-
-        //System.out.println(sb.toString().replaceAll("\"","").replaceAll(" ", "").replaceAll("\\+",""));
-
-        return new ResultVideoData(sb.toString().replaceAll("\"","").replaceAll(" ", "").replaceAll("\\+",""), "", true, false, false, "");
+        return new ResultVideoData(url.getAsString(), "", true, false, false, "");
     }
 
     @Override
