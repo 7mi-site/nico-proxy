@@ -36,7 +36,7 @@ public class Twitter implements ShareService{
         final OkHttpClient.Builder builder = new OkHttpClient.Builder();
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
-        if (id.length() == 0){
+        if (id.isEmpty()){
             throw new Exception("Tweet NotFound");
         }
 
