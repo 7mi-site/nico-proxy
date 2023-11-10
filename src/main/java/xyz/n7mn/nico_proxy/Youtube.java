@@ -79,7 +79,7 @@ public class Youtube implements ShareService{
             response.close();
         }
 
-        //System.out.println(ResponseJson);
+        System.out.println(ResponseJson);
         String[] VideoURL = {""};
         long[] VideoBitrate = {0};
         String[] AudioURL = {""};
@@ -105,8 +105,16 @@ public class Youtube implements ShareService{
             }
         });
 
+        String caption = null;
+        try {
+            if (!json.getAsJsonObject().getAsJsonObject("captions").isJsonNull()){
+                caption = json.getAsJsonObject().getAsJsonObject("captions").toString();
+            }
+        } catch (Exception e){
+            //e.printStackTrace();
+        }
 
-        return new ResultVideoData(VideoURL[0], AudioURL[0], false, false, false, "", json.getAsJsonObject().getAsJsonObject("captions").toString());
+        return new ResultVideoData(VideoURL[0], AudioURL[0], false, false, false, "", caption);
     }
 
     @Override
