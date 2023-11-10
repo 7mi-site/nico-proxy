@@ -59,7 +59,7 @@ public class Youtube implements ShareService{
         String ResponseJson = "";
         if (response.body() != null){
 
-            Headers headers = response.headers();
+            //Headers headers = response.headers();
             //System.out.println(response.code());
             //for (String name : headers.names()) {
             //    System.out.println(name + " : " + headers.get(name));
@@ -79,7 +79,7 @@ public class Youtube implements ShareService{
             response.close();
         }
 
-        System.out.println(ResponseJson);
+        //System.out.println(ResponseJson);
         String[] VideoURL = {""};
         long[] VideoBitrate = {0};
         String[] AudioURL = {""};
