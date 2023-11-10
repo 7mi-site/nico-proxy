@@ -8,6 +8,7 @@ public class ResultVideoData {
     private final boolean isEncrypted;
     private final boolean isStream;
     private final String TokenJson;
+    private final String CaptionData;
 
     public ResultVideoData(String videoURL, String audioURL, boolean isHLS, boolean isEncrypted, boolean isStream, String tokenJson){
         this.VideoURL = videoURL;
@@ -16,6 +17,16 @@ public class ResultVideoData {
         this.isEncrypted = isEncrypted;
         this.isStream = isStream;
         this.TokenJson = tokenJson;
+        this.CaptionData = null;
+    }
+    public ResultVideoData(String videoURL, String audioURL, boolean isHLS, boolean isEncrypted, boolean isStream, String tokenJson, String captionData){
+        this.VideoURL = videoURL;
+        this.AudioURL = audioURL;
+        this.isHLS = isHLS;
+        this.isEncrypted = isEncrypted;
+        this.isStream = isStream;
+        this.TokenJson = tokenJson;
+        this.CaptionData = captionData;
     }
 
     public String getVideoURL() {
@@ -40,5 +51,9 @@ public class ResultVideoData {
 
     public String getTokenJson() {
         return TokenJson;
+    }
+
+    public String getCaptionData() {
+        return CaptionData;
     }
 }
