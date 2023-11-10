@@ -1,7 +1,9 @@
 package xyz.n7mn.nico_proxy;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import okhttp3.*;
 import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
@@ -11,6 +13,7 @@ import xyz.n7mn.nico_proxy.data.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -80,51 +83,92 @@ public class NicoNicoVideo implements ShareService {
         String Token = null;
         String Signature = null;
 
-        // セッションID
-        Matcher matcher1 = Pattern.compile("player_id\\\\&quot;:\\\\&quot;nicovideo-(.*)\\\\&quot;,\\\\&quot;recipe_id").matcher(HtmlText);
+        String json_text = "";
+        Matcher matcher_json = Pattern.compile("<div id=\"js-initial-watch-data\" data-api-data=\"\\{(.*)\\}\" data-environment=\"\\{").matcher(HtmlText);
+        if (matcher_json.find()){
+            json_text = "{" + matcher_json.group(1) + "}";
+            json_text = json_text.replaceAll("&quot;", "\"").replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
 
-        if (matcher1.find()) {
-            SessionId = matcher1.group(1);
-            //System.out.println("[Debug] セッションID : "+SessionId+" "+sdf.format(new Date()));
+            //System.out.println(json_text);
+
         }
 
+        JsonElement json = null;
+        try {
+            json = new Gson().fromJson(json_text, JsonElement.class);
+        } catch (Exception e){
+            //e.printStackTrace();
+            //return null;
+        }
+
+        if (json_text.isEmpty() || json == null){
+            throw new Exception("www.nicovideo.jp Not Found");
+        }
+
+
         // Tokenデータ
-        Matcher matcher2 = Pattern.compile("\\{\\\\&quot;service_id\\\\&quot;:\\\\&quot;nicovideo\\\\&quot;(.*)\\\\&quot;transfer_presets\\\\&quot;:\\[\\]\\}").matcher(HtmlText);
-        if (matcher2.find()) {
-            Token = matcher2.group().replaceAll("\\\\", "").replaceAll("&quot;", "\"").replaceAll("\"", "\\\\\"");
-            //System.out.println("[Debug] TokenData : \n"+Token+"\n"+ sdf.format(new Date()));
+        try {
+            Token = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("movie").getAsJsonObject("session").get("token").getAsString();
+        } catch (Exception e){
+            //e.printStackTrace();
+            //return null;
+        }
+
+        //System.out.println(Token);
+
+        // セッションID
+        try {
+            JsonElement json1 = new Gson().fromJson(Token, JsonElement.class);
+            String player_id = json1.getAsJsonObject().get("player_id").getAsString();
+            SessionId = player_id.replaceAll("nicovideo-", "");
+        } catch (Exception e){
+            //e.printStackTrace();
+            //return null;
         }
 
         // signature
-        Matcher matcher3 = Pattern.compile("signature&quot;:&quot;(.*)&quot;,&quot;contentId").matcher(HtmlText);
-        if (matcher3.find()) {
-            Signature = matcher3.group(1);
-            //System.out.println("[Debug] signature : "+Signature+" "+ sdf.format(new Date()));
+        try {
+            Signature = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("movie").getAsJsonObject("session").get("signature").getAsString();
+        } catch (Exception e){
+            //e.printStackTrace();
+            //return null;
         }
 
-        if (SessionId == null && Token == null && Signature == null) {
-            throw new Exception("www.nicovideo.jp Not Found SessionData");
+        StringBuilder video_src = new StringBuilder();
+        StringBuilder audio_src = new StringBuilder();
+        try {
+            JsonArray temp = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("movie").getAsJsonObject("session").getAsJsonArray("videos");
+            for (int i = 0; i < temp.size(); i++){
+                video_src.append("\"").append(temp.get(i).getAsString()).append("\"");
+
+                if (i + 1 < temp.size()){
+                    video_src.append(",");
+                }
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+        try {
+            JsonArray temp = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("movie").getAsJsonObject("session").getAsJsonArray("audios");
+            for (int i = 0; i < temp.size(); i++){
+                audio_src.append("\"").append(temp.get(i).getAsString()).append("\"");
+                if (i + 1 < temp.size()){
+                    audio_src.append(",");
+                }
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
         }
 
+        //System.out.println(video_src);
+        //System.out.println(audio_src);
 
-        Matcher matcher_video = Pattern.compile("&quot;,&quot;videos&quot;:\\[(.*)\\],&quot;audios").matcher(HtmlText);
-        Matcher matcher_audio = Pattern.compile("&quot;audios\\\\&quot;:\\[(.*)\\],\\\\&quot;movies").matcher(HtmlText);
-        String video_src = "";
-        String audio_src = "";
-        if (matcher_video.find()) {
-            video_src = matcher_video.group(1).replaceAll("&quot;", "\"");
-        }
-        if (matcher_audio.find()) {
-            audio_src = matcher_audio.group(1).replaceAll("&quot;", "\"").replaceAll("\\\\", "");
-        }
-
-        Matcher matcher_hls1 = Pattern.compile("hls_encrypted_key\\\\&quot;:\\\\&quot;(.*)\\\\&quot;}&quot;,&quot;signature").matcher(HtmlText);
-        Matcher matcher_hls2 = Pattern.compile("&quot;keyUri&quot;:&quot;(.*)&quot;},&quot;movie").matcher(HtmlText);
-        Matcher matcher_hls3 = Pattern.compile(",&quot;token&quot;:&quot;(.*)&quot;,&quot;signature&quot;:&quot;").matcher(HtmlText);
-        Matcher matcher_hls4 = Pattern.compile(",&quot;trackingId&quot;:&quot;(.*)&quot;},&quot;deliveryLegac").matcher(HtmlText);
-
-        if (matcher_hls4.find()) {
-            String key = matcher_hls4.group(1).replaceAll("\\\\","");
+        boolean isEncrypt = !json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").get("encryption").isJsonNull();
+        if (isEncrypt) {
+            System.out.println("null?");
+            String key = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").get("trackingId").getAsString();
             //System.out.println(key);
             //System.out.println("https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=" + URLEncoder.encode(key, StandardCharsets.UTF_8));
             Request request_hls = new Request.Builder()
@@ -141,25 +185,28 @@ public class NicoNicoVideo implements ShareService {
             Response response_hls = client.newCall(request_hls).execute();
             //System.out.println(response_hls.body().string());
             response_hls.close();
-
+            //System.out.println("Encrypted!");
         }
 
         String hls_encrypted_key = null;
-        if (matcher_hls1.find()){
-            hls_encrypted_key = matcher_hls1.group(1).replaceAll("\\\\","");
-        }
         String keyUri = "";
-        if (matcher_hls2.find()){
-            keyUri = matcher_hls2.group(1).replaceAll("\\\\","").replaceAll("&amp;","&");
+        if (isEncrypt){
+            try {
+                hls_encrypted_key = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("encryption").get("encryptedKey").getAsString();
+                //System.out.println(hls_encrypted_key);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+            try {
+                keyUri = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("encryption").get("keyUri").getAsString();
+            } catch (Exception e){
+                //e.printStackTrace();
+            }
         }
         //System.out.println(keyUri);
 
-        if (matcher_hls3.find()) {
-            Token = matcher_hls3.group(1).replaceAll("&quot;", "\"");
-        }
-
-        String[] split1 = video_src.split(",");
-        String[] split2 = audio_src.split(",");
+        String[] split1 = video_src.toString().split(",");
+        String[] split2 = audio_src.toString().split(",");
 
         StringBuilder temp = new StringBuilder();
         for (String s : split1) {
@@ -170,9 +217,10 @@ public class NicoNicoVideo implements ShareService {
             temp.append(s);
             temp.append(",");
         }
-        String SendJson = "{\"session\":{\"recipe_id\":\"nicovideo-" + id + "\",\"content_id\":\"out1\",\"content_type\":\"movie\",\"content_src_id_sets\":[{\"content_src_ids\":[{\"src_id_to_mux\":{\"video_src_ids\":[" + video_src + "],\"audio_src_ids\":[" + split2[0] + "]}},{\"src_id_to_mux\":{\"video_src_ids\":[" + split1[split1.length - 1] + "],\"audio_src_ids\":[" + split2[0] + "]}}]}],\"timing_constraint\":\"unlimited\",\"keep_method\":{\"heartbeat\":{\"lifetime\":120000}},\"protocol\":{\"name\":\"http\",\"parameters\":{\"http_parameters\":{\"parameters\":{\"hls_parameters\":{\"use_well_known_port\":\"yes\",\"use_ssl\":\"yes\",\"transfer_preset\":\"\",\"segment_duration\":6000,\"encryption\":{\"hls_encryption_v1\":{\"encrypted_key\":\"" + hls_encrypted_key + "\",\"key_uri\":\"" + keyUri + "\"}}}}}}},\"content_uri\":\"\",\"session_operation_auth\":{\"session_operation_auth_by_signature\":{\"token\":\"" + Token + "\",\"signature\":\"" + Signature + "\"}},\"content_auth\":{\"auth_type\":\"ht2\",\"content_key_timeout\":600000,\"service_id\":\"nicovideo\",\"service_user_id\":\"" + SessionId + "\"},\"client_info\":{\"player_id\":\"nicovideo-" + SessionId + "\"},\"priority\":0.2}}";
+
+        String SendJson = "{\"session\":{\"recipe_id\":\"nicovideo-" + id + "\",\"content_id\":\"out1\",\"content_type\":\"movie\",\"content_src_id_sets\":[{\"content_src_ids\":[{\"src_id_to_mux\":{\"video_src_ids\":[" + video_src + "],\"audio_src_ids\":[" + split2[0] + "]}},{\"src_id_to_mux\":{\"video_src_ids\":[" + split1[split1.length - 1] + "],\"audio_src_ids\":[" + split2[0] + "]}}]}],\"timing_constraint\":\"unlimited\",\"keep_method\":{\"heartbeat\":{\"lifetime\":120000}},\"protocol\":{\"name\":\"http\",\"parameters\":{\"http_parameters\":{\"parameters\":{\"hls_parameters\":{\"use_well_known_port\":\"yes\",\"use_ssl\":\"yes\",\"transfer_preset\":\"\",\"segment_duration\":6000,\"encryption\":{\"hls_encryption_v1\":{\"encrypted_key\":\"" + hls_encrypted_key + "\",\"key_uri\":\"" + keyUri + "\"}}}}}}},\"content_uri\":\"\",\"session_operation_auth\":{\"session_operation_auth_by_signature\":{\"token\":\"" + Token.replaceAll("\n","").replaceAll("\"","\\\\\"") + "\",\"signature\":\"" + Signature + "\"}},\"content_auth\":{\"auth_type\":\"ht2\",\"content_key_timeout\":600000,\"service_id\":\"nicovideo\",\"service_user_id\":\"" + SessionId + "\"},\"client_info\":{\"player_id\":\"nicovideo-" + SessionId + "\"},\"priority\":0.2}}";
         if (hls_encrypted_key == null) {
-            SendJson = "{\"session\":{\"recipe_id\":\"nicovideo-" + id + "\",\"content_id\":\"out1\",\"content_type\":\"movie\",\"content_src_id_sets\":[{\"content_src_ids\":[{\"src_id_to_mux\":{\"video_src_ids\":[" + video_src + "],\"audio_src_ids\":[" + split2[0] + "]}},{\"src_id_to_mux\":{\"video_src_ids\":[" + split1[split1.length - 1] + "],\"audio_src_ids\":[" + split2[0] + "]}}]}],\"timing_constraint\":\"unlimited\",\"keep_method\":{\"heartbeat\":{\"lifetime\":120000}},\"protocol\":{\"name\":\"http\",\"parameters\":{\"http_parameters\":{\"parameters\":{\"hls_parameters\":{\"use_well_known_port\":\"yes\",\"use_ssl\":\"yes\",\"transfer_preset\":\"\",\"segment_duration\":6000}}}}},\"content_uri\":\"\",\"session_operation_auth\":{\"session_operation_auth_by_signature\":{\"token\":\"" + Token + "\",\"signature\":\"" + Signature + "\"}},\"content_auth\":{\"auth_type\":\"ht2\",\"content_key_timeout\":600000,\"service_id\":\"nicovideo\",\"service_user_id\":\"" + SessionId + "\"},\"client_info\":{\"player_id\":\"nicovideo-" + SessionId + "\"},\"priority\":" + (id.startsWith("so") ? "0.2" : "0") + "}}";
+            SendJson = "{\"session\":{\"recipe_id\":\"nicovideo-" + id + "\",\"content_id\":\"out1\",\"content_type\":\"movie\",\"content_src_id_sets\":[{\"content_src_ids\":[{\"src_id_to_mux\":{\"video_src_ids\":[" + video_src + "],\"audio_src_ids\":[" + split2[0] + "]}},{\"src_id_to_mux\":{\"video_src_ids\":[" + split1[split1.length - 1] + "],\"audio_src_ids\":[" + split2[0] + "]}}]}],\"timing_constraint\":\"unlimited\",\"keep_method\":{\"heartbeat\":{\"lifetime\":120000}},\"protocol\":{\"name\":\"http\",\"parameters\":{\"http_parameters\":{\"parameters\":{\"hls_parameters\":{\"use_well_known_port\":\"yes\",\"use_ssl\":\"yes\",\"transfer_preset\":\"\",\"segment_duration\":6000}}}}},\"content_uri\":\"\",\"session_operation_auth\":{\"session_operation_auth_by_signature\":{\"token\":\"" + Token.replaceAll("\n","").replaceAll("\"","\\\\\"") + "\",\"signature\":\"" + Signature + "\"}},\"content_auth\":{\"auth_type\":\"ht2\",\"content_key_timeout\":600000,\"service_id\":\"nicovideo\",\"service_user_id\":\"" + SessionId + "\"},\"client_info\":{\"player_id\":\"nicovideo-" + SessionId + "\"},\"priority\":" + (id.startsWith("so") ? "0.2" : "0") + "}}";
         }
         //System.out.println(SendJson);
         //System.out.println(keyUri);
