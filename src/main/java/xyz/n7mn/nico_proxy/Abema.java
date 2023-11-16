@@ -184,6 +184,6 @@ public class Abema implements ShareService {
 
     @Override
     public String getVersion() {
-        return "20231007";
+        return "20231116";
     }
 }
