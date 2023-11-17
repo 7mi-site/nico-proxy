@@ -8,8 +8,10 @@ public class TestMain {
 
     public static void main(String[] args) throws Exception {
 
-        ResultVideoData live = new TVer().getVideo(new RequestVideoData("https://tver.jp/episodes/epq882oemn", null));
+        ResultVideoData live = new TVer().getLive(new RequestVideoData("https://tver.jp/live/ntv", null));
 
-        //System.out.println(live.getVideoURL());
+        System.out.println(live.getVideoURL());
+        String title = new TVer().getTitle(new RequestVideoData("https://tver.jp/live/ntv", null));
+
     }
 }

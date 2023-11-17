@@ -2,9 +2,7 @@ package xyz.n7mn.nico_proxy;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import xyz.n7mn.nico_proxy.data.RequestVideoData;
 import xyz.n7mn.nico_proxy.data.ResultVideoData;
 
@@ -80,33 +78,192 @@ public class TVer implements ShareService{
 
     @Override
     public ResultVideoData getLive(RequestVideoData data) throws Exception {
-        //
-        return null;
+        Matcher matcher = Pattern.compile("https://tver.jp/live/(.+)").matcher(data.getURL());
+        Matcher matcher2 = Pattern.compile("https://tver.jp/live/simul/(.+)").matcher(data.getURL());
+
+        boolean a = matcher.find();
+        boolean b = matcher2.find();
+        if (!a && !b){
+            throw new Exception("Not Support URL");
+        }
+
+        String id = a ? matcher.group(1) : matcher2.group(1);
+
+        final OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
+
+        long currentTime = 0;
+        Request request1 = new Request.Builder()
+                .url("https://platform-api.tver.jp/v2/api/public/current_time")
+                .build();
+
+        Response response1 = client.newCall(request1).execute();
+        if (response1.body() != null){
+            JsonElement json = new Gson().fromJson(response1.body().string(), JsonElement.class);
+            currentTime = json.getAsJsonObject().getAsJsonObject("result").get("epoch").getAsLong();
+        }
+        response1.close();
+
+        Request request2 = new Request.Builder()
+                .url("https://platform-api.tver.jp/v2/api/platform_users/info?platform_uid=b7cd9e1b8ae94ed3865233c74ccfcf5d47f5&platform_token=xxyjo2stlpqv5a93plut3u4bcr08fwcv395t454c")
+                .build();
+
+        Response response2 = client.newCall(request2).execute();
+        response2.close();
+
+        String jsonText = "";
+
+        String url = "";
+        if (a){
+
+            String liveID = "";
+            Request request3 = new Request.Builder()
+                    .url("https://service-api.tver.jp/api/v1/callLiveTimeline/"+id)
+                    .addHeader("x-tver-platform-type","web")
+                    .build();
+
+            Response response3 = client.newCall(request3).execute();
+            if (response3.body() != null){
+                jsonText = response3.body().string();
+            }
+            response3.close();
+            //System.out.println(jsonText);
+
+            JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
+            for (JsonElement element : json.getAsJsonObject().getAsJsonObject("result").getAsJsonArray("contents")) {
+                long start = element.getAsJsonObject().getAsJsonObject("content").get("startAt").getAsLong();
+                long end = element.getAsJsonObject().getAsJsonObject("content").get("endAt").getAsLong();
+                if (start <= currentTime && end >= currentTime){
+                    liveID = element.getAsJsonObject().getAsJsonObject("content").get("id").getAsString();
+                    break;
+                }
+            }
+
+
+            Request request4 = new Request.Builder()
+                    .url("https://playback.api.streaks.jp/v1/projects/tver-simul-"+id+"/medias/ref:simul-"+id)
+                    .addHeader("X-Streaks-Api-Key", id)
+                    .build();
+
+            Response response4 = client.newCall(request4).execute();
+            if (response4.body() != null){
+                jsonText = response4.body().string();
+            }
+            response4.close();
+
+            //System.out.println(jsonText);
+            json = new Gson().fromJson(jsonText, JsonElement.class);
+
+            String sessionId = json.getAsJsonObject().get("id").getAsString();
+            String jsonSendID = json.getAsJsonObject().getAsJsonArray("sources").get(0).getAsJsonObject().get("id").getAsString();
+            // このままでは見れないが仮置き
+            url = json.getAsJsonObject().getAsJsonArray("sources").get(0).getAsJsonObject().get("src").getAsString();
+
+            MediaType mediaType = MediaType.get("application/json; charset=utf-8");
+
+            String text = "{\n" +
+                    "    \"ads_params\": {\n" +
+                    "        \"tvcu_pcode\": \"09\",\n" +
+                    "        \"tvcu_ccode\": \"09201\",\n" +
+                    "        \"tvcu_zcode\": \"3208501\",\n" +
+                    "        \"tvcu_gender\": \"m\",\n" +
+                    "        \"tvcu_gender_code\": \"1\",\n" +
+                    "        \"tvcu_age\": 30,\n" +
+                    "        \"tvcu_agegrp\": 3,\n" +
+                    "        \"delivery_type\": \"simul\",\n" +
+                    "        \"is_dvr\": 0,\n" +
+                    "        \"rdid\": \"\",\n" +
+                    "        \"idtype\": \"\",\n" +
+                    "        \"is_lat\": \"\",\n" +
+                    "        \"bundle\": \"\",\n" +
+                    "        \"iuid\": \"my5821gsnc0114482616\",\n" +
+                    "        \"interest\": \"\",\n" +
+                    "        \"video_id\": \""+liveID+"\",\n" +
+                    "        \"device\": \"pc\",\n" +
+                    "        \"device_code\": \"0001\",\n" +
+                    "        \"tag_type\": \"browser\",\n" +
+                    "        \"item_eventid\": \"62033\",\n" +
+                    "        \"item_programkey\": \"00005\",\n" +
+                    "        \"item_category\": \"99\",\n" +
+                    "        \"item_episodecode\": \"d5bb7aba-4602-4707-8ccf-8638ecdd36ce\",\n" +
+                    "        \"item_originalmeta1\": \"\",\n" +
+                    "        \"item_originalmeta2\": \"\",\n" +
+                    "        \"ntv_ppid\": \"z75i3v2wb7cd9e1b8ae94ed3865233c74ccfcf5d47f5\",\n" +
+                    "        \"tbs_ppid\": \"f87wu4inb7cd9e1b8ae94ed3865233c74ccfcf5d47f5\",\n" +
+                    "        \"tx_ppid\": \"t87wrus6b7cd9e1b8ae94ed3865233c74ccfcf5d47f5\",\n" +
+                    "        \"ex_ppid\": \"n6dsf79vb7cd9e1b8ae94ed3865233c74ccfcf5d47f5\",\n" +
+                    "        \"cx_ppid_gam\": \"b8a35iwjb7cd9e1b8ae94ed3865233c74ccfcf5d47f5\",\n" +
+                    "        \"mbs_ppid_gam\": \"x32ck84sb7cd9e1b8ae94ed3865233c74ccfcf5d47f5\",\n" +
+                    "        \"abc_ppid\": \"c2fq84emb7cd9e1b8ae94ed3865233c74ccfcf5d47f5\",\n" +
+                    "        \"tvo_ppid\": \"i3wtqjeyb7cd9e1b8ae94ed3865233c74ccfcf5d47f5\",\n" +
+                    "        \"ktv_ppid\": \"g9byn7reb7cd9e1b8ae94ed3865233c74ccfcf5d47f5\",\n" +
+                    "        \"ytv_ppid\": \"g8kusm76b7cd9e1b8ae94ed3865233c74ccfcf5d47f5\",\n" +
+                    "        \"vr_uuid\": \"AB4AC57F-4DA9-420F-855E-2FC497141B59\",\n" +
+                    "        \"personalIsLat\": \"0\",\n" +
+                    "        \"platformAdUid\": \"6bfe71c2-0b12-4529-b5dc-207fb644031c\",\n" +
+                    "        \"platformUid\": \"b7cd9e1b8ae94ed3865233c74ccfcf5d47f5\",\n" +
+                    "        \"memberId\": \"\",\n" +
+                    "        \"c\": \"simul\",\n" +
+                    "        \"luid\": \"AB4AC57F-4DA9-420F-855E-2FC497141B59\"\n" +
+                    "    },\n" +
+                    "    \"id\": \""+jsonSendID+"\"\n" +
+                    "}";
+
+            Request request5 = new Request.Builder()
+                    .url("https://ssai.api.streaks.jp/v1/projects/tver-simul-ntv/medias/"+sessionId+"/ssai/session")
+                    .post(RequestBody.create(text, mediaType))
+                    .build();
+
+            Response response5 = client.newCall(request5).execute();
+            if (response5.body() != null){
+                jsonText = response5.body().string();
+            }
+            response5.close();
+            //System.out.println(jsonText);
+
+            json = new Gson().fromJson(jsonText, JsonElement.class);
+            url = url + "&" + json.getAsJsonArray().get(0).getAsJsonObject().get("query").getAsString();
+
+        }
+
+
+        return new ResultVideoData(url, null, true, false, true, null);
     }
 
     @Override
     public String getTitle(RequestVideoData data) throws Exception {
 
         Matcher matcher_video = Pattern.compile("https://tver.jp/episodes/(.+)").matcher(data.getURL());
+        Matcher matcher_live1 = Pattern.compile("https://tver.jp/live/(.+)").matcher(data.getURL());
 
         final OkHttpClient.Builder builder = new OkHttpClient.Builder();
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
         boolean isVideo = matcher_video.find();
+        boolean isLive1 = matcher_live1.find();
 
         String id = "";
         if (isVideo){
             id = matcher_video.group(1);
         }
 
+        if (isLive1){
+            id = matcher_live1.group(1);
+        }
+
+        long currentTime = 0L;
+        Request request1 = new Request.Builder()
+                .url("https://platform-api.tver.jp/v2/api/public/current_time")
+                .build();
+
+        Response response1 = client.newCall(request1).execute();
+        if (response1.body() != null){
+            JsonElement json = new Gson().fromJson(response1.body().string(), JsonElement.class);
+            currentTime = json.getAsJsonObject().getAsJsonObject("result").get("epoch").getAsLong();
+        }
+        response1.close();
 
         if (isVideo){
-            Request request1 = new Request.Builder()
-                    .url("https://platform-api.tver.jp/v2/api/public/current_time")
-                    .build();
-
-            Response response1 = client.newCall(request1).execute();
-            response1.close();
 
             Request request2 = new Request.Builder()
                     .url("https://platform-api.tver.jp/v2/api/platform_users/info?platform_uid=b7cd9e1b8ae94ed3865233c74ccfcf5d47f5&platform_token=xxyjo2stlpqv5a93plut3u4bcr08fwcv395t454c")
@@ -127,6 +284,39 @@ public class TVer implements ShareService{
 
             JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
             return json.getAsJsonObject().get("title").getAsString();
+        }
+
+        if (isLive1){
+            String jsonText = "";
+            String title = "";
+            Request request3 = new Request.Builder()
+                    .url("https://service-api.tver.jp/api/v1/callLiveTimeline/"+id)
+                    .addHeader("x-tver-platform-type","web")
+                    .build();
+
+            Response response3 = client.newCall(request3).execute();
+            if (response3.body() != null){
+                jsonText = response3.body().string();
+            }
+            response3.close();
+            //System.out.println(jsonText);
+
+            JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
+            for (JsonElement element : json.getAsJsonObject().getAsJsonObject("result").getAsJsonArray("contents")) {
+                long start = element.getAsJsonObject().getAsJsonObject("content").get("startAt").getAsLong();
+                long end = element.getAsJsonObject().getAsJsonObject("content").get("endAt").getAsLong();
+                if (start <= currentTime && end >= currentTime){
+                    if (element.getAsJsonObject().getAsJsonObject("content").get("title") == null || element.getAsJsonObject().getAsJsonObject("content").get("title").getAsString().equals(" ")){
+                        title = element.getAsJsonObject().getAsJsonObject("content").get("seriesTitle").getAsString();
+                    } else {
+                        title = element.getAsJsonObject().getAsJsonObject("content").get("title").getAsString();
+                    }
+                    break;
+                }
+            }
+
+            System.out.println(title);
+            return title;
         }
 
         return null;
