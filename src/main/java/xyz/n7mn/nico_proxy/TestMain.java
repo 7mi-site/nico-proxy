@@ -11,7 +11,8 @@ public class TestMain {
         ResultVideoData live = new TVer().getLive(new RequestVideoData("https://tver.jp/live/ntv", null));
 
         System.out.println(live.getVideoURL());
-        String title = new TVer().getTitle(new RequestVideoData("https://tver.jp/live/ntv", null));
+        String title = new TVer().getTitle(new RequestVideoData("https://tver.jp/live/simul/let3phmt6v", null));
+        System.out.println(title);
 
     }
 }
