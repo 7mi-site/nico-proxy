@@ -90,7 +90,7 @@ public class Abema implements ShareService {
         for (int i = 0; i < json.getAsJsonObject().getAsJsonArray("channels").size(); i++){
             JsonElement element = json.getAsJsonObject().getAsJsonArray("channels").get(i);
 
-            if (matcher.group(1).split("\\?")[0].startsWith(element.getAsJsonObject().get("id").getAsString())){
+            if (matcher.group(1).split("\\?")[0].equals(element.getAsJsonObject().get("id").getAsString())){
                 return new ResultVideoData(element.getAsJsonObject().getAsJsonObject("playback").get("hlsPreview").getAsString(), null, true, false, true, "");
             }
         }
@@ -166,8 +166,7 @@ public class Abema implements ShareService {
 
             for (int i = 0; i < json.getAsJsonObject().getAsJsonArray("channels").size(); i++){
                 JsonElement element = json.getAsJsonObject().getAsJsonArray("channels").get(i);
-
-                if (matcher2.group(1).split("\\?")[0].startsWith(element.getAsJsonObject().get("id").getAsString())){
+                if (matcher2.group(1).split("\\?")[0].equals(element.getAsJsonObject().get("id").getAsString())){
                     return element.getAsJsonObject().get("name").getAsString();
                 }
             }
