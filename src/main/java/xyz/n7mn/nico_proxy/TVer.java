@@ -40,6 +40,9 @@ public class TVer implements ShareService{
                 .build();
 
         Response response2 = client.newCall(request2).execute();
+        if (response2.body() != null){
+            jsonText = response2.body().string();
+        }
         response2.close();
 
         //System.out.println(jsonText);
@@ -56,19 +59,46 @@ public class TVer implements ShareService{
         response3.close();
         //System.out.println(jsonText);
         JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
-        videoRefID = json.getAsJsonObject().getAsJsonObject("video").get("videoRefID").getAsString();
+
+        videoRefID = json.getAsJsonObject().getAsJsonObject("video").get("videoRefID") != null ? json.getAsJsonObject().getAsJsonObject("video").get("videoRefID").getAsString() : "";
         accountID = json.getAsJsonObject().getAsJsonObject("video").get("accountID").getAsString();
+        String videoID = json.getAsJsonObject().getAsJsonObject("video").get("videoID") != null ? json.getAsJsonObject().getAsJsonObject("video").get("videoID").getAsString() : "";
 
 
         Request request4 = new Request.Builder()
-                .url("https://edge.api.brightcove.com/playback/v1/accounts/"+accountID+"/videos/ref%3A"+videoRefID)
-                .addHeader("Accept", "application/json;pk=BCpkADawqM2XqfdZX45o9xMUoyUbUrkEjt-dMFupSdYwCw6YH7Dgd_Aj4epNSPEGgyBOFGHmLa_IPqbf8qv8CWSZaI_8Cd8xkpoMSNkyZrzzX7_TGRmVjAmZ_q_KxemVvC2gsMyfCqCzRrRx")
+                .url("http://players.brightcove.net/"+accountID+"/default_default/config.json")
                 .build();
+
         Response response4 = client.newCall(request4).execute();
         if (response4.body() != null){
             jsonText = response4.body().string();
         }
         response4.close();
+        //System.out.println(jsonText);
+
+        json = new Gson().fromJson(jsonText, JsonElement.class);
+        String policy_key = json.getAsJsonObject().getAsJsonObject("video_cloud").get("policy_key").getAsString();
+
+
+//
+        Request request5;
+        if (!videoRefID.isEmpty()){
+            request5 = new Request.Builder()
+                    .url("https://edge.api.brightcove.com/playback/v1/accounts/"+accountID+"/videos/ref%3A"+videoRefID)
+                    .addHeader("Accept", "application/json;pk="+policy_key)
+                    .build();
+        } else {
+            request5 = new Request.Builder()
+                    .url("https://edge.api.brightcove.com/playback/v1/accounts/"+accountID+"/videos/"+videoID+"?config_id=f0876aa7-0bab-4049-ab23-1b2001ff7c79")
+                    .addHeader("Accept", "application/json;pk="+policy_key)
+                    .build();
+        }
+
+        Response response5 = client.newCall(request5).execute();
+        if (response5.body() != null){
+            jsonText = response5.body().string();
+        }
+        response5.close();
         //System.out.println(jsonText);
         json = new Gson().fromJson(jsonText, JsonElement.class);
 
