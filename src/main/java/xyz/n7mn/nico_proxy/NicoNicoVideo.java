@@ -191,7 +191,7 @@ public class NicoNicoVideo implements ShareService {
 
             Request request_m3u8 = new Request.Builder()
                     .url(contentUrl)
-                    .addHeader("Cookie", "CloudFront-Policy="+json.getAsJsonObject().get("CloudFront_Policy").getAsString()+";CloudFront-Signature="+json.getAsJsonObject().get("CloudFront_Signature").getAsString()+";CloudFront-Key-Pair-Id="+json.getAsJsonObject().get("CloudFront_Key_Pair_Id").getAsString()+";session="+json.getAsJsonObject().get("session").getAsString())
+                    .addHeader("Cookie", "CloudFront-Policy="+policy+";CloudFront-Signature="+signature+";CloudFront-Key-Pair-Id="+KeyPairId+";session="+session)
                     .build();
             Response response_m3u8 = client.newCall(request_m3u8).execute();
 
