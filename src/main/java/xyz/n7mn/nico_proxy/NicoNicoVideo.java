@@ -106,14 +106,14 @@ public class NicoNicoVideo implements ShareService {
         }
 
         // domand鯖へアクセスするためのデバッグ用
-        /*Request request_html = new Request.Builder()
+        Request request_html = new Request.Builder()
                 .url("https://www.nicovideo.jp/api/watch/v3_guest/"+id+"?_frontendId=3&_frontendVersion=0&actionTrackId="+json.getAsJsonObject().getAsJsonObject("client").get("watchTrackId").getAsString())
                 .build();
         Response response = client.newCall(request_html).execute();
         if (response.body() != null){
             json = new Gson().fromJson(response.body().string(), JsonElement.class).getAsJsonObject().getAsJsonObject("data");
         }
-        response.close();*/
+        response.close();
 
         if (json_text.isEmpty() || json == null){
             throw new Exception("www.nicovideo.jp Not Found");
@@ -154,12 +154,14 @@ public class NicoNicoVideo implements ShareService {
             String policy = "";
             String signature = "";
             String KeyPairId = "";
+            String session = "";
             if (response2.body() != null){
                 for (Pair<? extends String, ? extends String> header : response2.headers()) {
                     //System.out.println(header.component1() + " : " + header.component2());
                     Matcher matcher1 = Pattern.compile("CloudFront-Policy=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=nicovideo\\.jp; priority=Low; secure; HttpOnly").matcher(header.component2());
                     Matcher matcher2 = Pattern.compile("CloudFront-Signature=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=nicovideo\\.jp; priority=Low; secure; HttpOnly").matcher(header.component2());
                     Matcher matcher3 = Pattern.compile("CloudFront-Key-Pair-Id=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=nicovideo\\.jp; priority=Low; secure; HttpOnly").matcher(header.component2());
+                    Matcher matcher4 = Pattern.compile("session=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=nicovideo\\.jp; priority=Low; secure; HttpOnly").matcher(header.component2());
                     if (matcher1.find()){
                         policy = matcher1.group(1);
                     }
@@ -169,7 +171,10 @@ public class NicoNicoVideo implements ShareService {
                     if (matcher3.find()){
                         KeyPairId = matcher3.group(1);
                     }
-                    if (!policy.isEmpty() && !signature.isEmpty() && !KeyPairId.isEmpty()){
+                    if (matcher4.find()){
+                        session = matcher4.group(1);
+                    }
+                    if (!policy.isEmpty() && !signature.isEmpty() && !KeyPairId.isEmpty() && !session.isEmpty()){
                         break;
                     }
                 }
@@ -187,7 +192,13 @@ public class NicoNicoVideo implements ShareService {
             nicoCookie.setCloudFront_Policy(policy);
             nicoCookie.setCloudFront_Signature(signature);
             nicoCookie.setCloudFront_Key_Pair_Id(KeyPairId);
-            return new ResultVideoData(contentUrl, "", true, false, false, new Gson().toJson(nicoCookie));
+            nicoCookie.setSession(session);
+
+            ResultVideoData result = new ResultVideoData(contentUrl, "", true, false, false, new Gson().toJson(nicoCookie));
+            QueueList.remove(id);
+            QueueList.put(id, result);
+
+            return result;
         } else {
             // dmc.nico
             // Tokenデータ
@@ -651,7 +662,7 @@ public class NicoNicoVideo implements ShareService {
 
     @Override
     public String getVersion() {
-        return "1.0-20230918";
+        return "20231123";
     }
 
     private String getId(String text){

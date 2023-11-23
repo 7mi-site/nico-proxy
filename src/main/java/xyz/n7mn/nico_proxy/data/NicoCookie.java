@@ -5,6 +5,7 @@ public class NicoCookie {
     private String CloudFront_Policy;
     private String CloudFront_Signature;
     private String CloudFront_Key_Pair_Id;
+    private String session;
 
     public String getCloudFront_Policy() {
         return CloudFront_Policy;
@@ -28,5 +29,13 @@ public class NicoCookie {
 
     public void setCloudFront_Key_Pair_Id(String cloudFront_Key_Pair_Id) {
         CloudFront_Key_Pair_Id = cloudFront_Key_Pair_Id;
+    }
+
+    public String getSession() {
+        return session;
+    }
+
+    public void setSession(String session) {
+        this.session = session;
     }
 }
