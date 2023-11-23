@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import kotlin.Pair;
 import okhttp3.*;
 import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
@@ -11,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.n7mn.nico_proxy.data.*;
 
 import java.io.IOException;
+import java.io.StreamCorruptedException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URLDecoder;
@@ -56,6 +58,8 @@ public class NicoNicoVideo implements ShareService {
             Request request_html = new Request.Builder()
                     .url("https://www.nicovideo.jp/watch/" + id)
                     .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
+                    //.addHeader("User-agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0.1 Mobile/15E148 Safari/604.1 nico-proxy/1.0")
+                    //.addHeader("Cookie", "usepc=1;")
                     .build();
             Response response = client.newCall(request_html).execute();
             if (response.header("X-niconico-sid") != null){
@@ -101,197 +105,279 @@ public class NicoNicoVideo implements ShareService {
             //return null;
         }
 
+        // domand鯖へアクセスするためのデバッグ用
+        /*Request request_html = new Request.Builder()
+                .url("https://www.nicovideo.jp/api/watch/v3_guest/"+id+"?_frontendId=3&_frontendVersion=0&actionTrackId="+json.getAsJsonObject().getAsJsonObject("client").get("watchTrackId").getAsString())
+                .build();
+        Response response = client.newCall(request_html).execute();
+        if (response.body() != null){
+            json = new Gson().fromJson(response.body().string(), JsonElement.class).getAsJsonObject().getAsJsonObject("data");
+        }
+        response.close();*/
+
         if (json_text.isEmpty() || json == null){
             throw new Exception("www.nicovideo.jp Not Found");
         }
 
+        if (json.getAsJsonObject().getAsJsonObject("media").get("domand") != null && !json.getAsJsonObject().getAsJsonObject("media").get("domand").isJsonNull()){
+            // domand
 
-        // Tokenデータ
-        try {
-            Token = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("movie").getAsJsonObject("session").get("token").getAsString();
-        } catch (Exception e){
-            //e.printStackTrace();
-            //return null;
-        }
+            String video = "";
+            String audio = "";
 
-        //System.out.println(Token);
-
-        // セッションID
-        try {
-            JsonElement json1 = new Gson().fromJson(Token, JsonElement.class);
-            String player_id = json1.getAsJsonObject().get("player_id").getAsString();
-            SessionId = player_id.replaceAll("nicovideo-", "");
-        } catch (Exception e){
-            //e.printStackTrace();
-            //return null;
-        }
-
-        // signature
-        try {
-            Signature = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("movie").getAsJsonObject("session").get("signature").getAsString();
-        } catch (Exception e){
-            //e.printStackTrace();
-            //return null;
-        }
-
-        StringBuilder video_src = new StringBuilder();
-        StringBuilder audio_src = new StringBuilder();
-        try {
-            JsonArray temp = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("movie").getAsJsonObject("session").getAsJsonArray("videos");
-            for (int i = 0; i < temp.size(); i++){
-                video_src.append("\"").append(temp.get(i).getAsString()).append("\"");
-
-                if (i + 1 < temp.size()){
-                    video_src.append(",");
+            for (JsonElement videos : json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("domand").getAsJsonArray("videos")) {
+                if (videos.getAsJsonObject().get("isAvailable").getAsBoolean()){
+                    video = videos.getAsJsonObject().get("id").getAsString();
+                    break;
                 }
             }
-        } catch (Exception e){
-            e.printStackTrace();
-            return null;
-        }
-        try {
-            JsonArray temp = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("movie").getAsJsonObject("session").getAsJsonArray("audios");
-            for (int i = 0; i < temp.size(); i++){
-                audio_src.append("\"").append(temp.get(i).getAsString()).append("\"");
-                if (i + 1 < temp.size()){
-                    audio_src.append(",");
+
+            for (JsonElement audios : json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("domand").getAsJsonArray("audios")) {
+                if (audios.getAsJsonObject().get("isAvailable").getAsBoolean()){
+                    audio = audios.getAsJsonObject().get("id").getAsString();
+                    break;
                 }
             }
-        } catch (Exception e){
-            e.printStackTrace();
-            return null;
-        }
 
-        //System.out.println(video_src);
-        //System.out.println(audio_src);
-
-        boolean isEncrypt = !json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").get("encryption").isJsonNull();
-        if (isEncrypt) {
-            System.out.println("null?");
-            String key = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").get("trackingId").getAsString();
-            //System.out.println(key);
-            //System.out.println("https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=" + URLEncoder.encode(key, StandardCharsets.UTF_8));
-            Request request_hls = new Request.Builder()
-                    .url("https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=" + URLEncoder.encode(key, StandardCharsets.UTF_8))
-                    .addHeader("X-Frontend-Id", "6")
+            RequestBody body = RequestBody.create("{\"outputs\":[[\""+video+"\",\""+audio+"\"]]}", JSON);
+            Request request2 = new Request.Builder()
+                    .url("https://nvapi.nicovideo.jp/v1/watch/"+id+"/access-rights/hls?actionTrackId="+json.getAsJsonObject().getAsJsonObject("client").get("watchTrackId").getAsString())
+                    .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
+                    .addHeader("X-Access-Right-Key", json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("domand").get("accessRightKey").getAsString())
                     .addHeader("X-Frontend-Version", "0")
-                    .addHeader("Cookie", "nicosid="+nico_sid)
-                    .addHeader("X-Niconico-Language", "en-us")
+                    .addHeader("X-Frontend-Id", "3") // 今は暫定でスマホ側の3
                     .addHeader("X-Request-With", "https://www.nicovideo.jp")
-                    .addHeader("Origin", "https://www.nicovideo.jp")
-                    .addHeader("Referer", "https://www.nicovideo.jp/")
-                    .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
+                    .post(body)
                     .build();
-            Response response_hls = client.newCall(request_hls).execute();
-            //System.out.println(response_hls.body().string());
-            response_hls.close();
-            //System.out.println("Encrypted!");
-        }
+            Response response2 = client.newCall(request2).execute();
 
-        String hls_encrypted_key = null;
-        String keyUri = "";
-        if (isEncrypt){
-            try {
-                hls_encrypted_key = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("encryption").get("encryptedKey").getAsString();
-                //System.out.println(hls_encrypted_key);
-            } catch (Exception e){
-                e.printStackTrace();
+            String policy = "";
+            String signature = "";
+            String KeyPairId = "";
+            if (response2.body() != null){
+                for (Pair<? extends String, ? extends String> header : response2.headers()) {
+                    //System.out.println(header.component1() + " : " + header.component2());
+                    Matcher matcher1 = Pattern.compile("CloudFront-Policy=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=nicovideo\\.jp; priority=Low; secure; HttpOnly").matcher(header.component2());
+                    Matcher matcher2 = Pattern.compile("CloudFront-Signature=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=nicovideo\\.jp; priority=Low; secure; HttpOnly").matcher(header.component2());
+                    Matcher matcher3 = Pattern.compile("CloudFront-Key-Pair-Id=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=nicovideo\\.jp; priority=Low; secure; HttpOnly").matcher(header.component2());
+                    if (matcher1.find()){
+                        policy = matcher1.group(1);
+                    }
+                    if (matcher2.find()){
+                        signature = matcher2.group(1);
+                    }
+                    if (matcher3.find()){
+                        KeyPairId = matcher3.group(1);
+                    }
+                    if (!policy.isEmpty() && !signature.isEmpty() && !KeyPairId.isEmpty()){
+                        break;
+                    }
+                }
+
+                json_text = response2.body().string();
             }
+            response2.close();
+
+            //System.out.println(json_text);
+            json = new Gson().fromJson(json_text, JsonElement.class);
+
+            // このままだと再生できないのでアクセス時にCookieを渡してあげる必要がある
+            String contentUrl = json.getAsJsonObject().getAsJsonObject("data").get("contentUrl").getAsString();
+            NicoCookie nicoCookie = new NicoCookie();
+            nicoCookie.setCloudFront_Policy(policy);
+            nicoCookie.setCloudFront_Signature(signature);
+            nicoCookie.setCloudFront_Key_Pair_Id(KeyPairId);
+            return new ResultVideoData(contentUrl, "", true, false, false, new Gson().toJson(nicoCookie));
+        } else {
+            // dmc.nico
+            // Tokenデータ
             try {
-                keyUri = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("encryption").get("keyUri").getAsString();
+                Token = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("movie").getAsJsonObject("session").get("token").getAsString();
             } catch (Exception e){
                 //e.printStackTrace();
-            }
-        }
-        //System.out.println(keyUri);
-
-        String[] split1 = video_src.toString().split(",");
-        String[] split2 = audio_src.toString().split(",");
-
-        StringBuilder temp = new StringBuilder();
-        for (String s : split1) {
-            if (s.startsWith("\"archive_h264_1080p\"") || s.startsWith("\"archive_h264_720p\"")){
-                continue;
+                //return null;
             }
 
-            temp.append(s);
-            temp.append(",");
-        }
+            //System.out.println(Token);
 
-        String SendJson = "{\"session\":{\"recipe_id\":\"nicovideo-" + id + "\",\"content_id\":\"out1\",\"content_type\":\"movie\",\"content_src_id_sets\":[{\"content_src_ids\":[{\"src_id_to_mux\":{\"video_src_ids\":[" + video_src + "],\"audio_src_ids\":[" + split2[0] + "]}},{\"src_id_to_mux\":{\"video_src_ids\":[" + split1[split1.length - 1] + "],\"audio_src_ids\":[" + split2[0] + "]}}]}],\"timing_constraint\":\"unlimited\",\"keep_method\":{\"heartbeat\":{\"lifetime\":120000}},\"protocol\":{\"name\":\"http\",\"parameters\":{\"http_parameters\":{\"parameters\":{\"hls_parameters\":{\"use_well_known_port\":\"yes\",\"use_ssl\":\"yes\",\"transfer_preset\":\"\",\"segment_duration\":6000,\"encryption\":{\"hls_encryption_v1\":{\"encrypted_key\":\"" + hls_encrypted_key + "\",\"key_uri\":\"" + keyUri + "\"}}}}}}},\"content_uri\":\"\",\"session_operation_auth\":{\"session_operation_auth_by_signature\":{\"token\":\"" + Token.replaceAll("\n","").replaceAll("\"","\\\\\"") + "\",\"signature\":\"" + Signature + "\"}},\"content_auth\":{\"auth_type\":\"ht2\",\"content_key_timeout\":600000,\"service_id\":\"nicovideo\",\"service_user_id\":\"" + SessionId + "\"},\"client_info\":{\"player_id\":\"nicovideo-" + SessionId + "\"},\"priority\":0.2}}";
-        if (hls_encrypted_key == null) {
-            SendJson = "{\"session\":{\"recipe_id\":\"nicovideo-" + id + "\",\"content_id\":\"out1\",\"content_type\":\"movie\",\"content_src_id_sets\":[{\"content_src_ids\":[{\"src_id_to_mux\":{\"video_src_ids\":[" + video_src + "],\"audio_src_ids\":[" + split2[0] + "]}},{\"src_id_to_mux\":{\"video_src_ids\":[" + split1[split1.length - 1] + "],\"audio_src_ids\":[" + split2[0] + "]}}]}],\"timing_constraint\":\"unlimited\",\"keep_method\":{\"heartbeat\":{\"lifetime\":120000}},\"protocol\":{\"name\":\"http\",\"parameters\":{\"http_parameters\":{\"parameters\":{\"hls_parameters\":{\"use_well_known_port\":\"yes\",\"use_ssl\":\"yes\",\"transfer_preset\":\"\",\"segment_duration\":6000}}}}},\"content_uri\":\"\",\"session_operation_auth\":{\"session_operation_auth_by_signature\":{\"token\":\"" + Token.replaceAll("\n","").replaceAll("\"","\\\\\"") + "\",\"signature\":\"" + Signature + "\"}},\"content_auth\":{\"auth_type\":\"ht2\",\"content_key_timeout\":600000,\"service_id\":\"nicovideo\",\"service_user_id\":\"" + SessionId + "\"},\"client_info\":{\"player_id\":\"nicovideo-" + SessionId + "\"},\"priority\":" + (id.startsWith("so") ? "0.2" : "0") + "}}";
-        }
-        //System.out.println(SendJson);
-        //System.out.println(keyUri);
-
-        String ResponseJson = "";
-        RequestBody body = RequestBody.create(SendJson, JSON);
-
-        Request request2 = new Request.Builder()
-                .url("https://api.dmc.nico/api/sessions?_format=json")
-                .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
-                .post(body)
-                .build();
-
-
-        try {
-            Response response2 = client.newCall(request2).execute();
-            if (response2.body() != null){
-                ResponseJson = response2.body().string();
+            // セッションID
+            try {
+                JsonElement json1 = new Gson().fromJson(Token, JsonElement.class);
+                String player_id = json1.getAsJsonObject().get("player_id").getAsString();
+                SessionId = player_id.replaceAll("nicovideo-", "");
+            } catch (Exception e){
+                //e.printStackTrace();
+                //return null;
             }
-            //System.out.println(ResponseJson);
-            response2.close();
-        } catch (IOException e) {
-            if (data.getProxy() != null){
-                throw new Exception("api.dmc.nico" + e.getMessage() + " (Use Proxy : "+data.getProxy().getProxyIP()+")");
+
+            // signature
+            try {
+                Signature = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("movie").getAsJsonObject("session").get("signature").getAsString();
+            } catch (Exception e){
+                //e.printStackTrace();
+                //return null;
+            }
+
+            StringBuilder video_src = new StringBuilder();
+            StringBuilder audio_src = new StringBuilder();
+            try {
+                JsonArray temp = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("movie").getAsJsonObject("session").getAsJsonArray("videos");
+                for (int i = 0; i < temp.size(); i++){
+                    video_src.append("\"").append(temp.get(i).getAsString()).append("\"");
+
+                    if (i + 1 < temp.size()){
+                        video_src.append(",");
+                    }
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+                return null;
+            }
+            try {
+                JsonArray temp = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("movie").getAsJsonObject("session").getAsJsonArray("audios");
+                for (int i = 0; i < temp.size(); i++){
+                    audio_src.append("\"").append(temp.get(i).getAsString()).append("\"");
+                    if (i + 1 < temp.size()){
+                        audio_src.append(",");
+                    }
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+                return null;
+            }
+
+            //System.out.println(video_src);
+            //System.out.println(audio_src);
+
+            boolean isEncrypt = !json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").get("encryption").isJsonNull();
+            if (isEncrypt) {
+                //System.out.println("null?");
+                String key = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").get("trackingId").getAsString();
+                //System.out.println(key);
+                //System.out.println("https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=" + URLEncoder.encode(key, StandardCharsets.UTF_8));
+                Request request_hls = new Request.Builder()
+                        .url("https://nvapi.nicovideo.jp/v1/2ab0cbaa/watch?t=" + URLEncoder.encode(key, StandardCharsets.UTF_8))
+                        .addHeader("X-Frontend-Id", "6")
+                        .addHeader("X-Frontend-Version", "0")
+                        .addHeader("Cookie", "nicosid="+nico_sid)
+                        .addHeader("X-Niconico-Language", "en-us")
+                        .addHeader("X-Request-With", "https://www.nicovideo.jp")
+                        .addHeader("Origin", "https://www.nicovideo.jp")
+                        .addHeader("Referer", "https://www.nicovideo.jp/")
+                        .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
+                        .build();
+                Response response_hls = client.newCall(request_hls).execute();
+                //System.out.println(response_hls.body().string());
+                response_hls.close();
+                //System.out.println("Encrypted!");
+            }
+
+            String hls_encrypted_key = null;
+            String keyUri = "";
+            if (isEncrypt){
+                try {
+                    hls_encrypted_key = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("encryption").get("encryptedKey").getAsString();
+                    //System.out.println(hls_encrypted_key);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+                try {
+                    keyUri = json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("delivery").getAsJsonObject("encryption").get("keyUri").getAsString();
+                } catch (Exception e){
+                    //e.printStackTrace();
+                }
+            }
+            //System.out.println(keyUri);
+
+            String[] split1 = video_src.toString().split(",");
+            String[] split2 = audio_src.toString().split(",");
+
+            StringBuilder temp = new StringBuilder();
+            for (String s : split1) {
+                if (s.startsWith("\"archive_h264_1080p\"") || s.startsWith("\"archive_h264_720p\"")){
+                    continue;
+                }
+
+                temp.append(s);
+                temp.append(",");
+            }
+
+            String SendJson = "{\"session\":{\"recipe_id\":\"nicovideo-" + id + "\",\"content_id\":\"out1\",\"content_type\":\"movie\",\"content_src_id_sets\":[{\"content_src_ids\":[{\"src_id_to_mux\":{\"video_src_ids\":[" + video_src + "],\"audio_src_ids\":[" + split2[0] + "]}},{\"src_id_to_mux\":{\"video_src_ids\":[" + split1[split1.length - 1] + "],\"audio_src_ids\":[" + split2[0] + "]}}]}],\"timing_constraint\":\"unlimited\",\"keep_method\":{\"heartbeat\":{\"lifetime\":120000}},\"protocol\":{\"name\":\"http\",\"parameters\":{\"http_parameters\":{\"parameters\":{\"hls_parameters\":{\"use_well_known_port\":\"yes\",\"use_ssl\":\"yes\",\"transfer_preset\":\"\",\"segment_duration\":6000,\"encryption\":{\"hls_encryption_v1\":{\"encrypted_key\":\"" + hls_encrypted_key + "\",\"key_uri\":\"" + keyUri + "\"}}}}}}},\"content_uri\":\"\",\"session_operation_auth\":{\"session_operation_auth_by_signature\":{\"token\":\"" + Token.replaceAll("\n","").replaceAll("\"","\\\\\"") + "\",\"signature\":\"" + Signature + "\"}},\"content_auth\":{\"auth_type\":\"ht2\",\"content_key_timeout\":600000,\"service_id\":\"nicovideo\",\"service_user_id\":\"" + SessionId + "\"},\"client_info\":{\"player_id\":\"nicovideo-" + SessionId + "\"},\"priority\":0.2}}";
+            if (hls_encrypted_key == null) {
+                SendJson = "{\"session\":{\"recipe_id\":\"nicovideo-" + id + "\",\"content_id\":\"out1\",\"content_type\":\"movie\",\"content_src_id_sets\":[{\"content_src_ids\":[{\"src_id_to_mux\":{\"video_src_ids\":[" + video_src + "],\"audio_src_ids\":[" + split2[0] + "]}},{\"src_id_to_mux\":{\"video_src_ids\":[" + split1[split1.length - 1] + "],\"audio_src_ids\":[" + split2[0] + "]}}]}],\"timing_constraint\":\"unlimited\",\"keep_method\":{\"heartbeat\":{\"lifetime\":120000}},\"protocol\":{\"name\":\"http\",\"parameters\":{\"http_parameters\":{\"parameters\":{\"hls_parameters\":{\"use_well_known_port\":\"yes\",\"use_ssl\":\"yes\",\"transfer_preset\":\"\",\"segment_duration\":6000}}}}},\"content_uri\":\"\",\"session_operation_auth\":{\"session_operation_auth_by_signature\":{\"token\":\"" + Token.replaceAll("\n","").replaceAll("\"","\\\\\"") + "\",\"signature\":\"" + Signature + "\"}},\"content_auth\":{\"auth_type\":\"ht2\",\"content_key_timeout\":600000,\"service_id\":\"nicovideo\",\"service_user_id\":\"" + SessionId + "\"},\"client_info\":{\"player_id\":\"nicovideo-" + SessionId + "\"},\"priority\":" + (id.startsWith("so") ? "0.2" : "0") + "}}";
+            }
+            //System.out.println(SendJson);
+            //System.out.println(keyUri);
+
+            String ResponseJson = "";
+            RequestBody body = RequestBody.create(SendJson, JSON);
+
+            Request request2 = new Request.Builder()
+                    .url("https://api.dmc.nico/api/sessions?_format=json")
+                    .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
+                    .post(body)
+                    .build();
+
+
+            try {
+                Response response2 = client.newCall(request2).execute();
+                if (response2.body() != null){
+                    ResponseJson = response2.body().string();
+                }
+                //System.out.println(ResponseJson);
+                response2.close();
+            } catch (IOException e) {
+                if (data.getProxy() != null){
+                    throw new Exception("api.dmc.nico" + e.getMessage() + " (Use Proxy : "+data.getProxy().getProxyIP()+")");
+                } else {
+                    throw new Exception("api.dmc.nico" + e.getMessage());
+                }
+            }
+
+            // 送られてきたJSONから動画ファイルのURLとハートビート信号用のセッションを取得する
+            final String HeartBeatSession;
+            final String HeartBeatSessionId;
+
+            // 動画URL
+            String VideoURL = null;
+            Matcher video_matcher = Pattern.compile("\"content_uri\":\"(.*)\",\"session_operation_auth").matcher(ResponseJson);
+            if (video_matcher.find()){
+                VideoURL = video_matcher.group(1).replaceAll("\\\\","");
+                QueueList.put(id, new ResultVideoData(VideoURL, null, true, hls_encrypted_key != null, false, null));
+            }
+
+            // ハートビート信号用 セッション
+            Matcher heart_session_matcher = Pattern.compile("\\{\"meta\":\\{\"status\":201,\"message\":\"created\"},\"data\":\\{(.*)\\}").matcher(ResponseJson);
+            if (heart_session_matcher.find()){
+                HeartBeatSession = "{"+heart_session_matcher.group(1); //.replaceAll("\\\\","");
             } else {
-                throw new Exception("api.dmc.nico" + e.getMessage());
+                HeartBeatSession = null;
             }
+            // ハートビート信号用ID
+            Matcher heart_session_matcher2 = Pattern.compile("\"data\":\\{\"session\":\\{\"id\":\"(.*)\",\"recipe_id\"").matcher(ResponseJson);
+            if (heart_session_matcher2.find()){
+                HeartBeatSessionId = heart_session_matcher2.group(1).replaceAll("\\\\","");
+            } else {
+                HeartBeatSessionId = null;
+            }
+
+            if (VideoURL == null || HeartBeatSession == null || HeartBeatSessionId == null){
+                throw new Exception("api.dmc.nico PostData Error");
+            }
+
+            ResultVideoData result;
+            if (hls_encrypted_key != null){
+                result = new ResultVideoData(VideoURL, null, true, true, false, new Gson().toJson(new EncryptedTokenJSON(keyUri, "https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT", HeartBeatSession)));
+            } else {
+                result = new ResultVideoData(VideoURL, null, true, false, false, new Gson().toJson(new TokenJSON("https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT", HeartBeatSession)));
+
+            }
+            QueueList.remove(id);
+            QueueList.put(id, result);
+
+            return result;
         }
 
-        // 送られてきたJSONから動画ファイルのURLとハートビート信号用のセッションを取得する
-        final String HeartBeatSession;
-        final String HeartBeatSessionId;
-
-        // 動画URL
-        String VideoURL = null;
-        Matcher video_matcher = Pattern.compile("\"content_uri\":\"(.*)\",\"session_operation_auth").matcher(ResponseJson);
-        if (video_matcher.find()){
-            VideoURL = video_matcher.group(1).replaceAll("\\\\","");
-            QueueList.put(id, new ResultVideoData(VideoURL, null, true, hls_encrypted_key != null, false, null));
-        }
-
-        // ハートビート信号用 セッション
-        Matcher heart_session_matcher = Pattern.compile("\\{\"meta\":\\{\"status\":201,\"message\":\"created\"},\"data\":\\{(.*)\\}").matcher(ResponseJson);
-        if (heart_session_matcher.find()){
-            HeartBeatSession = "{"+heart_session_matcher.group(1); //.replaceAll("\\\\","");
-        } else {
-            HeartBeatSession = null;
-        }
-        // ハートビート信号用ID
-        Matcher heart_session_matcher2 = Pattern.compile("\"data\":\\{\"session\":\\{\"id\":\"(.*)\",\"recipe_id\"").matcher(ResponseJson);
-        if (heart_session_matcher2.find()){
-            HeartBeatSessionId = heart_session_matcher2.group(1).replaceAll("\\\\","");
-        } else {
-            HeartBeatSessionId = null;
-        }
-
-        if (VideoURL == null || HeartBeatSession == null || HeartBeatSessionId == null){
-            throw new Exception("api.dmc.nico PostData Error");
-        }
-
-        ResultVideoData result;
-        if (hls_encrypted_key != null){
-            result = new ResultVideoData(VideoURL, null, true, true, false, new Gson().toJson(new EncryptedTokenJSON(keyUri, "https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT", HeartBeatSession)));
-        } else {
-            result = new ResultVideoData(VideoURL, null, true, false, false, new Gson().toJson(new TokenJSON("https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT", HeartBeatSession)));
-
-        }
-        QueueList.remove(id);
-        QueueList.put(id, result);
-
-        return result;
     }
 
     private WebSocket webSocket = null;
