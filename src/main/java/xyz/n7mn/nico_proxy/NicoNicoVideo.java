@@ -106,14 +106,14 @@ public class NicoNicoVideo implements ShareService {
         }
 
         // domand鯖へアクセスするためのデバッグ用
-        Request request_html = new Request.Builder()
+        /*Request request_html = new Request.Builder()
                 .url("https://www.nicovideo.jp/api/watch/v3_guest/"+id+"?_frontendId=3&_frontendVersion=0&actionTrackId="+json.getAsJsonObject().getAsJsonObject("client").get("watchTrackId").getAsString())
                 .build();
         Response response = client.newCall(request_html).execute();
         if (response.body() != null){
             json = new Gson().fromJson(response.body().string(), JsonElement.class).getAsJsonObject().getAsJsonObject("data");
         }
-        response.close();
+        response.close();*/
 
         if (json_text.isEmpty() || json == null){
             throw new Exception("www.nicovideo.jp Not Found");
@@ -188,13 +188,43 @@ public class NicoNicoVideo implements ShareService {
 
             // このままだと再生できないのでアクセス時にCookieを渡してあげる必要がある
             String contentUrl = json.getAsJsonObject().getAsJsonObject("data").get("contentUrl").getAsString();
+
+            Request request_m3u8 = new Request.Builder()
+                    .url(contentUrl)
+                    .addHeader("Cookie", "CloudFront-Policy="+json.getAsJsonObject().get("CloudFront_Policy").getAsString()+";CloudFront-Signature="+json.getAsJsonObject().get("CloudFront_Signature").getAsString()+";CloudFront-Key-Pair-Id="+json.getAsJsonObject().get("CloudFront_Key_Pair_Id").getAsString()+";session="+json.getAsJsonObject().get("session").getAsString())
+                    .build();
+            Response response_m3u8 = client.newCall(request_m3u8).execute();
+
+            String main_m3u8 = "";
+            if (response_m3u8.body() != null){
+                main_m3u8 = response_m3u8.body().string();
+                //System.out.println(main_m3u8);
+            }
+            response_m3u8.close();
+
+            String videoUrl = "";
+            String audioUrl = "";
+            for (String str : main_m3u8.split("\n")){
+                Matcher matcher_m3u8 = Pattern.compile("#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"(.+)\",NAME=\"(.+)\",DEFAULT=(.+),URI=\"(.+)\"").matcher(str);
+                if (matcher_m3u8.find()){
+                    audioUrl = matcher_m3u8.group(4);
+                    continue;
+                }
+                if (str.startsWith("#")){
+                    continue;
+                }
+
+                videoUrl = str;
+                break;
+            }
+
             NicoCookie nicoCookie = new NicoCookie();
             nicoCookie.setCloudFront_Policy(policy);
             nicoCookie.setCloudFront_Signature(signature);
             nicoCookie.setCloudFront_Key_Pair_Id(KeyPairId);
             nicoCookie.setSession(session);
 
-            ResultVideoData result = new ResultVideoData(contentUrl, "", true, false, false, new Gson().toJson(nicoCookie));
+            ResultVideoData result = new ResultVideoData(videoUrl, audioUrl, true, false, false, new Gson().toJson(nicoCookie));
             QueueList.remove(id);
             QueueList.put(id, result);
 
