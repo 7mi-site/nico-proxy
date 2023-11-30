@@ -4,10 +4,7 @@ public class NicoCookie {
 
     private String domand_bid;
     private String nicosid;
-    private String watchTrackId;
-    private String contentId;
-    private String DateLong;
-    private String quality;
+    private String MainM3U8;
 
     public String getDomand_bid() {
         return domand_bid;
@@ -25,35 +22,11 @@ public class NicoCookie {
         this.nicosid = nicosid;
     }
 
-    public String getWatchTrackId() {
-        return watchTrackId;
+    public String getMainM3U8() {
+        return MainM3U8;
     }
 
-    public void setWatchTrackId(String watchTrackId) {
-        this.watchTrackId = watchTrackId;
-    }
-
-    public String getContentId() {
-        return contentId;
-    }
-
-    public void setContentId(String contentId) {
-        this.contentId = contentId;
-    }
-
-    public String getDateLong() {
-        return DateLong;
-    }
-
-    public void setDateLong(String dateLong) {
-        DateLong = dateLong;
-    }
-
-    public String getQuality() {
-        return quality;
-    }
-
-    public void setQuality(String quality) {
-        this.quality = quality;
+    public void setMainM3U8(String mainM3U8) {
+        MainM3U8 = mainM3U8;
     }
 }

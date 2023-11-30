@@ -120,7 +120,7 @@ public class NicoNicoVideo implements ShareService {
                     break;
                 }
             }
-
+/*
             Date date = new Date();
             String dateText = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss+09:00").format(date);
             String jsont = "[" +
@@ -193,7 +193,7 @@ public class NicoNicoVideo implements ShareService {
             //    System.out.println(response2.code());
             //}
             response2.close();
-
+*/
             RequestBody body2 = RequestBody.create("{\"outputs\":[[\""+video+"\",\""+audio+"\"]]}", JSON);
             //System.out.println("{\"outputs\":[[\""+video+"\",\""+audio+"\"]]}");
             Request request3 = new Request.Builder()
@@ -265,10 +265,7 @@ public class NicoNicoVideo implements ShareService {
             NicoCookie nicoCookie = new NicoCookie();
             nicoCookie.setDomand_bid(domand_bid);
             nicoCookie.setNicosid(nico_sid);
-            nicoCookie.setWatchTrackId(firstJson.getAsJsonObject().getAsJsonObject("client").get("watchTrackId").getAsString());
-            nicoCookie.setContentId(id);
-            nicoCookie.setDateLong(date.getTime()+"");
-            nicoCookie.setQuality(video);
+            nicoCookie.setMainM3U8(main_m3u8);
 
             ResultVideoData result = new ResultVideoData(videoUrl, audioUrl, true, true, false, new Gson().toJson(nicoCookie));
             return result;
