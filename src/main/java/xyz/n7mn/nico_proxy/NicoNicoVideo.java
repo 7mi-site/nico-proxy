@@ -3,7 +3,6 @@ package xyz.n7mn.nico_proxy;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import kotlin.Pair;
 import okhttp3.*;
 import okio.ByteString;
@@ -12,14 +11,12 @@ import org.jetbrains.annotations.Nullable;
 import xyz.n7mn.nico_proxy.data.*;
 
 import java.io.IOException;
-import java.io.StreamCorruptedException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
@@ -27,10 +24,11 @@ import java.util.regex.Pattern;
 
 public class NicoNicoVideo implements ShareService {
 
-    private final Map<String, ResultVideoData> QueueList = new HashMap<>();
     private final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
     private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+    private final String UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/119.0 nico-proxy/1.0";
 
     /**
      * @param data ニコ動URL、接続プロキシ情報
@@ -44,12 +42,6 @@ public class NicoNicoVideo implements ShareService {
         // IDのみにする
         final String id = getId(data.getURL());
 
-        // 無駄にアクセスしないようにすでに接続されてたらそれを返す
-        ResultVideoData videoData = QueueList.get(id);
-        if (videoData != null) {
-            return videoData;
-        }
-
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
         String HtmlText = "";
@@ -57,9 +49,7 @@ public class NicoNicoVideo implements ShareService {
         try {
             Request request_html = new Request.Builder()
                     .url("https://www.nicovideo.jp/watch/" + id)
-                    .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
-                    //.addHeader("User-agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0.1 Mobile/15E148 Safari/604.1 nico-proxy/1.0")
-                    //.addHeader("Cookie", "usepc=1;")
+                    .addHeader("User-agent", UserAgent)
                     .build();
             Response response = client.newCall(request_html).execute();
             if (response.header("X-niconico-sid") != null){
@@ -105,22 +95,14 @@ public class NicoNicoVideo implements ShareService {
             //return null;
         }
 
-        // domand鯖へアクセスするためのデバッグ用
-        /*Request request_html = new Request.Builder()
-                .url("https://www.nicovideo.jp/api/watch/v3_guest/"+id+"?_frontendId=3&_frontendVersion=0&actionTrackId="+json.getAsJsonObject().getAsJsonObject("client").get("watchTrackId").getAsString())
-                .build();
-        Response response = client.newCall(request_html).execute();
-        if (response.body() != null){
-            json = new Gson().fromJson(response.body().string(), JsonElement.class).getAsJsonObject().getAsJsonObject("data");
-        }
-        response.close();*/
-
         if (json_text.isEmpty() || json == null){
             throw new Exception("www.nicovideo.jp Not Found");
         }
 
         if (json.getAsJsonObject().getAsJsonObject("media").get("domand") != null && !json.getAsJsonObject().getAsJsonObject("media").get("domand").isJsonNull()){
             // domand
+            //System.out.println(json);
+            final JsonElement firstJson = json;
 
             String video = "";
             String audio = "";
@@ -139,49 +121,34 @@ public class NicoNicoVideo implements ShareService {
                 }
             }
 
-            RequestBody body = RequestBody.create("{\"outputs\":[[\""+video+"\",\""+audio+"\"]]}", JSON);
-            Request request2 = new Request.Builder()
+            RequestBody body2 = RequestBody.create("{\"outputs\":[[\""+video+"\",\""+audio+"\"]]}", JSON);
+            Request request3 = new Request.Builder()
                     .url("https://nvapi.nicovideo.jp/v1/watch/"+id+"/access-rights/hls?actionTrackId="+json.getAsJsonObject().getAsJsonObject("client").get("watchTrackId").getAsString())
-                    .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
+                    .addHeader("User-agent", UserAgent)
                     .addHeader("X-Access-Right-Key", json.getAsJsonObject().getAsJsonObject("media").getAsJsonObject("domand").get("accessRightKey").getAsString())
                     .addHeader("X-Frontend-Version", "0")
-                    .addHeader("X-Frontend-Id", "3") // 今は暫定でスマホ側の3
+                    .addHeader("X-Frontend-Id", "6")
                     .addHeader("X-Request-With", "https://www.nicovideo.jp")
-                    .post(body)
+                    .post(body2)
                     .build();
-            Response response2 = client.newCall(request2).execute();
+            Response response3 = client.newCall(request3).execute();
 
-            String policy = "";
-            String signature = "";
-            String KeyPairId = "";
-            String session = "";
-            if (response2.body() != null){
-                for (Pair<? extends String, ? extends String> header : response2.headers()) {
+            String domand_bid = "";
+            if (response3.body() != null){
+                for (Pair<? extends String, ? extends String> header : response3.headers()) {
                     //System.out.println(header.component1() + " : " + header.component2());
-                    Matcher matcher1 = Pattern.compile("CloudFront-Policy=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=nicovideo\\.jp; priority=Low; secure; HttpOnly").matcher(header.component2());
-                    Matcher matcher2 = Pattern.compile("CloudFront-Signature=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=nicovideo\\.jp; priority=Low; secure; HttpOnly").matcher(header.component2());
-                    Matcher matcher3 = Pattern.compile("CloudFront-Key-Pair-Id=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=nicovideo\\.jp; priority=Low; secure; HttpOnly").matcher(header.component2());
-                    Matcher matcher4 = Pattern.compile("session=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=nicovideo\\.jp; priority=Low; secure; HttpOnly").matcher(header.component2());
+                    Matcher matcher1 = Pattern.compile("domand_bid=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=(.+); priority=(.+); secure; HttpOnly").matcher(header.component2());
                     if (matcher1.find()){
-                        policy = matcher1.group(1);
-                    }
-                    if (matcher2.find()){
-                        signature = matcher2.group(1);
-                    }
-                    if (matcher3.find()){
-                        KeyPairId = matcher3.group(1);
-                    }
-                    if (matcher4.find()){
-                        session = matcher4.group(1);
-                    }
-                    if (!policy.isEmpty() && !signature.isEmpty() && !KeyPairId.isEmpty() && !session.isEmpty()){
+                        //System.out.println(header.component1() + " : " + header.component2());
+                        domand_bid = matcher1.group(1);
                         break;
                     }
                 }
 
-                json_text = response2.body().string();
+                //System.out.println(domand_bid);
+                json_text = response3.body().string();
             }
-            response2.close();
+            response3.close();
 
             //System.out.println(json_text);
             json = new Gson().fromJson(json_text, JsonElement.class);
@@ -189,14 +156,17 @@ public class NicoNicoVideo implements ShareService {
             // このままだと再生できないのでアクセス時にCookieを渡してあげる必要がある
             String contentUrl = json.getAsJsonObject().getAsJsonObject("data").get("contentUrl").getAsString();
 
+            System.out.println(contentUrl);
             Request request_m3u8 = new Request.Builder()
                     .url(contentUrl)
-                    .addHeader("Cookie", "CloudFront-Policy="+policy+";CloudFront-Signature="+signature+";CloudFront-Key-Pair-Id="+KeyPairId+";session="+session)
+                    .addHeader("Cookie", "nicosid="+nico_sid+"; domand_bid=" + domand_bid)
+                    .addHeader("User-Agent", UserAgent)
                     .build();
             Response response_m3u8 = client.newCall(request_m3u8).execute();
 
             String main_m3u8 = "";
             if (response_m3u8.body() != null){
+                //System.out.println(response_m3u8.code());
                 main_m3u8 = response_m3u8.body().string();
                 //System.out.println(main_m3u8);
             }
@@ -219,15 +189,12 @@ public class NicoNicoVideo implements ShareService {
             }
 
             NicoCookie nicoCookie = new NicoCookie();
-            nicoCookie.setCloudFront_Policy(policy);
-            nicoCookie.setCloudFront_Signature(signature);
-            nicoCookie.setCloudFront_Key_Pair_Id(KeyPairId);
-            nicoCookie.setSession(session);
+            nicoCookie.setDomand_bid(domand_bid);
+            nicoCookie.setNicosid(nico_sid);
+            nicoCookie.setWatchTrackId(firstJson.getAsJsonObject().getAsJsonObject("client").get("watchTrackId").getAsString());
+            nicoCookie.setContentId(id);
 
-            ResultVideoData result = new ResultVideoData(videoUrl, audioUrl, true, false, false, new Gson().toJson(nicoCookie));
-            QueueList.remove(id);
-            QueueList.put(id, result);
-
+            ResultVideoData result = new ResultVideoData(videoUrl, audioUrl, true, true, false, new Gson().toJson(nicoCookie));
             return result;
         } else {
             // dmc.nico
@@ -384,7 +351,6 @@ public class NicoNicoVideo implements ShareService {
             Matcher video_matcher = Pattern.compile("\"content_uri\":\"(.*)\",\"session_operation_auth").matcher(ResponseJson);
             if (video_matcher.find()){
                 VideoURL = video_matcher.group(1).replaceAll("\\\\","");
-                QueueList.put(id, new ResultVideoData(VideoURL, null, true, hls_encrypted_key != null, false, null));
             }
 
             // ハートビート信号用 セッション
@@ -413,8 +379,6 @@ public class NicoNicoVideo implements ShareService {
                 result = new ResultVideoData(VideoURL, null, true, false, false, new Gson().toJson(new TokenJSON("https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT", HeartBeatSession)));
 
             }
-            QueueList.remove(id);
-            QueueList.put(id, result);
 
             return result;
         }
@@ -430,11 +394,7 @@ public class NicoNicoVideo implements ShareService {
 
         //System.out.println(id);
         // 無駄にアクセスしないようにすでに接続されてたらそれを返す
-        ResultVideoData LiveURL = QueueList.get(id);
-        if (LiveURL != null){
-            return LiveURL;
-        }
-        //System.out.println("a");
+        ResultVideoData LiveURL;
 
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
         String htmlText = "";
@@ -480,7 +440,6 @@ public class NicoNicoVideo implements ShareService {
                 System.out.println(reason);
                 System.out.println("---- reason text ----");
                  */
-                QueueList.remove(id);
                 timer.cancel();
             }
 
@@ -525,14 +484,12 @@ public class NicoNicoVideo implements ShareService {
                             try {
                                 Response response = client.newCall(request).execute();
                                 if (response.code() == 403 || response.code() == 404){
-                                    QueueList.remove(id);
                                     timer.cancel();
                                     webSocket.cancel();
                                     response.close();
                                 }
                                 response.close();
                             } catch (Exception e){
-                                QueueList.remove(id);
                                 timer.cancel();
                                 webSocket.cancel();
                                 //e.printStackTrace();
@@ -543,7 +500,6 @@ public class NicoNicoVideo implements ShareService {
                 }
 
                 if (text.startsWith("{\"type\":\"disconnect\"")) {
-                    QueueList.remove(id);
                     timer.cancel();
                     webSocket.cancel();
                 }
@@ -556,7 +512,6 @@ public class NicoNicoVideo implements ShareService {
                     if (matcher.find()) {
                         //System.out.println("url get ok");
                         temp[0] = matcher.group(1);
-                        QueueList.put(id, new ResultVideoData(temp[0], null, true, false, true, null));
                         liveUrl = temp[0];
                     } else {
                         temp[0] = "Error";
@@ -692,7 +647,7 @@ public class NicoNicoVideo implements ShareService {
 
     @Override
     public String getVersion() {
-        return "20231123";
+        return "20231125";
     }
 
     private String getId(String text){

@@ -2,40 +2,40 @@ package xyz.n7mn.nico_proxy.data;
 
 public class NicoCookie {
 
-    private String CloudFront_Policy;
-    private String CloudFront_Signature;
-    private String CloudFront_Key_Pair_Id;
-    private String session;
+    private String domand_bid;
+    private String nicosid;
+    private String watchTrackId;
+    private String contentId;
 
-    public String getCloudFront_Policy() {
-        return CloudFront_Policy;
+    public String getDomand_bid() {
+        return domand_bid;
     }
 
-    public void setCloudFront_Policy(String cloudFront_Policy) {
-        CloudFront_Policy = cloudFront_Policy;
+    public void setDomand_bid(String domand_bid) {
+        this.domand_bid = domand_bid;
     }
 
-    public String getCloudFront_Signature() {
-        return CloudFront_Signature;
+    public String getNicosid() {
+        return nicosid;
     }
 
-    public void setCloudFront_Signature(String cloudFront_Signature) {
-        CloudFront_Signature = cloudFront_Signature;
+    public void setNicosid(String nicosid) {
+        this.nicosid = nicosid;
     }
 
-    public String getCloudFront_Key_Pair_Id() {
-        return CloudFront_Key_Pair_Id;
+    public String getWatchTrackId() {
+        return watchTrackId;
     }
 
-    public void setCloudFront_Key_Pair_Id(String cloudFront_Key_Pair_Id) {
-        CloudFront_Key_Pair_Id = cloudFront_Key_Pair_Id;
+    public void setWatchTrackId(String watchTrackId) {
+        this.watchTrackId = watchTrackId;
     }
 
-    public String getSession() {
-        return session;
+    public String getContentId() {
+        return contentId;
     }
 
-    public void setSession(String session) {
-        this.session = session;
+    public void setContentId(String contentId) {
+        this.contentId = contentId;
     }
 }
