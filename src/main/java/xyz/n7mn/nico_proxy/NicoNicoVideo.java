@@ -156,7 +156,7 @@ public class NicoNicoVideo implements ShareService {
             // このままだと再生できないのでアクセス時にCookieを渡してあげる必要がある
             String contentUrl = json.getAsJsonObject().getAsJsonObject("data").get("contentUrl").getAsString();
 
-            System.out.println(contentUrl);
+            //System.out.println(contentUrl);
             Request request_m3u8 = new Request.Builder()
                     .url(contentUrl)
                     .addHeader("Cookie", "nicosid="+nico_sid+"; domand_bid=" + domand_bid)
