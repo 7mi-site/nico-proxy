@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -31,7 +30,7 @@ import java.util.regex.Pattern;
 public class TestMain {
 
     public static void main(String[] args) throws Exception {
-        ResultVideoData video = new NicoNicoVideo().getVideo(new RequestVideoData("https://www.nicovideo.jp/watch/sm43052342", null));
+        ResultVideoData video = new NicoNicoVideo().getVideo(new RequestVideoData("https://www.nicovideo.jp/watch/sm40354298", null));
 
         final OkHttpClient client = new OkHttpClient();
         if (video.getAudioURL() != null){
@@ -40,10 +39,7 @@ public class TestMain {
 
             String nicosid = json.getAsJsonObject().get("nicosid").getAsString();
             String domand_bid = json.getAsJsonObject().get("domand_bid").getAsString();
-            String watchTrackId = json.getAsJsonObject().get("watchTrackId").getAsString();
-            String contentId = json.getAsJsonObject().get("contentId").getAsString();
-            Date date = new Date(Long.parseLong(json.getAsJsonObject().get("DateLong").getAsString()));
-            String quality = json.getAsJsonObject().get("quality").getAsString();
+            String main_m3u8 = json.getAsJsonObject().get("MainM3U8").getAsString();
 
             Request request_video_m3u8 = new Request.Builder()
                     .url(video.getVideoURL())
@@ -88,12 +84,14 @@ public class TestMain {
                 file3.mkdir();
             }
 
-            // 動画
             Matcher matcher1 = Pattern.compile("#EXT-X-KEY:METHOD=(.+),URI=\"(.+)\",IV=([a-z0-9A-Z]+)").matcher(video_m3u8);
             Matcher matcher1_1 = Pattern.compile("#EXT-X-MAP:URI=\"(.+)\"").matcher(video_m3u8);
             Matcher matcher2 = Pattern.compile("#EXT-X-KEY:METHOD=(.+),URI=\"(.+)\",IV=([a-z0-9A-Z]+)").matcher(audio_m3u8);
-            StringBuilder sb = new StringBuilder();
+            Matcher matcher2_1 = Pattern.compile("#EXT-X-MAP:URI=\"(.+)\"").matcher(audio_m3u8);
+
+            // 動画
             List<String> videoUrl = new ArrayList<>();
+            StringBuilder sb = new StringBuilder();
             int i = 1;
             for (String str : video_m3u8.split("\n")){
                 if (str.startsWith("#")){
@@ -111,17 +109,43 @@ public class TestMain {
                 sb.append(i).append(".cmfv\n");
                 i++;
             }
+            // 音声
+            List<String> audioUrl = new ArrayList<>();
+            StringBuilder sb2 = new StringBuilder();
+            i = 1;
+            for (String str : audio_m3u8.split("\n")){
+                if (str.startsWith("#")){
+                    if (str.startsWith("#EXT-X-MAP") || str.startsWith("#EXT-X-KEY")){
+                        if (str.startsWith("#EXT-X-KEY")){
+                            sb2.append("#EXT-X-MAP:URI=\"init01.cmfa\"\n");
+                        }
+                        continue;
+                    }
+                    sb2.append(str).append("\n");
+                    continue;
+                }
+
+                audioUrl.add(str);
+                sb2.append(i).append(".cmfa\n");
+                i++;
+            }
 
             FileOutputStream m3u8_stream = new FileOutputStream(videoPass + "video.m3u8");
             m3u8_stream.write(sb.toString().getBytes(StandardCharsets.UTF_8));
             m3u8_stream.flush();
             m3u8_stream.close();
 
+            FileOutputStream m3u8_stream2 = new FileOutputStream(audioPass + "audio.m3u8");
+            m3u8_stream2.write(sb2.toString().getBytes(StandardCharsets.UTF_8));
+            m3u8_stream2.flush();
+            m3u8_stream2.close();
+
             final String VideoKeyURL;
             final String VideoInitURL;
             final String VideoKeyIV;
             final String AudioKeyURL;
             final String AudioKeyIV;
+            final String AudioInitURL;
 
 
             if (matcher1.find()){
@@ -142,6 +166,11 @@ public class TestMain {
             } else {
                 AudioKeyURL = "";
                 AudioKeyIV = "";
+            }
+            if (matcher2_1.find()){
+                AudioInitURL = matcher2_1.group(1);
+            } else {
+                AudioInitURL = "";
             }
 
             new Thread(()->{
@@ -222,166 +251,6 @@ public class TestMain {
                         }
                         response.close();
 
-                        // おまじない
-                        if (x == 5){
-                            Date newDate = new Date();
-                            String dateText = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss+09:00").format(newDate);
-                            String json1 = "[" +
-                                    "    {" +
-                                    "        \"eventType\": \"impression\"," +
-                                    "        \"eventOccurredAt\": \""+dateText+"\"," +
-                                    "        \"watchTrackId\": \""+watchTrackId+"\"," +
-                                    "        \"contentId\": \""+contentId+"\"," +
-                                    "        \"contentType\": \"video\"," +
-                                    "        \"watchMilliseconds\": 0," +
-                                    "        \"endCount\": 0," +
-                                    "        \"additionalParameters\": {" +
-                                    "            \"nicosid\": \""+nicosid+"\"," +
-                                    "            \"referer\": null," +
-                                    "            \"load_time\": "+(newDate.getTime() - date.getTime())+"," +
-                                    "            \"load_failed\": false," +
-                                    "            \"performance\": {" +
-                                    "                \"watch_access_start\": "+date.getTime()+"," +
-                                    "                \"watch_access_finish\": null," +
-                                    "                \"overlay_thumbnail_finish\": "+date.getTime()+"," +
-                                    "                \"comment_loading_start\": "+newDate.getTime()+"," +
-                                    "                \"comment_loading_finish\": "+newDate.getTime()+"," +
-                                    "                \"comment_load_failed_reason\": null," +
-                                    "                \"video_loading_start\": "+newDate.getTime()+"," +
-                                    "                \"video_loading_finish\": "+newDate.getTime()+"," +
-                                    "                \"video_load_failed_reason\": null," +
-                                    "                \"video_play_start\": "+newDate.getTime()+"," +
-                                    "                \"end_context\": {" +
-                                    "                    \"ad_playing\": false," +
-                                    "                    \"video_playing\": false," +
-                                    "                    \"is_suspending\": false" +
-                                    "                }" +
-                                    "            }," +
-                                    "            \"is_auto_play\": false," +
-                                    "            \"is_ad_block\": false," +
-                                    "            \"loop_count\": 0," +
-                                    "            \"playback_rate\": \"1.0\"," +
-                                    "            \"suspend_count\": 0," +
-                                    "            \"quality\": [" +
-                                    "                {" +
-                                    "                    \"name\": \"auto\"" +
-                                    "                }" +
-                                    "            ]," +
-                                    "            \"auto_quality\": [" +
-                                    "                {" +
-                                    "                    \"quality\": \""+quality+"\"" +
-                                    "                }" +
-                                    "            ]," +
-                                    "            \"highest_quality\": \""+quality+"\"," +
-                                    "            \"transfer_rate_kbps\": null," +
-                                    "            \"error_description\": null," +
-                                    "            \"use_flip\": false," +
-                                    "            \"suspend_timing\": []," +
-                                    "            \"end_position_milliseconds\": null," +
-                                    "            \"event_time_ms\": "+newDate.getTime()+"," +
-                                    "            \"query_parameters\": {}," +
-                                    "            \"viewing_source\": \"\"," +
-                                    "            \"viewing_source_detail\": {}," +
-                                    "            \"periodic_history\": {}," +
-                                    "            \"os\": \"\"," +
-                                    "            \"os_version\": \"\"," +
-                                    "            \"___delivery_type\": \"domand\"," +
-                                    "            \"has_playlist\": false" +
-                                    "        }" +
-                                    "    }" +
-                                    "]";
-
-                            RequestBody body = RequestBody.create(json1.replaceAll(" ",""), MediaType.get("application/json; charset=utf-8"));
-                            //System.out.println(jsont.replaceAll(" ",""));
-                            Request request3 = new Request.Builder()
-                                    .url("https://stella.nicovideo.jp/v1/watch/nonmember.json?__retry=0")
-                                    .addHeader("X-Frontend-Version", "0")
-                                    .addHeader("X-Frontend-Id", "6")
-                                    .post(body)
-                                    .build();
-                            Response response3 = client.newCall(request3).execute();
-                            //if (response3.body() != null){
-                            //    System.out.println(response3.code());
-                            //}
-                            response3.close();
-                            String json2 = "[" +
-                                    "    {" +
-                                    "        \"eventType\": \"impression\"," +
-                                    "        \"eventOccurredAt\": \""+dateText+"\"," +
-                                    "        \"watchTrackId\": \""+watchTrackId+"\"," +
-                                    "        \"contentId\": \""+contentId+"\"," +
-                                    "        \"contentType\": \"video\"," +
-                                    "        \"watchMilliseconds\": 0," +
-                                    "        \"endCount\": 0," +
-                                    "        \"additionalParameters\": {" +
-                                    "            \"nicosid\": \""+nicosid+"\"," +
-                                    "            \"referer\": null," +
-                                    "            \"load_time\": "+(newDate.getTime() - date.getTime())+"," +
-                                    "            \"load_failed\": false," +
-                                    "            \"performance\": {" +
-                                    "                \"watch_access_start\": "+date.getTime()+"," +
-                                    "                \"watch_access_finish\": null," +
-                                    "                \"overlay_thumbnail_finish\": "+date.getTime()+"," +
-                                    "                \"comment_loading_start\": "+newDate.getTime()+"," +
-                                    "                \"comment_loading_finish\": "+newDate.getTime()+"," +
-                                    "                \"comment_load_failed_reason\": null," +
-                                    "                \"video_loading_start\": "+newDate.getTime()+"," +
-                                    "                \"video_loading_finish\": "+newDate.getTime()+"," +
-                                    "                \"video_load_failed_reason\": null," +
-                                    "                \"video_play_start\": "+newDate.getTime()+"," +
-                                    "                \"end_context\": {" +
-                                    "                    \"ad_playing\": false," +
-                                    "                    \"video_playing\": false," +
-                                    "                    \"is_suspending\": false" +
-                                    "                }" +
-                                    "            }," +
-                                    "            \"is_auto_play\": false," +
-                                    "            \"is_ad_block\": false," +
-                                    "            \"loop_count\": 0," +
-                                    "            \"playback_rate\": \"1.0\"," +
-                                    "            \"suspend_count\": 0," +
-                                    "            \"quality\": [" +
-                                    "                {" +
-                                    "                    \"name\": \"auto\"" +
-                                    "                }" +
-                                    "            ]," +
-                                    "            \"auto_quality\": [" +
-                                    "                {" +
-                                    "                    \"quality\": \""+quality+"\"" +
-                                    "                }" +
-                                    "            ]," +
-                                    "            \"highest_quality\": \""+quality+"\"," +
-                                    "            \"transfer_rate_kbps\": null," +
-                                    "            \"error_description\": null," +
-                                    "            \"use_flip\": false," +
-                                    "            \"suspend_timing\": []," +
-                                    "            \"end_position_milliseconds\": null," +
-                                    "            \"event_time_ms\": "+newDate.getTime()+"," +
-                                    "            \"query_parameters\": {}," +
-                                    "            \"viewing_source\": \"\"," +
-                                    "            \"viewing_source_detail\": {}," +
-                                    "            \"periodic_history\": {}," +
-                                    "            \"os\": \"\"," +
-                                    "            \"os_version\": \"\"," +
-                                    "            \"___delivery_type\": \"domand\"," +
-                                    "            \"has_playlist\": false" +
-                                    "        }" +
-                                    "    }" +
-                                    "]";
-                            RequestBody body2 = RequestBody.create(json2.replaceAll(" ",""), MediaType.get("application/json; charset=utf-8"));
-                            Request request4 = new Request.Builder()
-                                    .url("https://stella.nicovideo.jp/v1/watch/nonmember.json?__retry=0")
-                                    .addHeader("X-Frontend-Version", "0")
-                                    .addHeader("X-Frontend-Id", "6")
-                                    .post(body2)
-                                    .build();
-                            Response response4 = client.newCall(request4).execute();
-                            //if (response4.body() != null){
-                            //    System.out.println(response4.code());
-                            //}
-                            response4.close();
-                        }
-
                         x++;
                     } catch (Exception e){
                         //e.printStackTrace();
@@ -392,6 +261,109 @@ public class TestMain {
 
             // 音声
             //System.out.println(audio_m3u8);
+            new Thread(()->{
+
+                // 復号化処理するための前処理
+                String s = AudioKeyIV.startsWith("0x") ? AudioKeyIV.substring(2) : AudioKeyIV;
+                byte[] iv = new BigInteger(s, 16).toByteArray();
+                //System.out.println(iv.length);
+                byte[] ivDataEncoded = new byte[16];
+                int offset = iv.length > 16 ? iv.length - 16 : 0;
+                System.arraycopy(
+                        iv,
+                        offset,
+                        ivDataEncoded,
+                        ivDataEncoded.length - iv.length + offset,
+                        iv.length - offset);
+
+                Cipher decrypter = null;
+                try {
+                    byte[] key_file = new byte[0];
+                    Request request_key = new Request.Builder()
+                            .url(AudioKeyURL)
+                            .addHeader("Cookie", "nicosid="+nicosid+"; domand_bid=" + domand_bid)
+                            .build();
+
+                    Response response_key = client.newCall(request_key).execute();
+                    if (response_key.body() != null){
+                        //System.out.println(response_key.code());
+                        key_file = response_key.body().bytes();
+                    }
+                    response_key.close();
+
+                    decrypter = Cipher.getInstance("AES/CBC/NoPadding");
+                    decrypter.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key_file, "AES"), new IvParameterSpec(ivDataEncoded));
+                } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | IOException | InvalidKeyException e) {
+                    //e.printStackTrace();
+                }
+
+                try {
+                    Request request_init = new Request.Builder()
+                            .url(AudioInitURL)
+                            .addHeader("Cookie", "nicosid="+nicosid+"; domand_bid=" + domand_bid)
+                            .build();
+                    Response response_init = client.newCall(request_init).execute();
+                    if (response_init.body() != null){
+                        byte[] bytes = response_init.body().bytes();
+                        FileOutputStream stream = new FileOutputStream(audioPass + "init01.cmfa");
+                        stream.write(bytes);
+                        stream.close();
+                    }
+                    response_init.close();
+                } catch (Exception e){
+                    //e.printStackTrace();
+                }
+
+                int x = 1;
+                for (String url : audioUrl){
+                    try {
+                        //System.out.println("- "+url+" --");
+                        // https://asset.domand.nicovideo.jp/655c8569f16a0601757053f4/video/12/video-h264-720p/01.cmfv
+                        Request request = new Request.Builder()
+                                .url(url)
+                                .addHeader("Cookie", "nicosid="+nicosid+"; domand_bid=" + domand_bid)
+                                .build();
+                        Response response = client.newCall(request).execute();
+                        if (response.body() != null){
+                            //System.out.println(response.code());
+                            byte[] bytes = response.body().bytes();
+                            if (bytes.length % 16 == 0){
+                                FileOutputStream stream = new FileOutputStream(audioPass + x + ".cmfa");
+                                if (decrypter != null){
+                                    stream.write(decrypter.doFinal(bytes));
+                                }
+                                stream.close();
+                            } else {
+                                System.out.println(new String(bytes, StandardCharsets.UTF_8));
+                            }
+                        }
+                        response.close();
+
+                        x++;
+                    } catch (Exception e){
+                        //e.printStackTrace();
+                    }
+                }
+
+            }).start();
+
+            // くっつけたm3u8を用意
+            // TODO: VRCでは何故か映像のみになってしまうため回避策を考える必要がある。
+            //Matcher matcher = Pattern.compile("#EXT-X-STREAM-INF:BANDWIDTH=(\\d+),AVERAGE-BANDWIDTH=(\\d+),CODECS=\"(.+)\",RESOLUTION=(.+),FRAME-RATE=(.+),AUDIO=\"(.+)\"").matcher(main_m3u8);
+
+            System.out.println(main_m3u8);
+            String m3u8 = "#EXTM3U\n" +
+                    "#EXT-X-VERSION:6\n" +
+                    "#EXT-X-INDEPENDENT-SEGMENTS\n" +
+                    "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"audio-aac-64kbps\",NAME=\"Main Audio\",DEFAULT=YES,URI=\"audio/audio.m3u8\"\n" +
+                    "#EXT-X-STREAM-INF:AUDIO=\"audio-aac-64kbps\"\n" +
+                    "video/video.m3u8";
+
+            //System.out.println(m3u8);
+            FileOutputStream stream = new FileOutputStream(basePass + "main.m3u8");
+            stream.write(m3u8.getBytes(StandardCharsets.UTF_8));
+            stream.close();
+
 
 
         }
