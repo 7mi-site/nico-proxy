@@ -121,7 +121,81 @@ public class NicoNicoVideo implements ShareService {
                 }
             }
 
+            Date date = new Date();
+            String dateText = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss+09:00").format(date);
+            String jsont = "[" +
+                    "    {" +
+                    "        \"eventType\": \"start\"," +
+                    "        \"eventOccurredAt\": \""+dateText+"\"," +
+                    "        \"watchTrackId\": \""+json.getAsJsonObject().getAsJsonObject("client").get("watchTrackId").getAsString()+"\"," +
+                    "        \"contentId\": \""+id+"\"," +
+                    "        \"contentType\": \"video\"," +
+                    "        \"watchMilliseconds\": 0," +
+                    "        \"endCount\": 0," +
+                    "        \"additionalParameters\": {" +
+                    "            \"nicosid\": \""+nico_sid+"\"," +
+                    "            \"referer\": null," +
+                    "            \"load_time\": null," +
+                    "            \"load_failed\": false," +
+                    "            \"performance\": {" +
+                    "                \"watch_access_start\": "+date.getTime()+"," +
+                    "                \"watch_access_finish\": null," +
+                    "                \"overlay_thumbnail_finish\": "+date.getTime()+"," +
+                    "                \"comment_loading_start\": null," +
+                    "                \"comment_loading_finish\": null," +
+                    "                \"comment_load_failed_reason\": null," +
+                    "                \"video_loading_start\": null," +
+                    "                \"video_loading_finish\": null," +
+                    "                \"video_load_failed_reason\": null," +
+                    "                \"video_play_start\": null," +
+                    "                \"end_context\": {" +
+                    "                    \"ad_playing\": false," +
+                    "                    \"video_playing\": false," +
+                    "                    \"is_suspending\": false" +
+                    "                }" +
+                    "            }," +
+                    "            \"is_auto_play\": false," +
+                    "            \"is_ad_block\": false," +
+                    "            \"loop_count\": 0," +
+                    "            \"playback_rate\": \"1.0\"," +
+                    "            \"suspend_count\": 0," +
+                    "            \"quality\": []," +
+                    "            \"auto_quality\": []," +
+                    "            \"highest_quality\": null," +
+                    "            \"transfer_rate_kbps\": null," +
+                    "            \"error_description\": null," +
+                    "            \"use_flip\": false," +
+                    "            \"suspend_timing\": []," +
+                    "            \"end_position_milliseconds\": null," +
+                    "            \"event_time_ms\": "+date.getTime()+"," +
+                    "            \"query_parameters\": {}," +
+                    "            \"viewing_source\": \"\"," +
+                    "            \"viewing_source_detail\": {}," +
+                    "            \"periodic_history\": {}," +
+                    "            \"os\": \"\"," +
+                    "            \"os_version\": \"\"," +
+                    "            \"___delivery_type\": \"domand\"," +
+                    "            \"has_playlist\": false" +
+                    "        }" +
+                    "    }" +
+                    "]";
+            RequestBody body = RequestBody.create(jsont.replaceAll(" ",""), JSON);
+            //System.out.println(jsont.replaceAll(" ",""));
+            Request request2 = new Request.Builder()
+                    .url("https://stella.nicovideo.jp/v1/watch/nonmember.json?__retry=0")
+                    .addHeader("User-agent", UserAgent)
+                    .addHeader("X-Frontend-Version", "0")
+                    .addHeader("X-Frontend-Id", "6")
+                    .post(body)
+                    .build();
+            Response response2 = client.newCall(request2).execute();
+            //if (response2.body() != null){
+            //    System.out.println(response2.code());
+            //}
+            response2.close();
+
             RequestBody body2 = RequestBody.create("{\"outputs\":[[\""+video+"\",\""+audio+"\"]]}", JSON);
+            //System.out.println("{\"outputs\":[[\""+video+"\",\""+audio+"\"]]}");
             Request request3 = new Request.Builder()
                     .url("https://nvapi.nicovideo.jp/v1/watch/"+id+"/access-rights/hls?actionTrackId="+json.getAsJsonObject().getAsJsonObject("client").get("watchTrackId").getAsString())
                     .addHeader("User-agent", UserAgent)
@@ -193,6 +267,8 @@ public class NicoNicoVideo implements ShareService {
             nicoCookie.setNicosid(nico_sid);
             nicoCookie.setWatchTrackId(firstJson.getAsJsonObject().getAsJsonObject("client").get("watchTrackId").getAsString());
             nicoCookie.setContentId(id);
+            nicoCookie.setDateLong(date.getTime()+"");
+            nicoCookie.setQuality(video);
 
             ResultVideoData result = new ResultVideoData(videoUrl, audioUrl, true, true, false, new Gson().toJson(nicoCookie));
             return result;

@@ -42,6 +42,8 @@ public class TestMain {
             String domand_bid = json.getAsJsonObject().get("domand_bid").getAsString();
             String watchTrackId = json.getAsJsonObject().get("watchTrackId").getAsString();
             String contentId = json.getAsJsonObject().get("contentId").getAsString();
+            Date date = new Date(Long.parseLong(json.getAsJsonObject().get("DateLong").getAsString()));
+            String quality = json.getAsJsonObject().get("quality").getAsString();
 
             Request request_video_m3u8 = new Request.Builder()
                     .url(video.getVideoURL())
@@ -206,6 +208,7 @@ public class TestMain {
                                 .build();
                         Response response = client.newCall(request).execute();
                         if (response.body() != null){
+                            //System.out.println(response.code());
                             byte[] bytes = response.body().bytes();
                             if (bytes.length % 16 == 0){
                                 FileOutputStream stream = new FileOutputStream(videoPass + x + ".cmfv");
@@ -218,6 +221,167 @@ public class TestMain {
                             }
                         }
                         response.close();
+
+                        // おまじない
+                        if (x == 5){
+                            Date newDate = new Date();
+                            String dateText = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss+09:00").format(newDate);
+                            String json1 = "[" +
+                                    "    {" +
+                                    "        \"eventType\": \"impression\"," +
+                                    "        \"eventOccurredAt\": \""+dateText+"\"," +
+                                    "        \"watchTrackId\": \""+watchTrackId+"\"," +
+                                    "        \"contentId\": \""+contentId+"\"," +
+                                    "        \"contentType\": \"video\"," +
+                                    "        \"watchMilliseconds\": 0," +
+                                    "        \"endCount\": 0," +
+                                    "        \"additionalParameters\": {" +
+                                    "            \"nicosid\": \""+nicosid+"\"," +
+                                    "            \"referer\": null," +
+                                    "            \"load_time\": "+(newDate.getTime() - date.getTime())+"," +
+                                    "            \"load_failed\": false," +
+                                    "            \"performance\": {" +
+                                    "                \"watch_access_start\": "+date.getTime()+"," +
+                                    "                \"watch_access_finish\": null," +
+                                    "                \"overlay_thumbnail_finish\": "+date.getTime()+"," +
+                                    "                \"comment_loading_start\": "+newDate.getTime()+"," +
+                                    "                \"comment_loading_finish\": "+newDate.getTime()+"," +
+                                    "                \"comment_load_failed_reason\": null," +
+                                    "                \"video_loading_start\": "+newDate.getTime()+"," +
+                                    "                \"video_loading_finish\": "+newDate.getTime()+"," +
+                                    "                \"video_load_failed_reason\": null," +
+                                    "                \"video_play_start\": "+newDate.getTime()+"," +
+                                    "                \"end_context\": {" +
+                                    "                    \"ad_playing\": false," +
+                                    "                    \"video_playing\": false," +
+                                    "                    \"is_suspending\": false" +
+                                    "                }" +
+                                    "            }," +
+                                    "            \"is_auto_play\": false," +
+                                    "            \"is_ad_block\": false," +
+                                    "            \"loop_count\": 0," +
+                                    "            \"playback_rate\": \"1.0\"," +
+                                    "            \"suspend_count\": 0," +
+                                    "            \"quality\": [" +
+                                    "                {" +
+                                    "                    \"name\": \"auto\"" +
+                                    "                }" +
+                                    "            ]," +
+                                    "            \"auto_quality\": [" +
+                                    "                {" +
+                                    "                    \"quality\": \""+quality+"\"" +
+                                    "                }" +
+                                    "            ]," +
+                                    "            \"highest_quality\": \""+quality+"\"," +
+                                    "            \"transfer_rate_kbps\": null," +
+                                    "            \"error_description\": null," +
+                                    "            \"use_flip\": false," +
+                                    "            \"suspend_timing\": []," +
+                                    "            \"end_position_milliseconds\": null," +
+                                    "            \"event_time_ms\": "+newDate.getTime()+"," +
+                                    "            \"query_parameters\": {}," +
+                                    "            \"viewing_source\": \"\"," +
+                                    "            \"viewing_source_detail\": {}," +
+                                    "            \"periodic_history\": {}," +
+                                    "            \"os\": \"\"," +
+                                    "            \"os_version\": \"\"," +
+                                    "            \"___delivery_type\": \"domand\"," +
+                                    "            \"has_playlist\": false" +
+                                    "        }" +
+                                    "    }" +
+                                    "]";
+
+                            RequestBody body = RequestBody.create(json1.replaceAll(" ",""), MediaType.get("application/json; charset=utf-8"));
+                            //System.out.println(jsont.replaceAll(" ",""));
+                            Request request3 = new Request.Builder()
+                                    .url("https://stella.nicovideo.jp/v1/watch/nonmember.json?__retry=0")
+                                    .addHeader("X-Frontend-Version", "0")
+                                    .addHeader("X-Frontend-Id", "6")
+                                    .post(body)
+                                    .build();
+                            Response response3 = client.newCall(request3).execute();
+                            //if (response3.body() != null){
+                            //    System.out.println(response3.code());
+                            //}
+                            response3.close();
+                            String json2 = "[" +
+                                    "    {" +
+                                    "        \"eventType\": \"impression\"," +
+                                    "        \"eventOccurredAt\": \""+dateText+"\"," +
+                                    "        \"watchTrackId\": \""+watchTrackId+"\"," +
+                                    "        \"contentId\": \""+contentId+"\"," +
+                                    "        \"contentType\": \"video\"," +
+                                    "        \"watchMilliseconds\": 0," +
+                                    "        \"endCount\": 0," +
+                                    "        \"additionalParameters\": {" +
+                                    "            \"nicosid\": \""+nicosid+"\"," +
+                                    "            \"referer\": null," +
+                                    "            \"load_time\": "+(newDate.getTime() - date.getTime())+"," +
+                                    "            \"load_failed\": false," +
+                                    "            \"performance\": {" +
+                                    "                \"watch_access_start\": "+date.getTime()+"," +
+                                    "                \"watch_access_finish\": null," +
+                                    "                \"overlay_thumbnail_finish\": "+date.getTime()+"," +
+                                    "                \"comment_loading_start\": "+newDate.getTime()+"," +
+                                    "                \"comment_loading_finish\": "+newDate.getTime()+"," +
+                                    "                \"comment_load_failed_reason\": null," +
+                                    "                \"video_loading_start\": "+newDate.getTime()+"," +
+                                    "                \"video_loading_finish\": "+newDate.getTime()+"," +
+                                    "                \"video_load_failed_reason\": null," +
+                                    "                \"video_play_start\": "+newDate.getTime()+"," +
+                                    "                \"end_context\": {" +
+                                    "                    \"ad_playing\": false," +
+                                    "                    \"video_playing\": false," +
+                                    "                    \"is_suspending\": false" +
+                                    "                }" +
+                                    "            }," +
+                                    "            \"is_auto_play\": false," +
+                                    "            \"is_ad_block\": false," +
+                                    "            \"loop_count\": 0," +
+                                    "            \"playback_rate\": \"1.0\"," +
+                                    "            \"suspend_count\": 0," +
+                                    "            \"quality\": [" +
+                                    "                {" +
+                                    "                    \"name\": \"auto\"" +
+                                    "                }" +
+                                    "            ]," +
+                                    "            \"auto_quality\": [" +
+                                    "                {" +
+                                    "                    \"quality\": \""+quality+"\"" +
+                                    "                }" +
+                                    "            ]," +
+                                    "            \"highest_quality\": \""+quality+"\"," +
+                                    "            \"transfer_rate_kbps\": null," +
+                                    "            \"error_description\": null," +
+                                    "            \"use_flip\": false," +
+                                    "            \"suspend_timing\": []," +
+                                    "            \"end_position_milliseconds\": null," +
+                                    "            \"event_time_ms\": "+newDate.getTime()+"," +
+                                    "            \"query_parameters\": {}," +
+                                    "            \"viewing_source\": \"\"," +
+                                    "            \"viewing_source_detail\": {}," +
+                                    "            \"periodic_history\": {}," +
+                                    "            \"os\": \"\"," +
+                                    "            \"os_version\": \"\"," +
+                                    "            \"___delivery_type\": \"domand\"," +
+                                    "            \"has_playlist\": false" +
+                                    "        }" +
+                                    "    }" +
+                                    "]";
+                            RequestBody body2 = RequestBody.create(json2.replaceAll(" ",""), MediaType.get("application/json; charset=utf-8"));
+                            Request request4 = new Request.Builder()
+                                    .url("https://stella.nicovideo.jp/v1/watch/nonmember.json?__retry=0")
+                                    .addHeader("X-Frontend-Version", "0")
+                                    .addHeader("X-Frontend-Id", "6")
+                                    .post(body2)
+                                    .build();
+                            Response response4 = client.newCall(request4).execute();
+                            //if (response4.body() != null){
+                            //    System.out.println(response4.code());
+                            //}
+                            response4.close();
+                        }
+
                         x++;
                     } catch (Exception e){
                         //e.printStackTrace();

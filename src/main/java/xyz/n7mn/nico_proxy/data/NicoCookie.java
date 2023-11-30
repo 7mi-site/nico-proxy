@@ -6,6 +6,8 @@ public class NicoCookie {
     private String nicosid;
     private String watchTrackId;
     private String contentId;
+    private String DateLong;
+    private String quality;
 
     public String getDomand_bid() {
         return domand_bid;
@@ -37,5 +39,21 @@ public class NicoCookie {
 
     public void setContentId(String contentId) {
         this.contentId = contentId;
+    }
+
+    public String getDateLong() {
+        return DateLong;
+    }
+
+    public void setDateLong(String dateLong) {
+        DateLong = dateLong;
+    }
+
+    public String getQuality() {
+        return quality;
+    }
+
+    public void setQuality(String quality) {
+        this.quality = quality;
     }
 }
