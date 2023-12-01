@@ -7,18 +7,9 @@ import okhttp3.*;
 import xyz.n7mn.nico_proxy.data.RequestVideoData;
 import xyz.n7mn.nico_proxy.data.ResultVideoData;
 
-import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -39,7 +30,6 @@ public class TestMain {
 
             String nicosid = json.getAsJsonObject().get("nicosid").getAsString();
             String domand_bid = json.getAsJsonObject().get("domand_bid").getAsString();
-            String main_m3u8 = json.getAsJsonObject().get("MainM3U8").getAsString();
 
             Request request_video_m3u8 = new Request.Builder()
                     .url(video.getVideoURL())
@@ -89,57 +79,6 @@ public class TestMain {
             Matcher matcher2 = Pattern.compile("#EXT-X-KEY:METHOD=(.+),URI=\"(.+)\",IV=([a-z0-9A-Z]+)").matcher(audio_m3u8);
             Matcher matcher2_1 = Pattern.compile("#EXT-X-MAP:URI=\"(.+)\"").matcher(audio_m3u8);
 
-            // 動画
-            List<String> videoUrl = new ArrayList<>();
-            StringBuilder sb = new StringBuilder();
-            int i = 1;
-            for (String str : video_m3u8.split("\n")){
-                if (str.startsWith("#")){
-                    if (str.startsWith("#EXT-X-MAP") || str.startsWith("#EXT-X-KEY")){
-                        if (str.startsWith("#EXT-X-KEY")){
-                            sb.append("#EXT-X-MAP:URI=\"init01.cmfv\"\n");
-                        }
-                        continue;
-                    }
-                    sb.append(str).append("\n");
-                    continue;
-                }
-
-                videoUrl.add(str);
-                sb.append(i).append(".cmfv\n");
-                i++;
-            }
-            // 音声
-            List<String> audioUrl = new ArrayList<>();
-            StringBuilder sb2 = new StringBuilder();
-            i = 1;
-            for (String str : audio_m3u8.split("\n")){
-                if (str.startsWith("#")){
-                    if (str.startsWith("#EXT-X-MAP") || str.startsWith("#EXT-X-KEY")){
-                        if (str.startsWith("#EXT-X-KEY")){
-                            sb2.append("#EXT-X-MAP:URI=\"init01.cmfa\"\n");
-                        }
-                        continue;
-                    }
-                    sb2.append(str).append("\n");
-                    continue;
-                }
-
-                audioUrl.add(str);
-                sb2.append(i).append(".cmfa\n");
-                i++;
-            }
-
-            FileOutputStream m3u8_stream = new FileOutputStream(videoPass + "video.m3u8");
-            m3u8_stream.write(sb.toString().getBytes(StandardCharsets.UTF_8));
-            m3u8_stream.flush();
-            m3u8_stream.close();
-
-            FileOutputStream m3u8_stream2 = new FileOutputStream(audioPass + "audio.m3u8");
-            m3u8_stream2.write(sb2.toString().getBytes(StandardCharsets.UTF_8));
-            m3u8_stream2.flush();
-            m3u8_stream2.close();
-
             final String VideoKeyURL;
             final String VideoInitURL;
             final String VideoKeyIV;
@@ -173,41 +112,64 @@ public class TestMain {
                 AudioInitURL = "";
             }
 
-            new Thread(()->{
-
-                // 復号化処理するための前処理
-                String s = VideoKeyIV.startsWith("0x") ? VideoKeyIV.substring(2) : VideoKeyIV;
-                byte[] iv = new BigInteger(s, 16).toByteArray();
-                //System.out.println(iv.length);
-                byte[] ivDataEncoded = new byte[16];
-                int offset = iv.length > 16 ? iv.length - 16 : 0;
-                System.arraycopy(
-                        iv,
-                        offset,
-                        ivDataEncoded,
-                        ivDataEncoded.length - iv.length + offset,
-                        iv.length - offset);
-
-                Cipher decrypter = null;
-                try {
-                    byte[] key_file = new byte[0];
-                    Request request_key = new Request.Builder()
-                            .url(VideoKeyURL)
-                            .addHeader("Cookie", "nicosid="+nicosid+"; domand_bid=" + domand_bid)
-                            .build();
-
-                    Response response_key = client.newCall(request_key).execute();
-                    if (response_key.body() != null){
-                        //System.out.println(response_key.code());
-                        key_file = response_key.body().bytes();
+            // 動画
+            List<String> videoUrl = new ArrayList<>();
+            StringBuilder sb = new StringBuilder();
+            int i = 1;
+            for (String str : video_m3u8.split("\n")){
+                if (str.startsWith("#")){
+                    if (str.startsWith("#EXT-X-MAP")){
+                        sb.append("#EXT-X-MAP:URI=\"init01.cmfv\"\n");
+                        continue;
                     }
-                    response_key.close();
-
-                    decrypter = Cipher.getInstance("AES/CBC/NoPadding");
-                    decrypter.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key_file, "AES"), new IvParameterSpec(ivDataEncoded));
-                } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | IOException | InvalidKeyException e) {
-                    //e.printStackTrace();
+                    if (str.startsWith("#EXT-X-KEY")){
+                        sb.append("#EXT-X-KEY:METHOD=AES-128,URI=\"key.key\",IV=").append(VideoKeyIV).append("\n");
+                        continue;
+                    }
+                    sb.append(str).append("\n");
+                    continue;
                 }
+
+                videoUrl.add(str);
+                sb.append(i).append(".cmfv\n");
+                i++;
+            }
+            // 音声
+            List<String> audioUrl = new ArrayList<>();
+            StringBuilder sb2 = new StringBuilder();
+            i = 1;
+            for (String str : audio_m3u8.split("\n")){
+                if (str.startsWith("#")){
+                    if (str.startsWith("#EXT-X-MAP")){
+                        sb2.append("#EXT-X-MAP:URI=\"init01.cmfa\"\n");
+                        continue;
+                    }
+                    if (str.startsWith("#EXT-X-KEY")){
+                        sb2.append("#EXT-X-KEY:METHOD=AES-128,URI=\"key.key\",IV=").append(AudioKeyIV).append("\n");
+                        continue;
+                    }
+                    sb2.append(str).append("\n");
+                    continue;
+                }
+
+                audioUrl.add(str);
+                sb2.append(i).append(".cmfa\n");
+                i++;
+            }
+
+            FileOutputStream m3u8_stream = new FileOutputStream(videoPass + "video.m3u8");
+            m3u8_stream.write(sb.toString().getBytes(StandardCharsets.UTF_8));
+            m3u8_stream.flush();
+            m3u8_stream.close();
+
+            FileOutputStream m3u8_stream2 = new FileOutputStream(audioPass + "audio.m3u8");
+            m3u8_stream2.write(sb2.toString().getBytes(StandardCharsets.UTF_8));
+            m3u8_stream2.flush();
+            m3u8_stream2.close();
+
+
+
+            new Thread(()->{
 
                 try {
                     Request request_init = new Request.Builder()
@@ -218,6 +180,23 @@ public class TestMain {
                     if (response_init.body() != null){
                         byte[] bytes = response_init.body().bytes();
                         FileOutputStream stream = new FileOutputStream(videoPass + "init01.cmfv");
+                        stream.write(bytes);
+                        stream.close();
+                    }
+                    response_init.close();
+                } catch (Exception e){
+                    //e.printStackTrace();
+                }
+
+                try {
+                    Request request_init = new Request.Builder()
+                            .url(VideoKeyURL)
+                            .addHeader("Cookie", "nicosid="+nicosid+"; domand_bid=" + domand_bid)
+                            .build();
+                    Response response_init = client.newCall(request_init).execute();
+                    if (response_init.body() != null){
+                        byte[] bytes = response_init.body().bytes();
+                        FileOutputStream stream = new FileOutputStream(videoPass + "key.key");
                         stream.write(bytes);
                         stream.close();
                     }
@@ -239,15 +218,9 @@ public class TestMain {
                         if (response.body() != null){
                             //System.out.println(response.code());
                             byte[] bytes = response.body().bytes();
-                            if (bytes.length % 16 == 0){
-                                FileOutputStream stream = new FileOutputStream(videoPass + x + ".cmfv");
-                                if (decrypter != null){
-                                    stream.write(decrypter.doFinal(bytes));
-                                }
-                                stream.close();
-                            } else {
-                                System.out.println(new String(bytes, StandardCharsets.UTF_8));
-                            }
+                            FileOutputStream stream = new FileOutputStream(videoPass + x + ".cmfv");
+                            stream.write(bytes);
+                            stream.close();
                         }
                         response.close();
 
@@ -263,40 +236,6 @@ public class TestMain {
             //System.out.println(audio_m3u8);
             new Thread(()->{
 
-                // 復号化処理するための前処理
-                String s = AudioKeyIV.startsWith("0x") ? AudioKeyIV.substring(2) : AudioKeyIV;
-                byte[] iv = new BigInteger(s, 16).toByteArray();
-                //System.out.println(iv.length);
-                byte[] ivDataEncoded = new byte[16];
-                int offset = iv.length > 16 ? iv.length - 16 : 0;
-                System.arraycopy(
-                        iv,
-                        offset,
-                        ivDataEncoded,
-                        ivDataEncoded.length - iv.length + offset,
-                        iv.length - offset);
-
-                Cipher decrypter = null;
-                try {
-                    byte[] key_file = new byte[0];
-                    Request request_key = new Request.Builder()
-                            .url(AudioKeyURL)
-                            .addHeader("Cookie", "nicosid="+nicosid+"; domand_bid=" + domand_bid)
-                            .build();
-
-                    Response response_key = client.newCall(request_key).execute();
-                    if (response_key.body() != null){
-                        //System.out.println(response_key.code());
-                        key_file = response_key.body().bytes();
-                    }
-                    response_key.close();
-
-                    decrypter = Cipher.getInstance("AES/CBC/NoPadding");
-                    decrypter.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key_file, "AES"), new IvParameterSpec(ivDataEncoded));
-                } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | IOException | InvalidKeyException e) {
-                    //e.printStackTrace();
-                }
-
                 try {
                     Request request_init = new Request.Builder()
                             .url(AudioInitURL)
@@ -306,6 +245,24 @@ public class TestMain {
                     if (response_init.body() != null){
                         byte[] bytes = response_init.body().bytes();
                         FileOutputStream stream = new FileOutputStream(audioPass + "init01.cmfa");
+                        stream.write(bytes);
+                        stream.close();
+                    }
+                    response_init.close();
+                } catch (Exception e){
+                    //e.printStackTrace();
+                }
+
+                try {
+                    //System.out.println(AudioKeyURL);
+                    Request request_init = new Request.Builder()
+                            .url(AudioKeyURL)
+                            .addHeader("Cookie", "nicosid="+nicosid+"; domand_bid=" + domand_bid)
+                            .build();
+                    Response response_init = client.newCall(request_init).execute();
+                    if (response_init.body() != null){
+                        byte[] bytes = response_init.body().bytes();
+                        FileOutputStream stream = new FileOutputStream(audioPass + "key.key");
                         stream.write(bytes);
                         stream.close();
                     }
@@ -327,15 +284,9 @@ public class TestMain {
                         if (response.body() != null){
                             //System.out.println(response.code());
                             byte[] bytes = response.body().bytes();
-                            if (bytes.length % 16 == 0){
-                                FileOutputStream stream = new FileOutputStream(audioPass + x + ".cmfa");
-                                if (decrypter != null){
-                                    stream.write(decrypter.doFinal(bytes));
-                                }
-                                stream.close();
-                            } else {
-                                System.out.println(new String(bytes, StandardCharsets.UTF_8));
-                            }
+                            FileOutputStream stream = new FileOutputStream(audioPass + x + ".cmfa");
+                            stream.write(bytes);
+                            stream.close();
                         }
                         response.close();
 
@@ -348,10 +299,6 @@ public class TestMain {
             }).start();
 
             // くっつけたm3u8を用意
-            // TODO: VRCでは何故か映像のみになってしまうため回避策を考える必要がある。
-            //Matcher matcher = Pattern.compile("#EXT-X-STREAM-INF:BANDWIDTH=(\\d+),AVERAGE-BANDWIDTH=(\\d+),CODECS=\"(.+)\",RESOLUTION=(.+),FRAME-RATE=(.+),AUDIO=\"(.+)\"").matcher(main_m3u8);
-
-            System.out.println(main_m3u8);
             String m3u8 = "#EXTM3U\n" +
                     "#EXT-X-VERSION:6\n" +
                     "#EXT-X-INDEPENDENT-SEGMENTS\n" +
@@ -364,6 +311,8 @@ public class TestMain {
             stream.write(m3u8.getBytes(StandardCharsets.UTF_8));
             stream.close();
 
+            // VRC上で再生するにはffmpegで整える
+            // ffmpeg -allowed_extensions ALL -i ./main.m3u8  -c:v copy -c:a copy -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "./video%3d.ts" ./video.m3u8
 
 
         }
