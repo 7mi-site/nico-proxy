@@ -110,14 +110,19 @@ public class TVer implements ShareService{
     public ResultVideoData getLive(RequestVideoData data) throws Exception {
         Matcher matcher = Pattern.compile("https://tver\\.jp/live/(.+)").matcher(data.getURL());
         Matcher matcher2 = Pattern.compile("https://tver\\.jp/live/simul/(.+)").matcher(data.getURL());
+        Matcher matcher3 = Pattern.compile("https://tver.jp/live/special/(.+)").matcher(data.getURL());
 
         boolean a = matcher.find();
         boolean b = matcher2.find();
-        if (!a && !b){
+        boolean c = matcher3.find();
+        if (!a && !b && !c){
             throw new Exception("Not Support URL");
         }
 
         String id = a && !b ? matcher.group(1) : matcher2.group(1);
+        if (c){
+            id = matcher3.group(1);
+        }
 
         final OkHttpClient.Builder builder = new OkHttpClient.Builder();
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
@@ -148,7 +153,7 @@ public class TVer implements ShareService{
         String jsonSendID = "";
         String liveID = "";
 
-        if (a && !b){
+        if (a && !b && !c){
 
             Request request3 = new Request.Builder()
                     .url("https://service-api.tver.jp/api/v1/callLiveTimeline/"+id)
@@ -194,7 +199,7 @@ public class TVer implements ShareService{
 
         }
 
-        if (b){
+        if (b && !c){
             liveID = id;
             Request request5 = new Request.Builder()
                     .url("https://statics.tver.jp/content/live/"+id+".json?v=7")
@@ -225,6 +230,42 @@ public class TVer implements ShareService{
             jsonSendID = json.getAsJsonObject().getAsJsonArray("sources").get(0).getAsJsonObject().get("id").getAsString();
             // このままでは見れないが仮置き
             url = json.getAsJsonObject().getAsJsonArray("sources").get(0).getAsJsonObject().get("src").getAsString();
+        }
+
+        if (c){
+            liveID = id;
+            Request request6 = new Request.Builder()
+                    .url("https://statics.tver.jp/content/live/"+id+".json?v=8")
+                    .build();
+
+            Response response6 = client.newCall(request6).execute();
+            if (response6.body() != null){
+                jsonText = response6.body().string();
+            }
+
+            response6.close();
+            //System.out.println(jsonText);
+
+            JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
+
+            Request request6_2 = new Request.Builder()
+                    .url("https://playback.api.streaks.jp/v1/projects/tver-splive/medias/ref:"+id)
+                    .addHeader("X-Streaks-Api-Key", json.getAsJsonObject().getAsJsonObject("liveVideo").get("apiKey").getAsString())
+                    .build();
+
+            Response response6_2 = client.newCall(request6_2).execute();
+            if (response6_2.body() != null){
+                jsonText = response6_2.body().string();
+            }
+            response6_2.close();
+            //System.out.println(jsonText);
+
+            json = new Gson().fromJson(jsonText, JsonElement.class);
+
+            sessionId = json.getAsJsonObject().get("id").getAsString();
+            jsonSendID = json.getAsJsonObject().getAsJsonArray("sources").get(0).getAsJsonObject().get("id").getAsString();
+            url = json.getAsJsonObject().getAsJsonArray("sources").get(0).getAsJsonObject().get("src").getAsString();
+
         }
 
         MediaType mediaType = MediaType.get("application/json; charset=utf-8");
