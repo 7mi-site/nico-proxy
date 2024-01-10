@@ -15,7 +15,7 @@ public class TVer implements ShareService{
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
         // https://tver.jp/episodes/epq882oemn
-        Matcher matcher = Pattern.compile("https://tver.jp/episodes/(.+)").matcher(data.getURL().split("\\?")[0]);
+        Matcher matcher = Pattern.compile("https://tver.jp/episodes/(.+)").matcher(data.getURL());
 
         if (!matcher.find()){
             throw new Exception("Not Support URL");

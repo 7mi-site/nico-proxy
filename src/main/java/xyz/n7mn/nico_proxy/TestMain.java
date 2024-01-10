@@ -22,8 +22,7 @@ import java.util.regex.Pattern;
 public class TestMain {
 
     public static void main(String[] args) throws Exception {
-        ResultVideoData video = new TVer().getVideo(new RequestVideoData("https://tver.jp/episodes/ep8gyppoa4?utm_campaign=article_153182&utm_medium=referral&utm_source=tver_plus", null));
-        System.out.println(video.getVideoURL());
-        System.out.println(video.getAudioURL());
+        ResultVideoData live = new TVer().getLive(new RequestVideoData("https://tver.jp/live/special/lecvdrq5hk", new ProxyData("172.104.67.19", 3128)));
+        System.out.println(live.getVideoURL());
     }
 }

@@ -19,35 +19,26 @@ public class BilibiliTv implements ShareService{
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
-        // https://www.bilibili.tv/en/play/2091717
-        //
+        // https://www.bilibili.tv/en/video/4786094886751232
         String s = data.getURL().split("\\?")[0];
         String[] strings = s.split("/");
         String id = strings[strings.length - 1];
         if (id.isEmpty()){
             id = strings[strings.length - 2];
         }
+        Request api = new Request.Builder()
+                .url("https://api.bilibili.tv/intl/gateway/web/playurl?s_locale=en_US&platform=web&aid="+id)
+                .build();
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
         final String JsonText;
         String tempText = null;
 
-        Request api = new Request.Builder()
-                .url("https://api.bilibili.tv/intl/gateway/web/playurl?s_locale=en_US&platform=web&ep_id=13011309&qn=64&type=0&device=wap&tf=0&spm_id=bstar-web.pgc-video-detail.0.0&from_spm_id=")
-                .addHeader("Referer", data.getURL())
-                .addHeader("Accept", "application/json, text/plain, */*")
-                .addHeader("Origin", "https://www.bilibili.tv")
-                //.addHeader("Accept-Encoding","gzip")
-                .addHeader("Cookie", "buvid3=fcec0a20-eb85-45e2-859d-f3d559285d8c12752infoc; bstar-web-lang=en")
-                .build();
-
-
         try {
             Response response = client.newCall(api).execute();
             if (response.body() != null){
                 tempText = response.body().string();
-                System.out.println(tempText);
             }
             response.close();
         } catch (Exception e){
@@ -116,6 +107,6 @@ public class BilibiliTv implements ShareService{
 
     @Override
     public String getVersion() {
-        return "2.1";
+        return "2.0";
     }
 }
