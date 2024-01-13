@@ -26,6 +26,7 @@ public class Xvideos implements ShareService{
         try {
             Request request_html = new Request.Builder()
                     .url(url)
+                    .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0")
                     .build();
             Response response = client.newCall(request_html).execute();
             if (response.body() != null){
@@ -35,6 +36,8 @@ public class Xvideos implements ShareService{
         } catch (Exception e){
             throw new Exception(e.getMessage());
         }
+
+        //System.out.println(HtmlText);
 
         Matcher matcher = Pattern.compile("html5player\\.setVideoUrlHigh\\('(.*)'\\)").matcher(HtmlText);
         if (matcher.find()){
