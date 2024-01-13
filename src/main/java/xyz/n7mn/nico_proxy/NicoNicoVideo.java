@@ -518,11 +518,13 @@ public class NicoNicoVideo implements ShareService {
 
             @Override
             public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+                timer.cancel();
                 super.onClosing(webSocket, code, reason);
             }
 
             @Override
             public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
+                timer.cancel();
                 super.onFailure(webSocket, t, response);
             }
 
