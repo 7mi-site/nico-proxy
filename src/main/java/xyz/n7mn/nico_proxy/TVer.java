@@ -261,6 +261,9 @@ public class TVer implements ShareService{
             //System.out.println(jsonText);
 
             json = new Gson().fromJson(jsonText, JsonElement.class);
+            if (!json.getAsJsonObject().has("sources") && json.getAsJsonObject().get("status").getAsInt() == 404){
+                throw new Exception("Not Found");
+            }
 
             sessionId = json.getAsJsonObject().get("id").getAsString();
             jsonSendID = json.getAsJsonObject().getAsJsonArray("sources").get(0).getAsJsonObject().get("id").getAsString();

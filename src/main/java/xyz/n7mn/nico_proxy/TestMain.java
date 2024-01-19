@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 public class TestMain {
 
     public static void main(String[] args) throws Exception {
-        ResultVideoData live = new Xvideos().getVideo(new RequestVideoData("https://www.xvideos.com/video65811649/fnf_2.5_", null));
+        ResultVideoData live = new TVer().getLive(new RequestVideoData("https://tver.jp/live/special/leks6l5nxi", null));
         System.out.println(live.getVideoURL());
     }
 }
