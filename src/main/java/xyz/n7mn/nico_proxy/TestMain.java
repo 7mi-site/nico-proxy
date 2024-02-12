@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 public class TestMain {
 
     public static void main(String[] args) throws Exception {
-        ResultVideoData live = new TVer().getLive(new RequestVideoData("https://tver.jp/live/special/leks6l5nxi", null));
+        ResultVideoData live = new Pornhub().getVideo(new RequestVideoData("https://jp.pornhub.com/view_video.php?viewkey=65953304c98fb", null));
         System.out.println(live.getVideoURL());
     }
 }
