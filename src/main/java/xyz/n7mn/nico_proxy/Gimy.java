@@ -98,6 +98,8 @@ public class Gimy implements ShareService{
         if (JsonData.getAsJsonObject().get("vod_data").getAsJsonObject().has("vod_name")){
             return JsonData.getAsJsonObject().get("vod_data").getAsJsonObject().get("vod_name").getAsString();
         }
+
+        return null;
     }
 
     @Override
