@@ -18,9 +18,13 @@ public class Abema implements ShareService {
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
-        Matcher matcher = Pattern.compile("https://abema.tv/video/episode/(.*)").matcher(data.getURL());
+        Matcher matcher = Pattern.compile("https://abema\\.tv/video/episode/(.*)").matcher(data.getURL());
+        Matcher matcher1 = Pattern.compile("https://abema\\.tv/channels/(.+)/slots/(.+)").matcher(data.getURL());
 
-        if (!matcher.find()){
+        boolean video = matcher.find();
+        boolean archive = matcher1.find();
+
+        if (!video && !archive){
             throw new Exception("Not Support URL");
         }
 
@@ -37,28 +41,57 @@ public class Abema implements ShareService {
             throw e;
         }
 
-        Request request_api = new Request.Builder()
-                .url("https://api.p-c3-e.abema-tv.com/v1/video/programs/"+matcher.group(1)+"?division=0&include=tvod")
-                .addHeader("Authorization","bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXYiOiI3YWQ5NjQ1Ni0zZjFmLTRiYTctOTQ1OC1jOTA0MzQyYTNiNDMiLCJleHAiOjIxNDc0ODM2NDcsImlzcyI6ImFiZW1hLmlvL3YxIiwic3ViIjoiOTRjeXh3UGR5OVdHcHcifQ.Muv9eT4Tmy4JsSOGTVexwxuGnf2ZkwL1RkBo6MrSZGg")
-                .addHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0")
-                .addHeader("Referer", "https://abema.tv/")
-                .build();
+        if (video){
+            Request request_api = new Request.Builder()
+                    .url("https://api.p-c3-e.abema-tv.com/v1/video/programs/"+matcher.group(1)+"?division=0&include=tvod")
+                    .addHeader("Authorization","bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXYiOiI3YWQ5NjQ1Ni0zZjFmLTRiYTctOTQ1OC1jOTA0MzQyYTNiNDMiLCJleHAiOjIxNDc0ODM2NDcsImlzcyI6ImFiZW1hLmlvL3YxIiwic3ViIjoiOTRjeXh3UGR5OVdHcHcifQ.Muv9eT4Tmy4JsSOGTVexwxuGnf2ZkwL1RkBo6MrSZGg")
+                    .addHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0")
+                    .addHeader("Referer", "https://abema.tv/")
+                    .build();
 
-       String api_result = "";
-        try {
-            Response response = client.newCall(request_api).execute();
-            api_result = response.body().string();
-            response.close();
-        } catch (Exception e){
-            throw e;
+            String api_result = "";
+            try {
+                Response response = client.newCall(request_api).execute();
+                api_result = response.body().string();
+                response.close();
+            } catch (Exception e){
+                throw e;
+            }
+
+            //System.out.println(api_result);
+
+            JsonElement json = new Gson().fromJson(api_result, JsonElement.class);
+            String string = json.getAsJsonObject().getAsJsonObject("playback").get("hlsPreview").getAsString();
+
+            return new ResultVideoData(string, "", true, false, false, null);
+        }
+        if (archive){
+            Request request_api = new Request.Builder()
+                    .url("https://api.p-c3-e.abema-tv.com/v1/media/slots/"+matcher1.group(2)+"?include=payperview")
+                    .addHeader("Authorization","bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXYiOiI3YWQ5NjQ1Ni0zZjFmLTRiYTctOTQ1OC1jOTA0MzQyYTNiNDMiLCJleHAiOjIxNDc0ODM2NDcsImlzcyI6ImFiZW1hLmlvL3YxIiwic3ViIjoiOTRjeXh3UGR5OVdHcHcifQ.Muv9eT4Tmy4JsSOGTVexwxuGnf2ZkwL1RkBo6MrSZGg")
+                    .addHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0")
+                    .addHeader("Referer", "https://abema.tv/")
+                    .build();
+
+            String api_result = "";
+            try {
+                Response response = client.newCall(request_api).execute();
+                api_result = response.body().string();
+                response.close();
+            } catch (Exception e){
+                throw e;
+            }
+
+            //System.out.println(api_result);
+
+            JsonElement json = new Gson().fromJson(api_result, JsonElement.class);
+            String string = json.getAsJsonObject().getAsJsonObject("slot").getAsJsonObject("playback").get("hlsPreview").getAsString();
+
+            return new ResultVideoData(string, "", true, false, false, null);
         }
 
-        //System.out.println(api_result);
+        return null;
 
-        JsonElement json = new Gson().fromJson(api_result, JsonElement.class);
-        String string = json.getAsJsonObject().getAsJsonObject("playback").get("hlsPreview").getAsString();
-
-        return new ResultVideoData(string, "", true, false, false, null);
     }
 
     @Override
@@ -183,6 +216,6 @@ public class Abema implements ShareService {
 
     @Override
     public String getVersion() {
-        return "20231116";
+        return "20240322";
     }
 }
