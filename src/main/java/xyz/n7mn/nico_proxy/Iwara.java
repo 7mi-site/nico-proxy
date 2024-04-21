@@ -58,7 +58,7 @@ public class Iwara implements ShareService{
                 throw e;
             }
 
-            System.out.println(api_result);
+            //System.out.println(api_result);
 
             json = new Gson().fromJson(api_result, JsonElement.class);
 
