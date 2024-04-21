@@ -62,7 +62,7 @@ public class Iwara implements ShareService{
 
             json = new Gson().fromJson(api_result, JsonElement.class);
 
-            return new ResultVideoData(json.getAsJsonArray().get(0).getAsJsonObject().get("src").getAsJsonObject().get("download").getAsString(), null, false, false, false, null);
+            return new ResultVideoData("https:"+json.getAsJsonArray().get(0).getAsJsonObject().get("src").getAsJsonObject().get("download").getAsString(), null, false, false, false, null);
 
         } else {
             throw new Exception("Not Found");
