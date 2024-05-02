@@ -18,10 +18,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Pornhub implements ShareService{
+
+    private final Pattern Support_URL1 = Pattern.compile("https://(.*)\\.pornhub\\.com/view_video\\.php\\?viewkey=(.*)");
+    private final Pattern matcher_json = Pattern.compile("var flashvars_(\\d+) = \\{(.*)\\}\\;");
+    private final Pattern matcher_title = Pattern.compile("<meta name=\"twitter:title\" content=\"(.*)\">");
+
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
 
-        Matcher matcher = Pattern.compile("https://(.*)\\.pornhub\\.com/view_video\\.php\\?viewkey=(.*)").matcher(data.getURL());
+        Matcher matcher = Support_URL1.matcher(data.getURL());
         if (!matcher.find()){
             throw new Exception("Not Found");
         }
@@ -36,6 +41,7 @@ public class Pornhub implements ShareService{
         try {
             Request request_html = new Request.Builder()
                     .url("https://jp.pornhub.com/view_video.php?viewkey="+id)
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .build();
             Response response = client.newCall(request_html).execute();
             if (response.body() != null){
@@ -47,7 +53,7 @@ public class Pornhub implements ShareService{
         }
 
         //System.out.println(HtmlText);
-        Matcher matcher1 = Pattern.compile("var flashvars_(\\d+) = \\{(.*)\\}\\;").matcher(HtmlText);
+        Matcher matcher1 = matcher_json.matcher(HtmlText);
 
         if (!matcher1.find()){
             //throw new Exception("Not Found");
@@ -73,7 +79,7 @@ public class Pornhub implements ShareService{
     public String getTitle(RequestVideoData data) throws Exception {
         String title = "";
 
-        Matcher matcher = Pattern.compile("https://(.*).pornhub.com/view_video.php\\?viewkey=(.*)").matcher(data.getURL());
+        Matcher matcher = Support_URL1.matcher(data.getURL());
         if (!matcher.find()){
             throw new Exception("Not Found");
         }
@@ -88,6 +94,7 @@ public class Pornhub implements ShareService{
         try {
             Request request_html = new Request.Builder()
                     .url("https://jp.pornhub.com/view_video.php?viewkey="+id)
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .build();
             Response response = client.newCall(request_html).execute();
             if (response.body() != null){
@@ -98,7 +105,7 @@ public class Pornhub implements ShareService{
             return "";
         }
 
-        Matcher matcher1 = Pattern.compile("<meta name=\"twitter:title\" content=\"(.*)\">").matcher(HtmlText);
+        Matcher matcher1 = matcher_title.matcher(HtmlText);
         if (!matcher1.find()){
             //System.out.println("naiyo");
             return title;
@@ -116,6 +123,6 @@ public class Pornhub implements ShareService{
 
     @Override
     public String getVersion() {
-        return "20230910";
+        return "20240502";
     }
 }

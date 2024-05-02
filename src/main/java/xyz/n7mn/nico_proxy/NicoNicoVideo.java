@@ -28,7 +28,22 @@ public class NicoNicoVideo implements ShareService {
 
     private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-    private final String UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/119.0 nico-proxy/1.0";
+    private final String UserAgent = Constant.nico_proxy_UserAgent;
+
+    private final Pattern matcher_VideoTime = Pattern.compile("<meta property=\"video:duration\" content=\"(\\d+)\">");
+    private final Pattern matcher_Json = Pattern.compile("<div id=\"js-initial-watch-data\" data-api-data=\"\\{(.*)\\}\" data-environment=\"\\{");
+    private final Pattern matcher_cookie = Pattern.compile("domand_bid=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=(.+); priority=(.+); secure; HttpOnly");
+    private final Pattern matcher_m3u8Audio = Pattern.compile("#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"(.+)\",NAME=\"(.+)\",DEFAULT=(.+),URI=\"(.+)\"");
+    private final Pattern matcher_VideoURL = Pattern.compile("\"content_uri\":\"(.*)\",\"session_operation_auth");
+    private final Pattern matcher_Session = Pattern.compile("\\{\"meta\":\\{\"status\":201,\"message\":\"created\"},\"data\":\\{(.*)\\}");
+    private final Pattern matcher_SessionID = Pattern.compile("\"data\":\\{\"session\":\\{\"id\":\"(.*)\",\"recipe_id\"");
+
+    private final Pattern matcher_WebsocketURL = Pattern.compile("webSocketUrl&quot;:&quot;wss://(.*)&quot;,&quot;csrfToken");
+    private final Pattern matcher_WebsocketData1 = Pattern.compile("\\{\"type\":\"stream\",\"data\":\\{\"uri\":\"https://");
+    private final Pattern matcher_WebsocketData2 = Pattern.compile("\"uri\":\"(.*)\",\"syncUri\":\"");
+
+    private final Pattern matcher_LdJsonVideo = Pattern.compile("<script type=\"application/ld\\+json\" class=\"LdJson\">\\{(.*)\\}");
+    private final Pattern matcher_LdJsonLive = Pattern.compile("<script type=\"application/ld\\+json\">\\{(.*)\\}");
 
     /**
      * @param data ニコ動URL、接続プロキシ情報
@@ -68,7 +83,7 @@ public class NicoNicoVideo implements ShareService {
             }
         }
 
-        Matcher matcher = Pattern.compile("<meta property=\"video:duration\" content=\"(\\d+)\">").matcher(HtmlText);
+        Matcher matcher = matcher_VideoTime.matcher(HtmlText);
         if (!matcher.find()) {
             throw new Exception("www.nicovideo.jp Not Found");
         }
@@ -78,7 +93,7 @@ public class NicoNicoVideo implements ShareService {
         String Signature = null;
 
         String json_text = "";
-        Matcher matcher_json = Pattern.compile("<div id=\"js-initial-watch-data\" data-api-data=\"\\{(.*)\\}\" data-environment=\"\\{").matcher(HtmlText);
+        Matcher matcher_json = matcher_Json.matcher(HtmlText);
         if (matcher_json.find()){
             json_text = "{" + matcher_json.group(1) + "}";
             json_text = json_text.replaceAll("&quot;", "\"").replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
@@ -211,7 +226,7 @@ public class NicoNicoVideo implements ShareService {
             if (response3.body() != null){
                 for (Pair<? extends String, ? extends String> header : response3.headers()) {
                     //System.out.println(header.component1() + " : " + header.component2());
-                    Matcher matcher1 = Pattern.compile("domand_bid=(.+); expires=(.+); Max-Age=(\\d+); path=(.+); domain=(.+); priority=(.+); secure; HttpOnly").matcher(header.component2());
+                    Matcher matcher1 = matcher_cookie.matcher(header.component2());
                     if (matcher1.find()){
                         //System.out.println(header.component1() + " : " + header.component2());
                         domand_bid = matcher1.group(1);
@@ -249,7 +264,7 @@ public class NicoNicoVideo implements ShareService {
             String videoUrl = "";
             String audioUrl = "";
             for (String str : main_m3u8.split("\n")){
-                Matcher matcher_m3u8 = Pattern.compile("#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"(.+)\",NAME=\"(.+)\",DEFAULT=(.+),URI=\"(.+)\"").matcher(str);
+                Matcher matcher_m3u8 = matcher_m3u8Audio.matcher(str);
                 if (matcher_m3u8.find()){
                     audioUrl = matcher_m3u8.group(4);
                     continue;
@@ -345,7 +360,7 @@ public class NicoNicoVideo implements ShareService {
                         .addHeader("X-Request-With", "https://www.nicovideo.jp")
                         .addHeader("Origin", "https://www.nicovideo.jp")
                         .addHeader("Referer", "https://www.nicovideo.jp/")
-                        .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
+                        .addHeader("User-agent", UserAgent)
                         .build();
                 Response response_hls = client.newCall(request_hls).execute();
                 //System.out.println(response_hls.body().string());
@@ -395,7 +410,7 @@ public class NicoNicoVideo implements ShareService {
 
             Request request2 = new Request.Builder()
                     .url("https://api.dmc.nico/api/sessions?_format=json")
-                    .addHeader("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0 nico-proxy/1.0")
+                    .addHeader("User-agent", UserAgent)
                     .post(body)
                     .build();
 
@@ -421,20 +436,20 @@ public class NicoNicoVideo implements ShareService {
 
             // 動画URL
             String VideoURL = null;
-            Matcher video_matcher = Pattern.compile("\"content_uri\":\"(.*)\",\"session_operation_auth").matcher(ResponseJson);
+            Matcher video_matcher = matcher_VideoURL.matcher(ResponseJson);
             if (video_matcher.find()){
                 VideoURL = video_matcher.group(1).replaceAll("\\\\","");
             }
 
             // ハートビート信号用 セッション
-            Matcher heart_session_matcher = Pattern.compile("\\{\"meta\":\\{\"status\":201,\"message\":\"created\"},\"data\":\\{(.*)\\}").matcher(ResponseJson);
+            Matcher heart_session_matcher = matcher_Session.matcher(ResponseJson);
             if (heart_session_matcher.find()){
                 HeartBeatSession = "{"+heart_session_matcher.group(1); //.replaceAll("\\\\","");
             } else {
                 HeartBeatSession = null;
             }
             // ハートビート信号用ID
-            Matcher heart_session_matcher2 = Pattern.compile("\"data\":\\{\"session\":\\{\"id\":\"(.*)\",\"recipe_id\"").matcher(ResponseJson);
+            Matcher heart_session_matcher2 = matcher_SessionID.matcher(ResponseJson);
             if (heart_session_matcher2.find()){
                 HeartBeatSessionId = heart_session_matcher2.group(1).replaceAll("\\\\","");
             } else {
@@ -474,6 +489,7 @@ public class NicoNicoVideo implements ShareService {
         try {
             Request request = new Request.Builder()
                     .url("https://live.nicovideo.jp/watch/"+id)
+                    .addHeader("User-Agent", UserAgent)
                     .build();
             Response response = client.newCall(request).execute();
             if (response.body() != null){
@@ -489,7 +505,7 @@ public class NicoNicoVideo implements ShareService {
             }
         }
 
-        Matcher matcher  = Pattern.compile("webSocketUrl&quot;:&quot;wss://(.*)&quot;,&quot;csrfToken").matcher(htmlText);
+        Matcher matcher  = matcher_WebsocketURL.matcher(htmlText);
 
         if (!matcher.find()){
             throw new Exception("live.nicovideo.jp No WebSocket Found");
@@ -498,6 +514,7 @@ public class NicoNicoVideo implements ShareService {
         String websocketURL = "wss://"+matcher.group(1);
         Request request = new Request.Builder()
                 .url(websocketURL)
+                .addHeader("User-Agent", UserAgent)
                 .build();
 
         String[] temp = new String[]{"wait", ""};
@@ -555,6 +572,7 @@ public class NicoNicoVideo implements ShareService {
                             //System.out.println("{\"type\":\"keepSeat\"}");
                             Request request = new Request.Builder()
                                     .url(liveUrl)
+                                    .addHeader("User-Agent", UserAgent)
                                     .build();
                             try {
                                 Response response = client.newCall(request).execute();
@@ -579,10 +597,10 @@ public class NicoNicoVideo implements ShareService {
                     webSocket.cancel();
                 }
 
-                Matcher matcherData = Pattern.compile("\\{\"type\":\"stream\",\"data\":\\{\"uri\":\"https://").matcher(text);
+                Matcher matcherData = matcher_WebsocketData1.matcher(text);
 
                 if (matcherData.find()) {
-                    Matcher matcher = Pattern.compile("\"uri\":\"(.*)\",\"syncUri\":\"").matcher(text);
+                    Matcher matcher = matcher_WebsocketData2.matcher(text);
                     //System.out.println("url get");
                     if (matcher.find()) {
                         //System.out.println("url get ok");
@@ -640,6 +658,7 @@ public class NicoNicoVideo implements ShareService {
         Request request = new Request.Builder()
                 .url("https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT")
                 .post(body)
+                .addHeader("User-Agent", UserAgent)
                 .build();
         try {
             Response response = client.newCall(request).execute();
@@ -666,6 +685,7 @@ public class NicoNicoVideo implements ShareService {
             try {
                 Request request_html = new Request.Builder()
                         .url("https://www.nicovideo.jp/watch/" + id)
+                        .addHeader("User-Agent", UserAgent)
                         .build();
                 Response response = client.newCall(request_html).execute();
                 if (response.body() != null) {
@@ -680,6 +700,7 @@ public class NicoNicoVideo implements ShareService {
             try {
                 Request request_html = new Request.Builder()
                         .url("https://live.nicovideo.jp/watch/" + id)
+                        .addHeader("User-Agent", UserAgent)
                         .build();
                 Response response = client.newCall(request_html).execute();
                 if (response.body() != null) {
@@ -693,10 +714,10 @@ public class NicoNicoVideo implements ShareService {
         }
 
         //System.out.println(HtmlText);
-        Matcher matcher = Pattern.compile("<script type=\"application/ld\\+json\" class=\"LdJson\">\\{(.*)\\}").matcher(HtmlText);
+        Matcher matcher = matcher_LdJsonVideo.matcher(HtmlText);
 
         if (Pattern.compile("lv").matcher(data.getURL()).find()){
-            matcher = Pattern.compile("<script type=\"application/ld\\+json\">\\{(.*)\\}").matcher(HtmlText);
+            matcher = matcher_LdJsonLive.matcher(HtmlText);
         }
 
         if (!matcher.find()){
@@ -722,7 +743,7 @@ public class NicoNicoVideo implements ShareService {
 
     @Override
     public String getVersion() {
-        return "20231125";
+        return "20240502";
     }
 
     private String getId(String text){

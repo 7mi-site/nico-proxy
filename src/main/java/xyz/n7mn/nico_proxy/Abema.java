@@ -13,13 +13,17 @@ import java.net.Proxy;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 public class Abema implements ShareService {
 
+    private final Pattern SupportURL_Video1 = Pattern.compile("https://abema\\.tv/video/episode/(.+)");
+    private final Pattern SupportURL_Video2 = Pattern.compile("https://abema\\.tv/channels/(.+)/slots/(.+)");
+    private final Pattern SupportURL_Live1 = Pattern.compile("https://abema\\.tv/now-on-air/(.+)");
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
-        Matcher matcher = Pattern.compile("https://abema\\.tv/video/episode/(.*)").matcher(data.getURL());
-        Matcher matcher1 = Pattern.compile("https://abema\\.tv/channels/(.+)/slots/(.+)").matcher(data.getURL());
+        Matcher matcher = SupportURL_Video1.matcher(data.getURL());
+        Matcher matcher1 = SupportURL_Video2.matcher(data.getURL());
 
         boolean video = matcher.find();
         boolean archive = matcher1.find();
@@ -45,7 +49,7 @@ public class Abema implements ShareService {
             Request request_api = new Request.Builder()
                     .url("https://api.p-c3-e.abema-tv.com/v1/video/programs/"+matcher.group(1)+"?division=0&include=tvod")
                     .addHeader("Authorization","bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXYiOiI3YWQ5NjQ1Ni0zZjFmLTRiYTctOTQ1OC1jOTA0MzQyYTNiNDMiLCJleHAiOjIxNDc0ODM2NDcsImlzcyI6ImFiZW1hLmlvL3YxIiwic3ViIjoiOTRjeXh3UGR5OVdHcHcifQ.Muv9eT4Tmy4JsSOGTVexwxuGnf2ZkwL1RkBo6MrSZGg")
-                    .addHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0")
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .addHeader("Referer", "https://abema.tv/")
                     .build();
 
@@ -69,7 +73,7 @@ public class Abema implements ShareService {
             Request request_api = new Request.Builder()
                     .url("https://api.p-c3-e.abema-tv.com/v1/media/slots/"+matcher1.group(2)+"?include=payperview")
                     .addHeader("Authorization","bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXYiOiI3YWQ5NjQ1Ni0zZjFmLTRiYTctOTQ1OC1jOTA0MzQyYTNiNDMiLCJleHAiOjIxNDc0ODM2NDcsImlzcyI6ImFiZW1hLmlvL3YxIiwic3ViIjoiOTRjeXh3UGR5OVdHcHcifQ.Muv9eT4Tmy4JsSOGTVexwxuGnf2ZkwL1RkBo6MrSZGg")
-                    .addHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0")
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .addHeader("Referer", "https://abema.tv/")
                     .build();
 
@@ -96,7 +100,7 @@ public class Abema implements ShareService {
 
     @Override
     public ResultVideoData getLive(RequestVideoData data) throws Exception {
-        Matcher matcher = Pattern.compile("https://abema.tv/now-on-air/(.+)").matcher(data.getURL());
+        Matcher matcher = SupportURL_Live1.matcher(data.getURL());
 
         if (!matcher.find()){
             throw new Exception("Not Support URL");
@@ -133,13 +137,15 @@ public class Abema implements ShareService {
 
     @Override
     public String getTitle(RequestVideoData data) throws Exception {
-        Matcher matcher = Pattern.compile("https://abema.tv/video/episode/(.*)").matcher(data.getURL());
-        Matcher matcher2 = Pattern.compile("https://abema.tv/now-on-air/(.+)").matcher(data.getURL());
+        Matcher matcher = SupportURL_Video1.matcher(data.getURL());
+        Matcher matcher1 = SupportURL_Video2.matcher(data.getURL());
+        Matcher matcher2 = SupportURL_Live1.matcher(data.getURL());
 
         boolean video = matcher.find();
+        boolean archive = matcher1.find();
         boolean live = matcher2.find();
 
-        if (!video && !live){
+        if (!video && !archive && !live){
             throw new Exception("Not Support URL");
         }
 
@@ -159,7 +165,7 @@ public class Abema implements ShareService {
             Request request_api = new Request.Builder()
                     .url("https://api.p-c3-e.abema-tv.com/v1/video/programs/"+matcher.group(1)+"?division=0&include=tvod")
                     .addHeader("Authorization","bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXYiOiI3YWQ5NjQ1Ni0zZjFmLTRiYTctOTQ1OC1jOTA0MzQyYTNiNDMiLCJleHAiOjIxNDc0ODM2NDcsImlzcyI6ImFiZW1hLmlvL3YxIiwic3ViIjoiOTRjeXh3UGR5OVdHcHcifQ.Muv9eT4Tmy4JsSOGTVexwxuGnf2ZkwL1RkBo6MrSZGg")
-                    .addHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0")
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .addHeader("Referer", "https://abema.tv/")
                     .build();
 
@@ -178,6 +184,31 @@ public class Abema implements ShareService {
 
             if (!json.getAsJsonObject().getAsJsonObject("series").get("title").isJsonNull()){
                 return json.getAsJsonObject().getAsJsonObject("series").get("title").getAsString();
+            }
+        }
+
+        if (archive){
+            Request request_api = new Request.Builder()
+                    .url("https://api.p-c3-e.abema-tv.com/v1/media/slots/"+matcher1.group(2)+"?include=payperview")
+                    .addHeader("Authorization","bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXYiOiI3YWQ5NjQ1Ni0zZjFmLTRiYTctOTQ1OC1jOTA0MzQyYTNiNDMiLCJleHAiOjIxNDc0ODM2NDcsImlzcyI6ImFiZW1hLmlvL3YxIiwic3ViIjoiOTRjeXh3UGR5OVdHcHcifQ.Muv9eT4Tmy4JsSOGTVexwxuGnf2ZkwL1RkBo6MrSZGg")
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                    .addHeader("Referer", "https://abema.tv/")
+                    .build();
+
+            String api_result = "";
+            try {
+                Response response = client.newCall(request_api).execute();
+                api_result = response.body().string();
+                response.close();
+            } catch (Exception e){
+                throw e;
+            }
+
+            //System.out.println(api_result);
+
+            JsonElement json = new Gson().fromJson(api_result, JsonElement.class);
+            if (json.getAsJsonObject().getAsJsonObject("slot").has("title")){
+                return json.getAsJsonObject().getAsJsonObject("slot").get("title").getAsString();
             }
         }
 
@@ -216,6 +247,6 @@ public class Abema implements ShareService {
 
     @Override
     public String getVersion() {
-        return "20240322";
+        return "20240502";
     }
 }

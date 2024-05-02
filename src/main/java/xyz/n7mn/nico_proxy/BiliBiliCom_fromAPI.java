@@ -18,11 +18,14 @@ public class BiliBiliCom_fromAPI implements ShareService{
 
     private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
+    private final Pattern Support_URL1 = Pattern.compile("https://www\\.bilibili\\.com/video/(.+)/");
+    private final Pattern Support_URL2 = Pattern.compile("https://www\\.bilibili\\.com/video/(.+)");
+
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
         // https://www.bilibili.com/video/BV1do4y1T7cH/
-        Matcher matcher1 = Pattern.compile("https://www\\.bilibili\\.com/video/(.+)/").matcher(data.getURL());
-        Matcher matcher2 = Pattern.compile("https://www\\.bilibili\\.com/video/(.+)").matcher(data.getURL());
+        Matcher matcher1 = Support_URL1.matcher(data.getURL());
+        Matcher matcher2 = Support_URL2.matcher(data.getURL());
 
         String VideoID = "";
         if (matcher1.find()){
@@ -93,8 +96,8 @@ public class BiliBiliCom_fromAPI implements ShareService{
 
     @Override
     public String getTitle(RequestVideoData data) throws Exception {
-        Matcher matcher1 = Pattern.compile("https://www\\.bilibili\\.com/video/(.+)/").matcher(data.getURL());
-        Matcher matcher2 = Pattern.compile("https://www\\.bilibili\\.com/video/(.+)").matcher(data.getURL());
+        Matcher matcher1 = Support_URL1.matcher(data.getURL());
+        Matcher matcher2 = Support_URL2.matcher(data.getURL());
 
         String VideoID = "";
         if (matcher1.find()){

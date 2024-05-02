@@ -18,11 +18,16 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 public class YoutubeHLS implements ShareService{
+
+    private final Pattern SupportURL = Pattern.compile("(youtu\\.be/|youtube.com/watch\\?v=)(.*)");
+    private final Pattern matcher_rate = Pattern.compile("#EXT-X-STREAM-INF:BANDWIDTH=(\\d+),CODECS=\"(.*)\",RESOLUTION=(.*),FRAME-RATE=(\\d+),VIDEO-RANGE=(.*),AUDIO=\"(\\d+)\",CLOSED-CAPTIONS=");
+    private final Pattern matcher_rate2 = Pattern.compile("#EXT-X-MEDIA:URI=\"(.*)\",TYPE=AUDIO,GROUP-ID=\"(\\d+)\",NAME=\"(.*)\",DEFAULT=(.*),AUTOSELECT=");
+
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
 
         String url = data.getURL().split("&")[0];
-        Matcher matcher = Pattern.compile("(youtu\\.be/|youtube.com/watch\\?v=)(.*)").matcher(url);
+        Matcher matcher = SupportURL.matcher(url);
 
         if (!matcher.find()){
             throw new Exception("Not Support URL");
@@ -114,7 +119,7 @@ public class YoutubeHLS implements ShareService{
 
             boolean isAdd = false;
             for (String str : string.split("\n")){
-                Matcher matcher1 = Pattern.compile("#EXT-X-STREAM-INF:BANDWIDTH=(\\d+),CODECS=\"(.*)\",RESOLUTION=(.*),FRAME-RATE=(\\d+),VIDEO-RANGE=(.*),AUDIO=\"(\\d+)\",CLOSED-CAPTIONS=").matcher(str);
+                Matcher matcher1 = matcher_rate.matcher(str);
 
                 if (matcher1.find()){
                     long l = Long.parseLong(matcher1.group(1));
@@ -137,7 +142,7 @@ public class YoutubeHLS implements ShareService{
             //System.out.println(groupId);
 
             for (String str : string.split("\n")){
-                Matcher matcher1 = Pattern.compile("#EXT-X-MEDIA:URI=\"(.*)\",TYPE=AUDIO,GROUP-ID=\"(\\d+)\",NAME=\"(.*)\",DEFAULT=(.*),AUTOSELECT=").matcher(str);
+                Matcher matcher1 = matcher_rate2.matcher(str);
 
                 if (matcher1.find()){
                     int g = Integer.parseInt(matcher1.group(2));
@@ -172,7 +177,7 @@ public class YoutubeHLS implements ShareService{
     public String getTitle(RequestVideoData data) throws Exception {
 
         String url = data.getURL().split("&")[0];
-        Matcher matcher = Pattern.compile("(youtu\\.be/|youtube.com/watch\\?v=)(.*)").matcher(url);
+        Matcher matcher = SupportURL.matcher(url);
 
         if (!matcher.find()){
             throw new Exception("Not Support URL");
@@ -237,11 +242,11 @@ public class YoutubeHLS implements ShareService{
 
     @Override
     public String getServiceName() {
-        return null;
+        return "Youtube";
     }
 
     @Override
     public String getVersion() {
-        return null;
+        return "1.0";
     }
 }

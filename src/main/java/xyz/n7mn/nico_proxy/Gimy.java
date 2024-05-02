@@ -14,10 +14,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Gimy implements ShareService{
+
+    private final Pattern Support_URL1 = Pattern.compile("https://gimy\\.ai/eps/(.+)\\.html");
+    private final Pattern matcher_json = Pattern.compile("player_data=\\{(.+)\\}");
+
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
 
-        Matcher matcher = Pattern.compile("https://gimy\\.ai/eps/(.+)\\.html").matcher(data.getURL());
+        Matcher matcher = Support_URL1.matcher(data.getURL());
         if (!matcher.find()){
             throw new Exception("gimy.ai Not Support URL");
         }
@@ -41,7 +45,7 @@ public class Gimy implements ShareService{
 
         //System.out.println(HtmlText);
 
-        Matcher json_matcher = Pattern.compile("player_data=\\{(.+)\\}").matcher(HtmlText);
+        Matcher json_matcher = matcher_json.matcher(HtmlText);
         if (!json_matcher.find()){
             throw new Exception("gimy.ai Not Found");
         }
@@ -63,7 +67,7 @@ public class Gimy implements ShareService{
 
     @Override
     public String getTitle(RequestVideoData data) throws Exception {
-        Matcher matcher = Pattern.compile("https://gimy\\.ai/eps/(.+)\\.html").matcher(data.getURL());
+        Matcher matcher = Support_URL1.matcher(data.getURL());
         if (!matcher.find()){
             throw new Exception("gimy.ai Not Support URL");
         }
@@ -87,7 +91,7 @@ public class Gimy implements ShareService{
 
         //System.out.println(HtmlText);
 
-        Matcher json_matcher = Pattern.compile("player_data=\\{(.+)\\}").matcher(HtmlText);
+        Matcher json_matcher = matcher_json.matcher(HtmlText);
         if (!json_matcher.find()){
             throw new Exception("gimy.ai Not Found");
         }

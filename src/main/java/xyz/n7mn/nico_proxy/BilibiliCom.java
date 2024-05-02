@@ -21,6 +21,10 @@ import java.util.regex.Pattern;
 
 public class BilibiliCom implements ShareService{
 
+    private Pattern matcher_json = Pattern.compile("window\\.__playinfo__=\\{(.*)\\}</script><script>window\\.__INITIAL_STATE__=\\{");
+    private Pattern matcher_cid = Pattern.compile("\"cid\":(\\d+)");
+    private Pattern matcher_title = Pattern.compile("<h1 title=\"(.*)\" class=\"video-title\"");
+
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
         String s = data.getURL().split("\\?")[0];
@@ -54,7 +58,7 @@ public class BilibiliCom implements ShareService{
         }
 
         //System.out.println(HtmlText);
-        Matcher matcher3 = Pattern.compile("window.__playinfo__=\\{(.*)\\}</script><script>window.__INITIAL_STATE__=\\{").matcher(HtmlText);
+        Matcher matcher3 = matcher_json.matcher(HtmlText);
         if (!matcher3.find()){
             throw new Exception("bilibili.com Not Found");
         }
@@ -85,7 +89,7 @@ public class BilibiliCom implements ShareService{
 
         //System.out.println(responseText);
 
-        Matcher matcher2 = Pattern.compile("\"cid\":(\\d+)").matcher(responseText);
+        Matcher matcher2 = matcher_cid.matcher(responseText);
 
         if (!matcher2.find()){
             throw new Exception("bilibili.com Not cid");
@@ -209,7 +213,7 @@ public class BilibiliCom implements ShareService{
             return "";
         }
 
-        Matcher matcher = Pattern.compile("<h1 title=\"(.*)\" class=\"video-title\"").matcher(HtmlText);
+        Matcher matcher = matcher_title.matcher(HtmlText);
         if (matcher.find()){
             title = matcher.group(1);
         }

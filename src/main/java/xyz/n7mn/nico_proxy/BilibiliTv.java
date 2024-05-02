@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 public class BilibiliTv implements ShareService{
 
+    private final Pattern matcher_title = Pattern.compile("<script type=\"application/ld\\+json\">\\[(.*)\\]");
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
@@ -87,7 +88,7 @@ public class BilibiliTv implements ShareService{
 
         //System.out.println(string);
 
-        Matcher matcher = Pattern.compile("<script type=\"application/ld\\+json\">\\[(.*)\\]").matcher(string);
+        Matcher matcher = matcher_title.matcher(string);
         if (!matcher.find()){
             return "";
         }

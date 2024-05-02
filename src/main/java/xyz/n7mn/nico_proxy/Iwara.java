@@ -30,6 +30,7 @@ public class Iwara implements ShareService{
         //System.out.println("https://api.iwara.tv/video/" + split[4]);
         Request request_api = new Request.Builder()
                 .url("https://api.iwara.tv/video/" + split[4])
+                .addHeader("User-Agent",Constant.nico_proxy_UserAgent)
                 .build();
 
         String api_result = "";
@@ -91,7 +92,7 @@ public class Iwara implements ShareService{
         //System.out.println("https://api.iwara.tv/video/" + split[4]);
         Request request_api = new Request.Builder()
                 .url("https://api.iwara.tv/video/" + split[4])
-                .addHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0")
+                .addHeader("User-Agent",Constant.nico_proxy_UserAgent)
                 .build();
 
         String api_result = "";

@@ -12,10 +12,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TVer implements ShareService{
+
+    private final Pattern Support_URLVideo1 = Pattern.compile("https://tver\\.jp/episodes/(.+)");
+    private final Pattern Support_URLLive1 = Pattern.compile("https://tver\\.jp/live/(.+)");
+    private final Pattern Support_URLLive2 = Pattern.compile("https://tver\\.jp/live/simul/(.+)");
+    private final Pattern Support_URLLive3 = Pattern.compile("https://tver.jp/live/special/(.+)");
+
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
         // https://tver.jp/episodes/epq882oemn
-        Matcher matcher = Pattern.compile("https://tver.jp/episodes/(.+)").matcher(data.getURL().split("\\?")[0]);
+        Matcher matcher = Support_URLVideo1.matcher(data.getURL().split("\\?")[0]);
 
         if (!matcher.find()){
             throw new Exception("Not Support URL");
@@ -108,9 +114,9 @@ public class TVer implements ShareService{
 
     @Override
     public ResultVideoData getLive(RequestVideoData data) throws Exception {
-        Matcher matcher = Pattern.compile("https://tver\\.jp/live/(.+)").matcher(data.getURL());
-        Matcher matcher2 = Pattern.compile("https://tver\\.jp/live/simul/(.+)").matcher(data.getURL());
-        Matcher matcher3 = Pattern.compile("https://tver.jp/live/special/(.+)").matcher(data.getURL());
+        Matcher matcher = Support_URLLive1.matcher(data.getURL());
+        Matcher matcher2 = Support_URLLive2.matcher(data.getURL());
+        Matcher matcher3 = Support_URLLive3.matcher(data.getURL());
 
         boolean a = matcher.find();
         boolean b = matcher2.find();
@@ -343,9 +349,10 @@ public class TVer implements ShareService{
     @Override
     public String getTitle(RequestVideoData data) throws Exception {
 
-        Matcher matcher_video = Pattern.compile("https://tver\\.jp/episodes/(.+)").matcher(data.getURL());
-        Matcher matcher_live1 = Pattern.compile("https://tver\\.jp/live/(.+)").matcher(data.getURL());
-        Matcher matcher_live2 = Pattern.compile("https://tver\\.jp/live/simul/(.+)").matcher(data.getURL());
+        Matcher matcher_video = Support_URLVideo1.matcher(data.getURL());
+        Matcher matcher_live1 = Support_URLLive1.matcher(data.getURL());
+        Matcher matcher_live2 = Support_URLLive2.matcher(data.getURL());
+        Matcher matcher_live3 = Support_URLLive3.matcher(data.getURL());
 
         final OkHttpClient.Builder builder = new OkHttpClient.Builder();
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
@@ -353,17 +360,22 @@ public class TVer implements ShareService{
         boolean isVideo = matcher_video.find();
         boolean isLive1 = matcher_live1.find();
         boolean isLive2 = matcher_live2.find();
+        boolean isLive3 = matcher_live3.find();
 
         String id = "";
         if (isVideo){
             id = matcher_video.group(1);
         }
 
-        if (isLive1 && !isLive2){
+        if (isLive1 && !isLive2 && !isLive3){
             id = matcher_live1.group(1);
         }
 
-        if (isLive2){
+        if (isLive2 && !isLive3){
+            id = matcher_live2.group(1);
+        }
+
+        if (isLive3){
             id = matcher_live2.group(1);
         }
 
@@ -431,7 +443,7 @@ public class TVer implements ShareService{
                 }
             }
 
-            System.out.println(title);
+            //System.out.println(title);
             return title;
         }
 
@@ -462,6 +474,6 @@ public class TVer implements ShareService{
 
     @Override
     public String getVersion() {
-        return "20231117";
+        return "20240502";
     }
 }

@@ -25,6 +25,11 @@ public class Twicast implements ShareService{
 
     private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
+    private final Pattern SupportURL_Live1 = Pattern.compile("https://twitcasting\\.tv/(.+)");
+    private final Pattern SupportURL_Live2 = Pattern.compile("https://twitcasting\\.tv/(.+)/movie/(\\d+)");
+
+    private final Pattern matcher_playlistJson = Pattern.compile("data-movie-playlist='(.+)'");
+
     public Twicast(String ClientID, String ClientSecret){
         this.ClientID = ClientID;
         this.ClientSecret = ClientSecret;
@@ -44,8 +49,8 @@ public class Twicast implements ShareService{
         String url = "";
         String jsonText = "";
 
-        Matcher matcher_live = Pattern.compile("https://twitcasting\\.tv/(.+)").matcher(data.getURL());
-        Matcher matcher_live2 = Pattern.compile("https://twitcasting\\.tv/(.+)/movie/(\\d+)").matcher(data.getURL());
+        Matcher matcher_live = SupportURL_Live1.matcher(data.getURL());
+        Matcher matcher_live2 = SupportURL_Live2.matcher(data.getURL());
 
 
         String id = "";
@@ -126,7 +131,7 @@ public class Twicast implements ShareService{
         }
 
         if (!htmlText.isEmpty()){
-            Matcher matcher = Pattern.compile("data-movie-playlist='(.+)'").matcher(htmlText);
+            Matcher matcher = matcher_playlistJson.matcher(htmlText);
             if (matcher.find()){
                 JsonElement json1 = new Gson().fromJson(matcher.group(1), JsonElement.class);
                 //System.out.println(json1.toString());
@@ -147,8 +152,8 @@ public class Twicast implements ShareService{
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
         String title = "";
 
-        Matcher matcher_live = Pattern.compile("https://twitcasting\\.tv/(.+)").matcher(data.getURL());
-        Matcher matcher_live2 = Pattern.compile("https://twitcasting\\.tv/(.+)/movie/(\\d+)").matcher(data.getURL());
+        Matcher matcher_live = SupportURL_Live1.matcher(data.getURL());
+        Matcher matcher_live2 = SupportURL_Live2.matcher(data.getURL());
 
         boolean isCheckUser = true;
 
@@ -220,6 +225,6 @@ public class Twicast implements ShareService{
 
     @Override
     public String getVersion() {
-        return "20230916";
+        return "20240502";
     }
 }

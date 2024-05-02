@@ -16,6 +16,10 @@ import java.util.regex.Pattern;
 
 
 public class OPENREC implements ShareService{
+
+    private final Pattern matcher_URL = Pattern.compile("\"url\":\"(.*)\",\"url_s");
+    private final Pattern matcher_LdJson = Pattern.compile("<script type=\"application/ld\\+json\">\\{(.*)\\}");
+
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
         // https://www.openrec.tv/movie/p2zj7wj1nzw
@@ -51,6 +55,7 @@ public class OPENREC implements ShareService{
 
             Request build = new Request.Builder()
                     .url("https://public.openrec.tv/external/api/v5/movies/" + id)
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .build();
 
             Response response = client.newCall(build).execute();
@@ -68,7 +73,7 @@ public class OPENREC implements ShareService{
 
             String tempJson = element.toString();
 
-            Matcher matcher = Pattern.compile("\"url\":\"(.*)\",\"url_s").matcher(tempJson);
+            Matcher matcher = matcher_URL.matcher(tempJson);
             if (matcher.find()) {
                 return matcher.group(1);
             }
@@ -89,6 +94,7 @@ public class OPENREC implements ShareService{
 
         Request build = new Request.Builder()
                 .url(data.getURL())
+                .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                 .build();
 
         String HtmlText = "";
@@ -105,7 +111,7 @@ public class OPENREC implements ShareService{
 
         //System.out.println(HtmlText);
 
-        Matcher matcher = Pattern.compile("<script type=\"application/ld\\+json\">\\{(.*)\\}").matcher(HtmlText);
+        Matcher matcher = matcher_LdJson.matcher(HtmlText);
 
         if (!matcher.find()){
             return "";
@@ -128,6 +134,6 @@ public class OPENREC implements ShareService{
 
     @Override
     public String getVersion() {
-        return "20230909";
+        return "20240502";
     }
 }

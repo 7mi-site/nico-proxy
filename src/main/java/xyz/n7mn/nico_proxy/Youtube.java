@@ -19,11 +19,14 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 public class Youtube implements ShareService{
+
+    private final Pattern SupportURL_Video1 = Pattern.compile("(youtu\\.be/|youtube\\.com/watch\\?v=)(.*)");
+
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
 
         String url = data.getURL().split("&")[0];
-        Matcher matcher = Pattern.compile("(youtu\\.be/|youtube.com/watch\\?v=)(.*)").matcher(url);
+        Matcher matcher = SupportURL_Video1.matcher(url);
 
         if (!matcher.find()){
             throw new Exception("Not Support URL");
@@ -126,7 +129,7 @@ public class Youtube implements ShareService{
     @Override
     public String getTitle(RequestVideoData data) throws Exception {
         String url = data.getURL().split("&")[0];
-        Matcher matcher = Pattern.compile("(youtu\\.be/|youtube.com/watch\\?v=)(.*)").matcher(url);
+        Matcher matcher = SupportURL_Video1.matcher(url);
 
         if (!matcher.find()){
             throw new Exception("Not Support URL");
@@ -191,11 +194,11 @@ public class Youtube implements ShareService{
 
     @Override
     public String getServiceName() {
-        return null;
+        return "Youtube";
     }
 
     @Override
     public String getVersion() {
-        return null;
+        return "1.0";
     }
 }

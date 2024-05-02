@@ -14,10 +14,8 @@ import java.io.IOException;
 public class TestMain {
 
     public static void main(String[] args) throws Exception {
-        final OkHttpClient client = new OkHttpClient();
-
-        ResultVideoData video = new Iwara().getVideo(new RequestVideoData("https://www.iwara.tv/video/vwvOcGMRQyvlwD/56-iochi-mari", null));
-        System.out.println(video.getVideoURL());
+        String video = new Abema().getTitle(new RequestVideoData("https://abema.tv/channels/fighting-sports/slots/EEPqpkB2qEdYgX", null));
+        System.out.println(video);
 
     }
 }

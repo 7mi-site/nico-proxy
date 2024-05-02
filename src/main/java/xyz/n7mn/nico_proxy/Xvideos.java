@@ -14,6 +14,9 @@ import java.util.regex.Pattern;
 
 public class Xvideos implements ShareService{
 
+    private final Pattern matcher_url = Pattern.compile("html5player\\.setVideoUrlHigh\\('(.*)'\\)");
+    private final Pattern matcher_title = Pattern.compile("html5player\\.setVideoTitle\\('(.*)'\\);");
+
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
 
@@ -26,7 +29,7 @@ public class Xvideos implements ShareService{
         try {
             Request request_html = new Request.Builder()
                     .url(url)
-                    .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0")
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .build();
             Response response = client.newCall(request_html).execute();
             if (response.body() != null){
@@ -39,7 +42,7 @@ public class Xvideos implements ShareService{
 
         //System.out.println(HtmlText);
 
-        Matcher matcher = Pattern.compile("html5player\\.setVideoUrlHigh\\('(.*)'\\)").matcher(HtmlText);
+        Matcher matcher = matcher_url.matcher(HtmlText);
         if (matcher.find()){
             return new ResultVideoData(matcher.group(1), "", false, false, false, "");
         }
@@ -75,7 +78,7 @@ public class Xvideos implements ShareService{
 
         //System.out.println(HtmlText);
 
-        Matcher matcher = Pattern.compile("html5player.setVideoTitle\\('(.*)'\\);").matcher(HtmlText);
+        Matcher matcher = matcher_title.matcher(HtmlText);
 
         if (!matcher.find()){
             return "";
@@ -93,6 +96,6 @@ public class Xvideos implements ShareService{
 
     @Override
     public String getVersion() {
-        return "20230909";
+        return "20240502";
     }
 }

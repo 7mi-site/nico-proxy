@@ -15,6 +15,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TikTok implements ShareService{
+
+    private final Pattern matcher_json = Pattern.compile("<script type=\"application/ld\\+json\" id=\"BreadcrumbList\">\\{(.*)\\}</script><style data-emotion=\"tiktok");
+
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
 
@@ -35,7 +38,7 @@ public class TikTok implements ShareService{
 
         final String id = split[i + 1];
 
-        if (id.length() == 0){
+        if (id.isEmpty()){
             throw new Exception("Video NotFound");
         }
 
@@ -43,6 +46,7 @@ public class TikTok implements ShareService{
         try {
             Request request_html = new Request.Builder()
                     .url("https://api16-normal-c-useast1a.tiktokv.com/aweme/v1/feed/?aweme_id="+id+"&version_name=26.1.3&version_code=260103&build_number=26.1.3&manifest_version_code=260103&update_version_code=260103&openudid=7fa1e2eb684ec9c2&uuid=5697458837675649&_rticket=1690897755327&ts=1690897755&device_brand=Google&device_type=Pixel+4&device_platform=android&resolution=1080%2A1920&dpi=420&os_version=10&os_api=29&carrier_region=US&sys_region=US&region=US&app_name=trill&app_language=en&language=en&timezone_name=America%2FNew_York&timezone_offset=-14400&channel=googleplay&ac=wifi&mcc_mnc=310260&is_my_cn=0&aid=1180&ssmix=a&as=a1qwert123&cp=cbfhckdckkde1")
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .build();
             Response response = client.newCall(request_html).execute();
             if (response.body() != null){
@@ -76,6 +80,7 @@ public class TikTok implements ShareService{
         String HtmlText = "";
         Request request_html = new Request.Builder()
                 .url(data.getURL())
+                .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                 .build();
         try {
             Response response = client.newCall(request_html).execute();
@@ -87,7 +92,7 @@ public class TikTok implements ShareService{
             return "";
         }
 
-        Matcher matcher = Pattern.compile("<script type=\"application/ld\\+json\" id=\"BreadcrumbList\">\\{(.*)\\}</script><style data-emotion=\"tiktok").matcher(HtmlText);
+        Matcher matcher = matcher_json.matcher(HtmlText);
 
         if (!matcher.find()){
             return "";
