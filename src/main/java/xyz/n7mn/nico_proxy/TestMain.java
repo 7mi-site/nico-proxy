@@ -13,5 +13,11 @@ public class TestMain {
         //System.out.println(video);
         //System.out.println(new Piapro().getTitle(new RequestVideoData("https://piapro.jp/t/KQn0", null)));
 
+        //ResultVideoData video = new SoundCloud().getVideo(new RequestVideoData("https://soundcloud.com/baron1_3/penguin3rd", null));
+        //System.out.println(video.getAudioURL());
+
+        //String title = new SoundCloud().getTitle(new RequestVideoData("https://soundcloud.com/baron1_3/penguin3rd", null));
+        //System.out.println(title);
+
     }
 }
