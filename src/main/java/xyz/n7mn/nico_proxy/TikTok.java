@@ -67,7 +67,7 @@ public class TikTok implements ShareService{
             throw new Exception("APIError : " + e.getMessage());
         }
         SetCookie = sb.substring(0, sb.length() - 2);
-        System.out.println(SetCookie);
+        //System.out.println(SetCookie);
 
         //System.out.println(HtmlText);
 
