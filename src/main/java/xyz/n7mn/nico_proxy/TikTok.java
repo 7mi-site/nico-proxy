@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 public class TikTok implements ShareService{
 
     private final Pattern matcher_json = Pattern.compile("<script type=\"application/ld\\+json\" id=\"BreadcrumbList\">\\{(.*)\\}</script><style data-emotion=\"tiktok");
+    private final Pattern matcher_DataJson = Pattern.compile("<script id=\"__UNIVERSAL_DATA_FOR_REHYDRATION__\" type=\"application/json\">(.+)</script><script data-chunk=\"webapp-desktop\" async src=\"https://sf16-website-login\\.neutral\\.ttwstatic\\.com/obj/tiktok_web_login_static/tiktok/webapp/main/webapp-desktop/runtime\\.ad47afed13cf237e8ae4\\.js\"></script>");
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
@@ -43,25 +44,46 @@ public class TikTok implements ShareService{
         }
 
         String HtmlText = "";
+        String SetCookie = "";
+        StringBuilder sb = new StringBuilder();
         try {
             Request request_html = new Request.Builder()
-                    .url("https://api16-normal-c-useast1a.tiktokv.com/aweme/v1/feed/?aweme_id="+id+"&version_name=26.1.3&version_code=260103&build_number=26.1.3&manifest_version_code=260103&update_version_code=260103&openudid=7fa1e2eb684ec9c2&uuid=5697458837675649&_rticket=1690897755327&ts=1690897755&device_brand=Google&device_type=Pixel+4&device_platform=android&resolution=1080%2A1920&dpi=420&os_version=10&os_api=29&carrier_region=US&sys_region=US&region=US&app_name=trill&app_language=en&language=en&timezone_name=America%2FNew_York&timezone_offset=-14400&channel=googleplay&ac=wifi&mcc_mnc=310260&is_my_cn=0&aid=1180&ssmix=a&as=a1qwert123&cp=cbfhckdckkde1")
+                    .url(data.getURL())
                     .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .build();
             Response response = client.newCall(request_html).execute();
             if (response.body() != null){
                 HtmlText = response.body().string();
             }
+            //System.out.println(response.header("Set-Cookie"));
+            response.headers().forEach((value)->{
+                //System.out.println(value.component1() + " : " + value.component2());
+                if (value.component1().equalsIgnoreCase("set-cookie")){
+                    sb.append(value.component2().split(";")[0]).append("; ");
+                }
+            });
             response.close();
         } catch (Exception e){
             throw new Exception("APIError : " + e.getMessage());
         }
+        SetCookie = sb.substring(0, sb.length() - 2);
+        System.out.println(SetCookie);
 
-        JsonElement json = new Gson().fromJson(HtmlText, JsonElement.class);
-        JsonArray object = json.getAsJsonObject().getAsJsonArray("aweme_list").get(0).getAsJsonObject().get("video").getAsJsonObject().getAsJsonObject("play_addr").getAsJsonArray("url_list");
-        return new ResultVideoData(object.get(0).getAsString(), "", false, false, false, "");
+        //System.out.println(HtmlText);
+
+        Matcher matcher = matcher_DataJson.matcher(HtmlText);
+        if (!matcher.find()){
+            return null;
+        }
+
+        //System.out.println(matcher.group(1));
+
+        JsonElement json = new Gson().fromJson(matcher.group(1), JsonElement.class);
+        //JsonArray object = json.getAsJsonObject().getAsJsonArray("aweme_list").get(0).getAsJsonObject().get("video").getAsJsonObject().getAsJsonObject("play_addr").getAsJsonArray("url_list");
+        //return new ResultVideoData(object.get(0).getAsString(), "", false, false, false, "");
 
         //throw new Exception("VideoURL Not Found");
+        return new ResultVideoData(json.getAsJsonObject().get("__DEFAULT_SCOPE__").getAsJsonObject().get("webapp.video-detail").getAsJsonObject().get("itemInfo").getAsJsonObject().get("itemStruct").getAsJsonObject().get("video").getAsJsonObject().get("downloadAddr").getAsString(), "", false, false, false, SetCookie, null);
     }
 
     @Override
