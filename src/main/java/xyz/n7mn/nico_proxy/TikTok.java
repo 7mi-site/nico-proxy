@@ -16,8 +16,7 @@ import java.util.regex.Pattern;
 
 public class TikTok implements ShareService{
 
-    private final Pattern matcher_json = Pattern.compile("<script type=\"application/ld\\+json\" id=\"BreadcrumbList\">\\{(.*)\\}</script><style data-emotion=\"tiktok");
-    private final Pattern matcher_DataJson = Pattern.compile("<script id=\"__UNIVERSAL_DATA_FOR_REHYDRATION__\" type=\"application/json\">(.+)</script><script data-chunk=\"webapp-desktop\" async src=\"https://sf16-website-login\\.neutral\\.ttwstatic\\.com/obj/tiktok_web_login_static/tiktok/webapp/main/webapp-desktop/runtime\\.ad47afed13cf237e8ae4\\.js\"></script>");
+    private final Pattern matcher_DataJson = Pattern.compile("<script id=\"__UNIVERSAL_DATA_FOR_REHYDRATION__\" type=\"application/json\">\\{(.+)\\}</script>");
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
@@ -73,16 +72,13 @@ public class TikTok implements ShareService{
 
         Matcher matcher = matcher_DataJson.matcher(HtmlText);
         if (!matcher.find()){
+            //System.out.println("not found");
             return null;
         }
 
         //System.out.println(matcher.group(1));
 
-        JsonElement json = new Gson().fromJson(matcher.group(1), JsonElement.class);
-        //JsonArray object = json.getAsJsonObject().getAsJsonArray("aweme_list").get(0).getAsJsonObject().get("video").getAsJsonObject().getAsJsonObject("play_addr").getAsJsonArray("url_list");
-        //return new ResultVideoData(object.get(0).getAsString(), "", false, false, false, "");
-
-        //throw new Exception("VideoURL Not Found");
+        JsonElement json = new Gson().fromJson("{"+matcher.group(1)+"}", JsonElement.class);
         return new ResultVideoData(json.getAsJsonObject().get("__DEFAULT_SCOPE__").getAsJsonObject().get("webapp.video-detail").getAsJsonObject().get("itemInfo").getAsJsonObject().get("itemStruct").getAsJsonObject().get("video").getAsJsonObject().get("downloadAddr").getAsString(), "", false, false, false, SetCookie, null);
     }
 
@@ -114,7 +110,7 @@ public class TikTok implements ShareService{
             return "";
         }
 
-        Matcher matcher = matcher_json.matcher(HtmlText);
+        Matcher matcher = matcher_DataJson.matcher(HtmlText);
 
         if (!matcher.find()){
             return "";
@@ -124,8 +120,7 @@ public class TikTok implements ShareService{
         //System.out.println(jsonText);
 
         JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
-        title = json.getAsJsonObject().getAsJsonArray("itemListElement").get(2).getAsJsonObject().get("item").getAsJsonObject().get("name").getAsString();
-        title = title.split(" \\| TikTok")[0];
+        title = json.getAsJsonObject().get("__DEFAULT_SCOPE__").getAsJsonObject().get("webapp.video-detail").getAsJsonObject().get("itemInfo").getAsJsonObject().get("itemStruct").getAsJsonObject().get("desc").getAsString();
 
         return title;
     }
