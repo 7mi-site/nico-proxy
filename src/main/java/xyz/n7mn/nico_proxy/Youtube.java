@@ -21,7 +21,7 @@ import java.util.zip.GZIPInputStream;
 
 public class Youtube implements ShareService{
 
-    private final Pattern SupportURL_Video1 = Pattern.compile("(youtu\\.be/|youtube\\.com/watch\\?v=)(.*)");
+    private final Pattern SupportURL_Video1 = Pattern.compile("(youtu\\.be/|youtube\\.com/watch\\?v=)(.+)");
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {

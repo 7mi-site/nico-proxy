@@ -19,7 +19,7 @@ import java.util.zip.GZIPInputStream;
 
 public class YoutubeHLS implements ShareService{
 
-    private final Pattern SupportURL = Pattern.compile("(youtu\\.be/|youtube.com/watch\\?v=)(.*)");
+    private final Pattern SupportURL = Pattern.compile("(youtu\\.be/|youtube\\.com/watch\\?v=)(.+)");
     private final Pattern matcher_rate = Pattern.compile("#EXT-X-STREAM-INF:BANDWIDTH=(\\d+),CODECS=\"(.*)\",RESOLUTION=(.*),FRAME-RATE=(\\d+),VIDEO-RANGE=(.*),AUDIO=\"(\\d+)\",CLOSED-CAPTIONS=");
     private final Pattern matcher_rate2 = Pattern.compile("#EXT-X-MEDIA:URI=\"(.*)\",TYPE=AUDIO,GROUP-ID=\"(\\d+)\",NAME=\"(.*)\",DEFAULT=(.*),AUTOSELECT=");
 
