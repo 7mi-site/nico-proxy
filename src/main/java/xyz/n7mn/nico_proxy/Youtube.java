@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import okhttp3.*;
+import xyz.n7mn.nico_proxy.bilibili.Video;
 import xyz.n7mn.nico_proxy.data.RequestVideoData;
 import xyz.n7mn.nico_proxy.data.ResultVideoData;
 
@@ -37,20 +38,20 @@ public class Youtube implements ShareService{
         final OkHttpClient client = data.getProxy() != null ? new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
 
-        String SendJson = "{\"context\": {\"client\": {\"clientName\": \"IOS\", \"clientVersion\": \"17.33.2\", \"deviceModel\": \"iPhone14,3\", \"userAgent\": \"com.google.ios.youtube/17.33.2 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)\", \"hl\": \"ja\", \"timeZone\": \"UTC\", \"utcOffsetMinutes\": 0}}, \"videoId\": \""+videoID+"\", \"playbackContext\": {\"contentPlaybackContext\": {\"html5Preference\": \"HTML5_PREF_WANTS\"}}, \"contentCheckOk\": true, \"racyCheckOk\": true}";
+        String SendJson = "{\"context\": {\"client\": {\"clientName\": \"IOS\", \"clientVersion\": \"19.09.3\", \"deviceModel\": \"iPhone14,3\", \"userAgent\": \"com.google.ios.youtube/19.09.3 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)\", \"hl\": \"en\", \"timeZone\": \"UTC\", \"utcOffsetMinutes\": 0}}, \"videoId\": \""+ videoID +"\", \"playbackContext\": {\"contentPlaybackContext\": {\"html5Preference\": \"HTML5_PREF_WANTS\"}}, \"contentCheckOk\": true, \"racyCheckOk\": true}";
 
         final MediaType JSON = MediaType.get("application/json; charset=utf-8");
         RequestBody body = RequestBody.create(SendJson, JSON);
 
         Request request_iosAPI = new Request.Builder()
                 .url("https://www.youtube.com/youtubei/v1/player?key=AIzaSyB-63vPrdThhKuerbB2N_l7Kwwcxj6yUAc&prettyPrint=false")
-                .addHeader("Cookie", "PREF=hl=en&tz=UTC; SOCS=CAI; GPS=1; YSC=cfiTHKBLEmo; VISITOR_INFO1_LIVE=P3aYDmsojgI; VISITOR_PRIVACY_METADATA=CgJKUBICGgA%3D")
-                .addHeader("User-Agent", "com.google.ios.youtube/17.33.2 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)")
+                .addHeader("Cookie", "GPS=1; PREF=hl=en&tz=UTC; SOCS=CAI; VISITOR_INFO1_LIVE=9tH5MTNfq14; VISITOR_PRIVACY_METADATA=CgJKUBIEGgAgJg%3D%3D; YSC=GwL8drMhsgc")
+                .addHeader("User-Agent", "com.google.ios.youtube/19.09.3 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)")
                 .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                 .addHeader("Accept-Language", "en-us,en;q=0.5")
                 .addHeader("Content-Type", "application/json")
                 .addHeader("X-Youtube-Client-Name", "5")
-                .addHeader("X-Youtube-Client-Version", "17.33.2")
+                .addHeader("X-Youtube-Client-Version", "19.09.3")
                 .addHeader("Origin", "https://www.youtube.com")
                 .addHeader("Accept-Encoding", "gzip")
                 .addHeader("Connection", "close")
@@ -140,20 +141,20 @@ public class Youtube implements ShareService{
         final OkHttpClient client = data.getProxy() != null ? new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
 
-        String SendJson = "{\"context\": {\"client\": {\"clientName\": \"IOS\", \"clientVersion\": \"17.33.2\", \"deviceModel\": \"iPhone14,3\", \"userAgent\": \"com.google.ios.youtube/17.33.2 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)\", \"hl\": \"ja\", \"timeZone\": \"UTC\", \"utcOffsetMinutes\": 0}}, \"videoId\": \""+videoID+"\", \"playbackContext\": {\"contentPlaybackContext\": {\"html5Preference\": \"HTML5_PREF_WANTS\"}}, \"contentCheckOk\": true, \"racyCheckOk\": true}";
+        String SendJson = "{\"context\": {\"client\": {\"clientName\": \"IOS\", \"clientVersion\": \"19.09.3\", \"deviceModel\": \"iPhone14,3\", \"userAgent\": \"com.google.ios.youtube/19.09.3 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)\", \"hl\": \"en\", \"timeZone\": \"UTC\", \"utcOffsetMinutes\": 0}}, \"videoId\": \""+ videoID +"\", \"playbackContext\": {\"contentPlaybackContext\": {\"html5Preference\": \"HTML5_PREF_WANTS\"}}, \"contentCheckOk\": true, \"racyCheckOk\": true}";
 
         final MediaType JSON = MediaType.get("application/json; charset=utf-8");
         RequestBody body = RequestBody.create(SendJson, JSON);
 
         Request request_iosAPI = new Request.Builder()
                 .url("https://www.youtube.com/youtubei/v1/player?key=AIzaSyB-63vPrdThhKuerbB2N_l7Kwwcxj6yUAc&prettyPrint=false")
-                .addHeader("Cookie", "PREF=hl=en&tz=UTC; SOCS=CAI; GPS=1; YSC=cfiTHKBLEmo; VISITOR_INFO1_LIVE=P3aYDmsojgI; VISITOR_PRIVACY_METADATA=CgJKUBICGgA%3D")
-                .addHeader("User-Agent", "com.google.ios.youtube/17.33.2 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)")
+                .addHeader("Cookie", "GPS=1; PREF=hl=en&tz=UTC; SOCS=CAI; VISITOR_INFO1_LIVE=9tH5MTNfq14; VISITOR_PRIVACY_METADATA=CgJKUBIEGgAgJg%3D%3D; YSC=GwL8drMhsgc")
+                .addHeader("User-Agent", "com.google.ios.youtube/19.09.3 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)")
                 .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                 .addHeader("Accept-Language", "en-us,en;q=0.5")
                 .addHeader("Content-Type", "application/json")
                 .addHeader("X-Youtube-Client-Name", "5")
-                .addHeader("X-Youtube-Client-Version", "17.33.2")
+                .addHeader("X-Youtube-Client-Version", "19.09.3")
                 .addHeader("Origin", "https://www.youtube.com")
                 .addHeader("Accept-Encoding", "gzip")
                 .addHeader("Connection", "close")
