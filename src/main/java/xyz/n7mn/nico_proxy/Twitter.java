@@ -13,7 +13,6 @@ import xyz.n7mn.nico_proxy.twitter.variants;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.util.regex.Pattern;
 
 
 public class Twitter implements ShareService{

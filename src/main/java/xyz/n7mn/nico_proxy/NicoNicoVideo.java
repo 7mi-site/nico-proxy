@@ -1,7 +1,6 @@
 package xyz.n7mn.nico_proxy;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import kotlin.Pair;
 import okhttp3.*;
@@ -13,10 +12,6 @@ import xyz.n7mn.nico_proxy.data.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
