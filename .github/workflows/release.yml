@@ -24,8 +24,6 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body: |
-            Changes in this Release
-            - First Change
-            - Second Change
-          draft: true
+            - 変更点を書く
+          draft: false
           prerelease: false
