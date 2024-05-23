@@ -24,7 +24,6 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body: |
-            - Gimy : このバージョンで非推奨、1.15.0で削除予定になりました。
-            - Twitter : twitter.com -> x.comを反映
+            - なんかなんか
           draft: false
           prerelease: false
