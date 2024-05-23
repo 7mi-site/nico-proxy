@@ -19,6 +19,7 @@ public class SoundCloud implements ShareService{
 
     //private final Pattern appVersion = Pattern.compile("window\\.__sc_version=\"(\\d+)\"");
     private final Pattern jsonData = Pattern.compile("window\\.__sc_hydration = \\[(.+)]");
+    private final Pattern secretTokenCheck = Pattern.compile("secret_token");
 
     private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
@@ -55,16 +56,37 @@ public class SoundCloud implements ShareService{
 
         //System.out.println("[" + matcher.group(1) + "]");
         final JsonElement json = new Gson().fromJson("[" + matcher.group(1) + "]", JsonElement.class);
-        //System.out.println(json.getAsJsonArray().get(7).getAsJsonObject().get("hydratable").getAsString());
+        System.out.println(json);
 
-        final String mediaUrl = json.getAsJsonArray().get(7).getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("transcodings").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
-        final String track_authorization = json.getAsJsonArray().get(7).getAsJsonObject().get("data").getAsJsonObject().get("track_authorization").getAsString();
+        int x = 0;
+        for (int i = 0; i < json.getAsJsonArray().size(); i++){
+            if (json.getAsJsonArray().get(i).getAsJsonObject().has("hydratable") && json.getAsJsonArray().get(i).getAsJsonObject().get("hydratable").getAsString().equals("sound")){
+                x = i;
+                break;
+            }
+        }
 
-        final Request request2 = new Request.Builder()
-                .url(mediaUrl + "?client_id=13dlrtjfx7d3OLEsFzbjJztO2G0U38DK&track_authorization=" + track_authorization)
-                .addHeader("x-datadome-clientid", "wlEz39mbH4i1EF83K8NNXGltwpzBmZcgvUwIRgftwHVYUYZHqrMu52LCm3NAh2z0A09o23wktFo32M00R3~G1_58MV~H9d2G1irVg5j7LoiAnAD6EqVnngwcwBNUbzT3")
-                .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
-                .build();
+        final String mediaUrl = json.getAsJsonArray().get(x).getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("transcodings").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
+        final String track_authorization = json.getAsJsonArray().get(x).getAsJsonObject().get("data").getAsJsonObject().get("track_authorization").getAsString();
+
+        //System.out.println(mediaUrl + "?client_id=13dlrtjfx7d3OLEsFzbjJztO2G0U38DK&track_authorization=" + track_authorization);
+
+        // ?secret_token=
+        final Request request2;
+
+        if (!secretTokenCheck.matcher(mediaUrl).find()){
+            request2 = new Request.Builder()
+                    .url(mediaUrl + "?client_id=13dlrtjfx7d3OLEsFzbjJztO2G0U38DK&track_authorization=" + track_authorization)
+                    .addHeader("x-datadome-clientid", "wlEz39mbH4i1EF83K8NNXGltwpzBmZcgvUwIRgftwHVYUYZHqrMu52LCm3NAh2z0A09o23wktFo32M00R3~G1_58MV~H9d2G1irVg5j7LoiAnAD6EqVnngwcwBNUbzT3")
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                    .build();
+        } else {
+            request2 = new Request.Builder()
+                    .url(mediaUrl + "&client_id=13dlrtjfx7d3OLEsFzbjJztO2G0U38DK&track_authorization=" + track_authorization)
+                    .addHeader("x-datadome-clientid", "wlEz39mbH4i1EF83K8NNXGltwpzBmZcgvUwIRgftwHVYUYZHqrMu52LCm3NAh2z0A09o23wktFo32M00R3~G1_58MV~H9d2G1irVg5j7LoiAnAD6EqVnngwcwBNUbzT3")
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                    .build();
+        }
 
         result = "";
         try {
