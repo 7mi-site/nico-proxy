@@ -13,6 +13,7 @@ import java.net.Proxy;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Deprecated
 public class Gimy implements ShareService{
 
     private final Pattern Support_URL1 = Pattern.compile("https://gimy\\.ai/eps/(.+)\\.html");
