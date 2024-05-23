@@ -6,18 +6,18 @@ on:
 
 name: Create Release
 
-permissions: write-all
-
 jobs:
   build:
     name: Create Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
       - name: Create Release
         id: create_release
-        uses: rafrafek/create-release@latest
+        uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
