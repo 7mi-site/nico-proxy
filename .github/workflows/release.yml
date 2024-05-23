@@ -6,13 +6,15 @@ on:
 
 name: Create Release
 
-permissions: write-all
-
 
 jobs:
   build:
     name: Create Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      deployments: write
     steps:
       - name: Checkout code
         uses: actions/checkout@master
