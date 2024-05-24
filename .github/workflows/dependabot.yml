@@ -1,4 +1,0 @@
-package-ecosystem: "gradle"
-directory: "/"
-schedule:
-  interval: "weekly"
