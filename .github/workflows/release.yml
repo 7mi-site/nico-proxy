@@ -24,6 +24,7 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body: |
-            - SoundCloud使用時コンソールログに余計な文字列が入るのを修正
+            - Gimy対応削除
+            - vimeo対応
           draft: false
           prerelease: false
