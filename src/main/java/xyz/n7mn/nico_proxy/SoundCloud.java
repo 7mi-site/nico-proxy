@@ -56,7 +56,7 @@ public class SoundCloud implements ShareService{
 
         //System.out.println("[" + matcher.group(1) + "]");
         final JsonElement json = new Gson().fromJson("[" + matcher.group(1) + "]", JsonElement.class);
-        System.out.println(json);
+        //System.out.println(json);
 
         int x = 0;
         for (int i = 0; i < json.getAsJsonArray().size(); i++){
