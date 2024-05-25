@@ -64,7 +64,17 @@ public class Abema implements ShareService {
 
             //System.out.println(api_result);
 
-            JsonElement json = new Gson().fromJson(api_result, JsonElement.class);
+            JsonElement json;
+            try {
+                json = new Gson().fromJson(api_result, JsonElement.class);
+            } catch (Exception e){
+                throw new Exception("Not Support Video");
+            }
+
+            if (!json.getAsJsonObject().has("playback")){
+                throw new Exception("Not Support Video");
+            }
+
             if (!json.getAsJsonObject().getAsJsonObject("playback").has("hlsPreview")){
                 throw new Exception("Not Support Video");
             }
@@ -91,7 +101,21 @@ public class Abema implements ShareService {
 
             //System.out.println(api_result);
 
-            JsonElement json = new Gson().fromJson(api_result, JsonElement.class);
+            JsonElement json;
+            try {
+                json = new Gson().fromJson(api_result, JsonElement.class);
+            } catch (Exception e){
+                throw new Exception("Not Support Archive");
+            }
+
+            if (!json.getAsJsonObject().has("slot")){
+                throw new Exception("Not Support Video");
+            }
+
+            if (!json.getAsJsonObject().getAsJsonObject("slot").has("playback")){
+                throw new Exception("Not Support Video");
+            }
+
             if (!json.getAsJsonObject().getAsJsonObject("slot").getAsJsonObject("playback").has("hlsPreview")){
                 throw new Exception("Not Support Archive");
             }
