@@ -32,12 +32,30 @@ public class SoundCloud implements ShareService{
         }
 
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
+
+        final String ClientID = "ICQyLasUBASlFk0tLJ8FRmTTFc11FVBZ";
+
+        Request request1 = new Request.Builder()
+                .url("https://api-auth.soundcloud.com/oauth/session?client_id="+ClientID)
+                .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                .build();
+
+        String result = "";
+        try {
+            Response response = client.newCall(request1).execute();
+            result = response.body().string();
+            response.close();
+        } catch (Exception e){
+            throw e;
+        }
+
+        //System.out.println(result);
+
         final Request request = new Request.Builder()
                 .url(data.getURL())
                 .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                 .build();
 
-        String result = "";
         try {
             Response response = client.newCall(request).execute();
             result = response.body().string();
@@ -69,20 +87,20 @@ public class SoundCloud implements ShareService{
         final String mediaUrl = json.getAsJsonArray().get(x).getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("transcodings").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
         final String track_authorization = json.getAsJsonArray().get(x).getAsJsonObject().get("data").getAsJsonObject().get("track_authorization").getAsString();
 
-        //System.out.println(mediaUrl + "?client_id=13dlrtjfx7d3OLEsFzbjJztO2G0U38DK&track_authorization=" + track_authorization);
+        //System.out.println(mediaUrl + "?client_id="+ClientID+"&track_authorization=" + track_authorization);
 
         // ?secret_token=
         final Request request2;
 
         if (!secretTokenCheck.matcher(mediaUrl).find()){
             request2 = new Request.Builder()
-                    .url(mediaUrl + "?client_id=13dlrtjfx7d3OLEsFzbjJztO2G0U38DK&track_authorization=" + track_authorization)
+                    .url(mediaUrl + "?client_id="+ClientID+"&track_authorization=" + track_authorization)
                     .addHeader("x-datadome-clientid", "wlEz39mbH4i1EF83K8NNXGltwpzBmZcgvUwIRgftwHVYUYZHqrMu52LCm3NAh2z0A09o23wktFo32M00R3~G1_58MV~H9d2G1irVg5j7LoiAnAD6EqVnngwcwBNUbzT3")
                     .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .build();
         } else {
             request2 = new Request.Builder()
-                    .url(mediaUrl + "&client_id=13dlrtjfx7d3OLEsFzbjJztO2G0U38DK&track_authorization=" + track_authorization)
+                    .url(mediaUrl + "&client_id="+ClientID+"&track_authorization=" + track_authorization)
                     .addHeader("x-datadome-clientid", "wlEz39mbH4i1EF83K8NNXGltwpzBmZcgvUwIRgftwHVYUYZHqrMu52LCm3NAh2z0A09o23wktFo32M00R3~G1_58MV~H9d2G1irVg5j7LoiAnAD6EqVnngwcwBNUbzT3")
                     .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .build();
@@ -97,7 +115,7 @@ public class SoundCloud implements ShareService{
             throw e;
         }
 
-        //System.out.println(result);
+        System.out.println(result);
         JsonElement json1 = new Gson().fromJson(result, JsonElement.class);
 
         return new ResultVideoData(null, json1.getAsJsonObject().get("url").getAsString(), true, false, false, null);
