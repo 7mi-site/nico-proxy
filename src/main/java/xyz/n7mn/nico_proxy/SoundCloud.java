@@ -115,7 +115,7 @@ public class SoundCloud implements ShareService{
             throw e;
         }
 
-        System.out.println(result);
+        //System.out.println(result);
         JsonElement json1 = new Gson().fromJson(result, JsonElement.class);
 
         return new ResultVideoData(null, json1.getAsJsonObject().get("url").getAsString(), true, false, false, null);
