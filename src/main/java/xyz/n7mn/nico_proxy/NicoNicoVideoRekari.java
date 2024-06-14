@@ -229,39 +229,69 @@ public class NicoNicoVideoRekari implements ShareService {
 
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
-        String HtmlText = "";
-        if (!Pattern.compile("lv").matcher(data.getURL()).find()) {
-            //System.out.println("video");
-            try {
-                Request request_html = new Request.Builder()
-                        .url("https://www.nicovideo.jp/watch_tmp/" + id)
-                        .addHeader("User-Agent", UserAgent)
-                        .build();
-                Response response = client.newCall(request_html).execute();
-                if (response.body() != null) {
-                    HtmlText = response.body().string();
-                }
-                response.close();
 
-            } catch (Exception e) {
-                return "";
+        String HtmlText = "";
+        try {
+            Request request_html = new Request.Builder()
+                    .url("https://www.nicovideo.jp/watch_tmp/" + id)
+                    .addHeader("User-Agent", UserAgent)
+                    .build();
+            Response response = client.newCall(request_html).execute();
+            if (response.body() != null){
+                HtmlText = response.body().string();
+            }
+            response.close();
+
+        } catch (Exception e) {
+            if (data.getProxy() != null) {
+                throw new Exception("www.nicovideo.jp" + e.getMessage() + " (Use Proxy : " + data.getProxy().getProxyIP() + ")");
+            } else {
+                throw new Exception("www.nicovideo.jp" + e.getMessage());
             }
         }
 
         //System.out.println(HtmlText);
-        Matcher matcher = matcher_LdJsonVideo.matcher(HtmlText);
 
-        if (!matcher.find()){
-            return "";
+        String json_text = "";
+        Matcher matcher_json = matcher_Json.matcher(HtmlText);
+        if (matcher_json.find()){
+            json_text = "{" + matcher_json.group(1) + "}";
+            json_text = json_text.replaceAll("&quot;", "\"").replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
+
+            //System.out.println(json_text);
+
         }
-        //System.out.println("found");
 
-        String jsonText = "{"+matcher.group(1)+"}";
-        jsonText = jsonText.replaceAll("&quot;", "\"");
-        //System.out.println(jsonText);
+        JsonElement json = null;
+        try {
+            json = new Gson().fromJson(json_text, JsonElement.class);
+        } catch (Exception e){
+            //e.printStackTrace();
+            //return null;
+        }
 
-        JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
-        title = json.getAsJsonObject().get("name").getAsString();
+        if (json_text.isEmpty() || json == null){
+            throw new Exception("www.nicovideo.jp Not Found");
+        }
+
+        //System.out.println(id);
+
+        // https://www.nicovideo.jp/api/watch/tmp/sm982882?_frontendId=6&_frontendVersion=0.0.0
+        Request request_api1 = new Request.Builder()
+                .url("https://www.nicovideo.jp/api/watch/tmp/"+id+"?_frontendId=6&_frontendVersion=0.0.0")
+                .addHeader("User-Agent", UserAgent)
+                .addHeader("Host", "www.nicovideo.jp")
+                .addHeader("Priority","u=4")
+                .addHeader("Referer", "https://www.nicovideo.jp/watch_tmp/" + id)
+                .build();
+        Response response = client.newCall(request_api1).execute();
+        if (response.body() != null){
+            HtmlText = response.body().string();
+        }
+
+        json = new Gson().fromJson(HtmlText, JsonElement.class);
+
+        title = json.getAsJsonObject().get("data").getAsJsonObject().get("video").getAsJsonObject().get("title").getAsString();
 
 
         return title;
