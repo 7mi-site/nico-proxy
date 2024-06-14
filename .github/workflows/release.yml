@@ -24,6 +24,6 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body: |
-            - ニコニコ動画 : Re:仮に対応
+            - ニコニコ動画 : Re:仮でもタイトル取得できるように
           draft: false
           prerelease: false
