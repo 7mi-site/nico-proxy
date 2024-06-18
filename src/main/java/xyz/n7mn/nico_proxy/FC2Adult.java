@@ -18,28 +18,40 @@ import java.util.regex.Pattern;
 
 public class FC2Adult implements ShareService {
 
-    private final Pattern matcher_SupportURL1 = Pattern.compile("https://video\\.fc2\\.com/a/(.+)/content/(.+)");
-    private final Pattern matcher_SupportURL2 = Pattern.compile("https://video\\.fc2\\.com/a/content/(.+)");
+    private final Pattern matcher_SupportURL1 = Pattern.compile("https://video\\.fc2\\.com/");
+    private final Pattern matcher_SupportURL2 = Pattern.compile("https://live\\.fc2\\.com");
     private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
         // https://video.fc2.com/a/ja/content/20240611gYt1mZuT
         // https://video.fc2.com/a/content/20240611gYt1mZuT
-        Matcher matcher1 = matcher_SupportURL1.matcher(data.getURL());
-        Matcher matcher2 = matcher_SupportURL2.matcher(data.getURL());
+        Matcher matcher = matcher_SupportURL1.matcher(data.getURL());
 
         final String id;
-        if (!matcher1.find() && !matcher2.find()){
+        if (!matcher.find()){
             throw new Exception("Not Support URL");
-        } else if (matcher1.find()){
-            id = matcher1.group(2).split("\\?")[0];
-        } else if (matcher2.find()){
-            id = matcher2.group(1).split("\\?")[0];
         } else {
-            id = "";
+            boolean isNext = false;
+            boolean isFound = false;
+            String tId = "";
+
+            for (String str : data.getURL().split("/")){
+
+                if (!isNext && str.startsWith("content")){
+                    isNext = true;
+                    continue;
+                }
+
+                if (!isFound && isNext){
+                    tId = str;
+                    isFound = true;
+                }
+            }
+            id = tId;
         }
 
+        //System.out.println("id : " + id);
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
         String HtmlText = "";
@@ -64,7 +76,7 @@ public class FC2Adult implements ShareService {
         }
 
         JsonElement json = new Gson().fromJson(HtmlText, JsonElement.class);
-        //System.out.println(json);
+        System.out.println(json);
         JsonElement json1 = json.getAsJsonObject().get("playlist");
 
         String uri = "";
@@ -304,6 +316,115 @@ public class FC2Adult implements ShareService {
 
     @Override
     public String getTitle(RequestVideoData data) throws Exception {
+        Matcher matcher1 = matcher_SupportURL1.matcher(data.getURL());
+        Matcher matcher2 = matcher_SupportURL2.matcher(data.getURL());
+
+        final String id;
+        boolean isVideo = false;
+        boolean isVideoFlag = matcher1.find();
+        boolean isLiveFlag = matcher2.find();
+
+        if (!isVideoFlag && !isLiveFlag){
+            throw new Exception("Not Support URL");
+        } else if (isVideoFlag){
+            boolean isNext = false;
+            boolean isFound = false;
+            String tId = "";
+
+            for (String str : data.getURL().split("/")){
+
+                if (!isNext && str.startsWith("content")){
+                    isNext = true;
+                    continue;
+                }
+
+                if (!isFound && isNext){
+                    tId = str;
+                    isFound = true;
+                }
+
+            }
+
+            id = tId;
+            isVideo = true;
+        } else {
+            String tId = "";
+            for (String str : data.getURL().split("/")){
+                try {
+                    if (Long.parseLong(str) >= 0){
+                        tId = str;
+                    }
+                } catch (Exception e){
+
+                }
+            }
+            id = tId;
+        }
+
+        //System.out.println("id : " + id + " / " + isVideo);
+
+        final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
+
+        if (isVideo){
+            String HtmlText = "";
+            try {
+
+                Request request_html = new Request.Builder()
+                        .url("https://video.fc2.com/api/v3/videoplayer/"+id+"?eef15dda2596a0c8b4dc556e60e2d020=1&tk=&fs=0")
+                        .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                        .build();
+                Response response = client.newCall(request_html).execute();
+                if (response.body() != null){
+                    HtmlText = response.body().string();
+                }
+                response.close();
+
+            } catch (Exception e) {
+                if (data.getProxy() != null) {
+                    throw new Exception("video.fc2.com " + e.getMessage() + " (Use Proxy : " + data.getProxy().getProxyIP() + ")");
+                } else {
+                    throw new Exception("video.fc2.com " + e.getMessage());
+                }
+            }
+
+            JsonElement json = new Gson().fromJson(HtmlText, JsonElement.class);
+            //System.out.println(json);
+
+            if (json.getAsJsonObject().has("title")){
+                return json.getAsJsonObject().get("title").getAsString();
+            }
+        } else if (!id.isEmpty()) {
+
+            RequestBody body1 = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("channel", null, RequestBody.create("1", MediaType.get("text/plain; charset=utf-8")))
+                    .addFormDataPart("profile", null, RequestBody.create("1", MediaType.get("text/plain; charset=utf-8")))
+                    .addFormDataPart("user", null, RequestBody.create("1", MediaType.get("text/plain; charset=utf-8")))
+                    .addFormDataPart("streamid", null, RequestBody.create(id, MediaType.get("text/plain; charset=utf-8")))
+                    .build();
+
+            Request request1 = new Request.Builder()
+                    .url("https://live.fc2.com/api/memberApi.php")
+                    .addHeader("User-agent", Constant.nico_proxy_UserAgent)
+                    .addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                    .addHeader("X-Requested-With", "XMLHttpRequest")
+                    .addHeader("Referer", "https://live.fc2.com/" + id)
+
+                    .post(body1)
+                    .build();
+            Response response1 = client.newCall(request1).execute();
+            String htmlText = "";
+            if (response1.body() != null) {
+                htmlText = response1.body().string();
+            }
+            response1.close();
+
+            JsonElement json = new Gson().fromJson(htmlText, JsonElement.class);
+
+            //System.out.println(json);
+            return json.getAsJsonObject().get("data").getAsJsonObject().get("channel_data").getAsJsonObject().get("title").getAsString();
+        }
+
         return "";
     }
 
