@@ -125,7 +125,10 @@ public class NicoNicoVideoRekari implements ShareService {
         JsonArray array = json.getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("domand").getAsJsonObject().get("videos").getAsJsonArray();
         JsonArray array2 = json.getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("domand").getAsJsonObject().get("audios").getAsJsonArray();
         for (JsonElement element : array) {
-            postJson.append(element.getAsJsonObject().get("id")).append(",").append(array2.get(0).getAsJsonObject().get("id")).append("],[");
+            //System.out.println(element.getAsJsonObject().get("id").getAsString());
+            if (!element.getAsJsonObject().get("id").getAsString().equals("video-h264-1080p")){
+                postJson.append(element.getAsJsonObject().get("id")).append(",").append(array2.get(0).getAsJsonObject().get("id")).append("],[");
+            }
         }
         String post = postJson.substring(0, postJson.length() - 2) + "]}";
 
