@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 public class Youjizz implements ShareService {
 
     private final Pattern matcher_URL1 = Pattern.compile("https://www\\.youjizz\\.com/videos/(.+)-(\\d+)\\.html");
+    private final Pattern matcher_Json = Pattern.compile("var dataEncodings = \\[(.+)\\];");
     private final Pattern matcher_Title = Pattern.compile("<title>(.+)</title>");
 
     private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
@@ -23,6 +24,40 @@ public class Youjizz implements ShareService {
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
+
+        if (!matcher_URL1.matcher(data.getURL()).find()){
+            throw new Exception("Not Support URL");
+        }
+
+        Request request = new Request.Builder()
+                .url(data.getURL())
+                .addHeader("User-Agent",Constant.nico_proxy_UserAgent)
+                .build();
+
+        String result = "";
+
+        try {
+            Response response = client.newCall(request).execute();
+            result = response.body().string();
+            response.close();
+        } catch (Exception e){
+            throw e;
+        }
+        Matcher matcher = matcher_Json.matcher(result);
+
+        if (matcher.find()){
+            JsonElement json = new Gson().fromJson("[" + matcher.group(1) + "]", JsonElement.class);
+            //System.out.println(json);
+
+            for (int i = json.getAsJsonArray().size() - 1; i >= 0; i--){
+
+                if (!json.getAsJsonArray().get(i).getAsJsonObject().get("quality").getAsString().equals("Auto")){
+                    return new ResultVideoData("https:"+json.getAsJsonArray().get(i).getAsJsonObject().get("filename").getAsString(), null, true, false, false, null);
+                }
+
+            }
+        }
+
         return null;
     }
 
