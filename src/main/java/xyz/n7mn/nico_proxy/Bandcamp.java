@@ -55,7 +55,7 @@ public class Bandcamp implements ShareService {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         String result = response.body();
-        client.close();
+        //client.close();
 
         //System.out.println(result);
 
@@ -118,7 +118,7 @@ public class Bandcamp implements ShareService {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         String result = response.body();
-        client.close();
+        //client.close();
 
         //System.out.println(result);
 
