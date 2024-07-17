@@ -1,20 +1,15 @@
 package xyz.n7mn.nico_proxy;
 
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.sun.net.httpserver.Request;
-import kotlin.Pair;
-import okhttp3.OkHttpClient;
-import okhttp3.Response;
 import xyz.n7mn.nico_proxy.data.RequestVideoData;
 import xyz.n7mn.nico_proxy.data.ResultVideoData;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.ProxySelector;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -28,8 +23,6 @@ public class Bandcamp implements ShareService {
     private final Pattern matcher_URL1 = Pattern.compile("https://(.+)\\.bandcamp\\.com/album/(.+)");
     private final Pattern matcher_URL2 = Pattern.compile("https://(.+)\\.bandcamp\\.com/track/(.+)");
     private final Pattern matcher_json = Pattern.compile("data-tralbum=\"\\{(.+)}\" data-payment=");
-
-    private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
@@ -62,7 +55,6 @@ public class Bandcamp implements ShareService {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         String result = response.body();
-
         client.close();
 
         //System.out.println(result);
@@ -126,8 +118,6 @@ public class Bandcamp implements ShareService {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         String result = response.body();
-
-
         client.close();
 
         //System.out.println(result);
