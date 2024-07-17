@@ -18,6 +18,7 @@ public class SoundCloud implements ShareService{
     private final Pattern SupportURL_1 = Pattern.compile("https://soundcloud\\.com/");
 
     //private final Pattern appVersion = Pattern.compile("window\\.__sc_version=\"(\\d+)\"");
+    private final Pattern clientId = Pattern.compile("client_application_id:(\\d+),client_id:\"(.+)\",env:\"production\"");
     private final Pattern jsonData = Pattern.compile("window\\.__sc_hydration = \\[(.+)]");
     private final Pattern secretTokenCheck = Pattern.compile("secret_token");
 
@@ -33,14 +34,37 @@ public class SoundCloud implements ShareService{
 
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
-        final String ClientID = "ICQyLasUBASlFk0tLJ8FRmTTFc11FVBZ";
+        final String ClientID; // = "ICQyLasUBASlFk0tLJ8FRmTTFc11FVBZ";
+
+        Request request0 = new Request.Builder()
+                .url("https://a-v2.sndcdn.com/assets/49-d6ecabd7.js")
+                .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                .build();
+
+        String result = "";
+
+        try {
+            Response response = client.newCall(request0).execute();
+            result = response.body().string();
+            response.close();
+        } catch (Exception e){
+            throw e;
+        }
+
+        Matcher matcher1 = clientId.matcher(result);
+        if (matcher1.find()){
+            ClientID = matcher1.group(2);
+        } else {
+            ClientID = "";
+        }
+
 
         Request request1 = new Request.Builder()
                 .url("https://api-auth.soundcloud.com/oauth/session?client_id="+ClientID)
                 .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                 .build();
 
-        String result = "";
+
         try {
             Response response = client.newCall(request1).execute();
             result = response.body().string();
