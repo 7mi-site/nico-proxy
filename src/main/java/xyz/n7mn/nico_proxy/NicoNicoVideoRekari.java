@@ -14,7 +14,6 @@ import java.net.Proxy;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Deprecated
 public class NicoNicoVideoRekari implements ShareService {
 
     private final MediaType JSON = MediaType.get("application/json; charset=utf-8");
