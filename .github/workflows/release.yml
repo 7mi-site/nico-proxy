@@ -24,6 +24,6 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body: |
-            - SoundCloudで再生できない問題の根本修正
+            - TVer : オリンピック特集に対応
           draft: false
           prerelease: false
