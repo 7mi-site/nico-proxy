@@ -24,7 +24,6 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body: |
-            - ニコニコ動画Re:仮は8/5に新バージョンになるため非推奨化
-            - TVer : オリンピック特集のアーカイブに対応
+            - ニコニコ動画 新バージョン対応
           draft: false
           prerelease: false
