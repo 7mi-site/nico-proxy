@@ -199,6 +199,11 @@ public class NicoNicoVideo implements ShareService {
 
     }
 
+    private WebSocket webSocket = null;
+
+    private final Pattern matcher_WebsocketURL = Pattern.compile("webSocketUrl&quot;:&quot;wss://(.*)&quot;,&quot;csrfToken");
+    private final Pattern matcher_WebsocketData1 = Pattern.compile("\\{\"type\":\"stream\",\"data\":\\{\"uri\":\"https://");
+    private final Pattern matcher_WebsocketData2 = Pattern.compile("\"uri\":\"(.*)\",\"syncUri\":\"");
 
     @Override
     public ResultVideoData getLive(RequestVideoData data) throws Exception {
@@ -207,12 +212,194 @@ public class NicoNicoVideo implements ShareService {
 
         //System.out.println(id);
         // 無駄にアクセスしないようにすでに接続されてたらそれを返す
-        ResultVideoData LiveURL = null;
+        ResultVideoData LiveURL;
 
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
         String htmlText = "";
+        try {
+            Request request = new Request.Builder()
+                    .url("https://live.nicovideo.jp/watch/"+id)
+                    .addHeader("User-Agent", UserAgent)
+                    .build();
+            Response response = client.newCall(request).execute();
+            if (response.body() != null){
+                htmlText = response.body().string();
+            }
+            response.close();
+
+        } catch (Exception e) {
+            if (data.getProxy() != null){
+                throw new Exception("live.nicovideo.jp " + e.getMessage() + " (Use Proxy : " + data.getProxy().getProxyIP()+")");
+            } else {
+                throw new Exception("live.nicovideo.jp " + e.getMessage());
+            }
+        }
+
+        Matcher matcher  = matcher_WebsocketURL.matcher(htmlText);
+
+        if (!matcher.find()){
+            throw new Exception("live.nicovideo.jp No WebSocket Found");
+        }
+
+        String websocketURL = "wss://"+matcher.group(1);
+        Request request = new Request.Builder()
+                .url(websocketURL)
+                .addHeader("User-Agent", UserAgent)
+                .build();
+
+        String[] temp = new String[]{"wait", ""};
+        webSocket = client.newWebSocket(request, new WebSocketListener() {
+            private final Timer timer = new Timer();
+            private String liveUrl = "";
+
+            @Override
+            public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+                /*
+                super.onClosed(webSocket, code, reason);
+                System.out.println("---- reason text ----");
+                System.out.println(reason);
+                System.out.println("---- reason text ----");
+                 */
+                timer.cancel();
+            }
+
+            @Override
+            public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+                timer.cancel();
+                super.onClosing(webSocket, code, reason);
+            }
+
+            @Override
+            public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
+                timer.cancel();
+                super.onFailure(webSocket, t, response);
+            }
+
+            @Override
+            public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+                //System.out.println("----");
+                //System.out.println(text);
+
+                if (text.startsWith("{\"type\":\"serverTime\",\"data\":{")) {
+                    webSocket.send("{\"type\":\"getEventState\",\"data\":{}}");
+                    //System.out.println("{\"type\":\"getEventState\",\"data\":{}}");
+                }
+                if (text.startsWith("{\"type\":\"eventState\",\"data\":{\"commentState\":{\"locked\":false,\"layout\":\"normal\"}}}")) {
+                    webSocket.send("{\"type\":\"getAkashic\",\"data\":{\"chasePlay\":false}}");
+                    //System.out.println("{\"type\":\"getAkashic\",\"data\":{\"chasePlay\":false}}");
+                }
+
+                if (text.equals("{\"type\":\"ping\"}")) {
+                    webSocket.send("{\"type\":\"pong\"}");
+                }
+
+                if (text.startsWith("{\"type\":\"seat\",\"data\":{\"keepIntervalSec\":30}}")) {
+
+                    timer.scheduleAtFixedRate(new TimerTask() {
+                        @Override
+                        public void run() {
+                            webSocket.send("{\"type\":\"keepSeat\"}");
+                            //System.out.println("{\"type\":\"keepSeat\"}");
+                            Request request = new Request.Builder()
+                                    .url(liveUrl)
+                                    .addHeader("User-Agent", UserAgent)
+                                    .build();
+                            try {
+                                Response response = client.newCall(request).execute();
+                                if (response.code() == 403 || response.code() == 404){
+                                    timer.cancel();
+                                    webSocket.cancel();
+                                    response.close();
+                                }
+                                response.close();
+                            } catch (Exception e){
+                                timer.cancel();
+                                webSocket.cancel();
+                                //e.printStackTrace();
+                            }
+                        }
+                    }, 30000L, 30000L);
+                    //System.out.println("{\"type\":\"keepSeat\"}");
+                }
+
+                if (text.startsWith("{\"type\":\"disconnect\"")) {
+                    timer.cancel();
+                    webSocket.cancel();
+                }
+
+                Matcher matcherData = matcher_WebsocketData1.matcher(text);
+
+                if (matcherData.find()) {
+                    Matcher matcher = matcher_WebsocketData2.matcher(text);
+                    //System.out.println("url get");
+                    if (matcher.find()) {
+                        //System.out.println("url get ok");
+                        temp[0] = matcher.group(1);
+                        liveUrl = temp[0];
+                    } else {
+                        temp[0] = "Error";
+                        webSocket.cancel();
+                    }
+
+                    //System.out.println(temp[0]);
+                }
+
+                //System.out.println("----");
+            }
+
+            @Override
+            public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
+
+            }
+
+            @Override
+            public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
+                //System.out.println("websocket open");
+                webSocket.send("{\"type\":\"startWatching\",\"data\":{\"stream\":{\"quality\":\"abr\",\"protocol\":\"hls\",\"latency\":\"low\",\"chasePlay\":false},\"room\":{\"protocol\":\"webSocket\",\"commentable\":true},\"reconnect\":false}}");
+            }
+        });
+        while (temp[0].startsWith("wait")){
+            temp[1] = temp[0];
+        }
+
+        LiveURL = new ResultVideoData(temp[0], null, true, false, true, null);
+
+        //System.out.println("t : "+temp[0]);
+        //System.out.println("l : "+LiveURL);
+
+        if (temp[0].equals("Error")){
+            throw new Exception("live.nicovideo.jp Not m3u8 URL Found");
+        }
 
         return LiveURL;
+    }
+
+    public void cancelWebSocket() {
+        if (webSocket != null){
+            webSocket.cancel();
+        }
+    }
+
+    private boolean SendHeartBeatVideo(String HeartBeatSession, String HeartBeatSessionId, ProxyData proxy){
+        System.gc();
+        final OkHttpClient client = proxy != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxy.getProxyIP(), proxy.getPort()))).build() : new OkHttpClient();
+
+        RequestBody body = RequestBody.create(HeartBeatSession, JSON);
+        Request request = new Request.Builder()
+                .url("https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT")
+                .post(body)
+                .addHeader("User-Agent", UserAgent)
+                .build();
+        try {
+            Response response = client.newCall(request).execute();
+            //System.out.println(response.body().string());
+            response.close();
+
+            return true;
+        } catch (IOException e) {
+            // e.printStackTrace();
+            return false;
+        }
     }
 
 
@@ -220,63 +407,8 @@ public class NicoNicoVideo implements ShareService {
 
     @Override
     public String getTitle(RequestVideoData data) throws Exception {
-        String id = getId(data.getURL());
         String title = "";
 
-        final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
-
-        String HtmlText = "";
-        if (!Pattern.compile("lv").matcher(data.getURL()).find()) {
-            //System.out.println("video");
-            try {
-                Request request_html = new Request.Builder()
-                        .url("https://www.nicovideo.jp/watch/" + id)
-                        .addHeader("User-Agent", UserAgent)
-                        .build();
-                Response response = client.newCall(request_html).execute();
-                if (response.body() != null) {
-                    HtmlText = response.body().string();
-                }
-                response.close();
-
-            } catch (Exception e) {
-                return "";
-            }
-        } else {
-            try {
-                Request request_html = new Request.Builder()
-                        .url("https://live.nicovideo.jp/watch/" + id)
-                        .addHeader("User-Agent", UserAgent)
-                        .build();
-                Response response = client.newCall(request_html).execute();
-                if (response.body() != null) {
-                    HtmlText = response.body().string();
-                }
-                response.close();
-
-            } catch (Exception e) {
-                return "";
-            }
-        }
-
-        //System.out.println(HtmlText);
-        Matcher matcher = matcher_LdJsonVideo.matcher(HtmlText);
-
-        if (Pattern.compile("lv").matcher(data.getURL()).find()){
-            matcher = matcher_LdJsonLive.matcher(HtmlText);
-        }
-
-        if (!matcher.find()){
-            return "";
-        }
-        //System.out.println("found");
-
-        String jsonText = "{"+matcher.group(1)+"}";
-        jsonText = jsonText.replaceAll("&quot;", "\"");
-        //System.out.println(jsonText);
-
-        JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
-        title = json.getAsJsonObject().get("name").getAsString();
 
 
         return title;
