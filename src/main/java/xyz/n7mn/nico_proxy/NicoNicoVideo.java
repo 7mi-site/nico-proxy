@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.rmi.server.UnicastRemoteObject;
 import java.time.Duration;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -36,7 +37,7 @@ public class NicoNicoVideo implements ShareService {
     private final Pattern matcher_m3u8Audio = Pattern.compile("#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"(.+)\",NAME=\"(.+)\",DEFAULT=(.+),URI=\"(.+)\"");
 
     private final Pattern matcher_LdJsonVideo = Pattern.compile("<script type=\"application/ld\\+json\" class=\"LdJson\">\\{(.*)\\}");
-    private final Pattern matcher_LdJsonLive = Pattern.compile("<script type=\"application/ld\\+json\">\\{(.*)\\}");
+    private final Pattern matcher_LdJsonLive = Pattern.compile("<script type=\"application/ld\\+json\">\\{(.+)}</script>");
 
     /**
      * @param data ニコ動URL、接続プロキシ情報
@@ -374,42 +375,58 @@ public class NicoNicoVideo implements ShareService {
         return LiveURL;
     }
 
-    public void cancelWebSocket() {
-        if (webSocket != null){
-            webSocket.cancel();
-        }
-    }
+    @Override
+    public String getTitle(RequestVideoData data) throws Exception {
+        final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
-    private boolean SendHeartBeatVideo(String HeartBeatSession, String HeartBeatSessionId, ProxyData proxy){
-        System.gc();
-        final OkHttpClient client = proxy != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxy.getProxyIP(), proxy.getPort()))).build() : new OkHttpClient();
+        String title = "";
 
-        RequestBody body = RequestBody.create(HeartBeatSession, JSON);
+        String htmlText = "";
+
+        final String nico_sid;
         Request request = new Request.Builder()
-                .url("https://api.dmc.nico/api/sessions/" + HeartBeatSessionId + "?_format=json&_method=PUT")
-                .post(body)
+                .url(data.getURL())
                 .addHeader("User-Agent", UserAgent)
                 .build();
         try {
             Response response = client.newCall(request).execute();
             //System.out.println(response.body().string());
+            if (response.header("X-niconico-sid") != null){
+                nico_sid = response.header("X-niconico-sid");
+            }
+
+            if (response.body() != null){
+                htmlText = response.body().string();
+            }
             response.close();
-
-            return true;
         } catch (IOException e) {
-            // e.printStackTrace();
-            return false;
+            throw e;
         }
-    }
 
+        Matcher matcher_live = matcher_LdJsonLive.matcher(htmlText);
+        //System.out.println("a");
+        String jsonText = "";
+        JsonElement json;
+        if (matcher_live.find()){
+            jsonText = "{"+matcher_live.group(1)+"}";
+            //System.out.println(jsonText);
 
+            json = new Gson().fromJson(jsonText, JsonElement.class);
+            title = json.getAsJsonObject().get("name").getAsString();
+        } else {
+            Matcher matcher = matcher_Json.matcher(htmlText);
+            if (!matcher.find()){
+                return "";
+            }
 
+            jsonText = "{" + matcher.group(1).replaceAll("&quot;", "\"") + "}";
+            //System.out.println(jsonText);
 
-    @Override
-    public String getTitle(RequestVideoData data) throws Exception {
-        String title = "";
+            json = new Gson().fromJson(jsonText, JsonElement.class);
+            //System.out.println(json);
 
-
+            title = json.getAsJsonObject().getAsJsonObject("data").getAsJsonObject("metadata").get("title").getAsString();
+        }
 
         return title;
     }
@@ -421,7 +438,7 @@ public class NicoNicoVideo implements ShareService {
 
     @Override
     public String getVersion() {
-        return "20240805";
+        return "20240806";
     }
 
     private String getId(String text){
