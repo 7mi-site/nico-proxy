@@ -24,6 +24,7 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body: |
-            - ニコニコ動画 新バージョン正式対応
+            - SpankBang対応
+            - ニコニコ動画 Re仮は次Verで削除されます
           draft: false
           prerelease: false
