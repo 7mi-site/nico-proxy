@@ -2,14 +2,16 @@ package xyz.n7mn.nico_proxy;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import kotlin.Pair;
+import okhttp3.*;
 import xyz.n7mn.nico_proxy.data.RequestVideoData;
 import xyz.n7mn.nico_proxy.data.ResultVideoData;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,46 +37,9 @@ public class SoundCloud implements ShareService{
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
         final String ClientID; // = "ICQyLasUBASlFk0tLJ8FRmTTFc11FVBZ";
-
-        Request request0 = new Request.Builder()
-                .url("https://a-v2.sndcdn.com/assets/49-d6ecabd7.js")
-                .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
-                .build();
-
         String result = "";
 
-        try {
-            Response response = client.newCall(request0).execute();
-            result = response.body().string();
-            response.close();
-        } catch (Exception e){
-            throw e;
-        }
-
-        Matcher matcher1 = clientId.matcher(result);
-        if (matcher1.find()){
-            ClientID = matcher1.group(2);
-        } else {
-            ClientID = "";
-        }
-
-
-        Request request1 = new Request.Builder()
-                .url("https://api-auth.soundcloud.com/oauth/session?client_id="+ClientID)
-                .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
-                .build();
-
-
-        try {
-            Response response = client.newCall(request1).execute();
-            result = response.body().string();
-            response.close();
-        } catch (Exception e){
-            throw e;
-        }
-
         //System.out.println(result);
-
         final Request request = new Request.Builder()
                 .url(data.getURL())
                 .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
@@ -104,35 +69,39 @@ public class SoundCloud implements ShareService{
         for (int i = 0; i < json.getAsJsonArray().size(); i++){
             if (json.getAsJsonArray().get(i).getAsJsonObject().has("hydratable") && json.getAsJsonArray().get(i).getAsJsonObject().get("hydratable").getAsString().equals("sound")){
                 x = i;
-                break;
+                //System.out.println(json.getAsJsonArray().get(i).getAsJsonObject());
             }
         }
 
         final String mediaUrl = json.getAsJsonArray().get(x).getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("transcodings").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
-        final String track_authorization = json.getAsJsonArray().get(x).getAsJsonObject().get("data").getAsJsonObject().get("track_authorization").getAsString();
-
         //System.out.println(mediaUrl + "?client_id="+ClientID+"&track_authorization=" + track_authorization);
 
-        // ?secret_token=
-        final Request request2;
+        Request request1 = new Request.Builder()
+                .url("https://api-v2.soundcloud.com/resolve?url="+URLEncoder.encode(data.getURL(), StandardCharsets.UTF_8)+"&client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT")
+                .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                .build();
 
-        if (!secretTokenCheck.matcher(mediaUrl).find()){
-            request2 = new Request.Builder()
-                    .url(mediaUrl + "?client_id="+ClientID+"&track_authorization=" + track_authorization)
-                    .addHeader("x-datadome-clientid", "wlEz39mbH4i1EF83K8NNXGltwpzBmZcgvUwIRgftwHVYUYZHqrMu52LCm3NAh2z0A09o23wktFo32M00R3~G1_58MV~H9d2G1irVg5j7LoiAnAD6EqVnngwcwBNUbzT3")
-                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
-                    .build();
-        } else {
-            request2 = new Request.Builder()
-                    .url(mediaUrl + "&client_id="+ClientID+"&track_authorization=" + track_authorization)
-                    .addHeader("x-datadome-clientid", "wlEz39mbH4i1EF83K8NNXGltwpzBmZcgvUwIRgftwHVYUYZHqrMu52LCm3NAh2z0A09o23wktFo32M00R3~G1_58MV~H9d2G1irVg5j7LoiAnAD6EqVnngwcwBNUbzT3")
-                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
-                    .build();
+        try {
+            Response response = client.newCall(request1).execute();
+            //System.out.println(response.code());
+            result = response.body().string();
+            response.close();
+        } catch (Exception e){
+            throw e;
         }
+
+        //System.out.println(result);
+
+        final Request request2 = new Request.Builder()
+                .url(mediaUrl + "?client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT")
+                //.addHeader("x-datadome-clientid", "wlEz39mbH4i1EF83K8NNXGltwpzBmZcgvUwIRgftwHVYUYZHqrMu52LCm3NAh2z0A09o23wktFo32M00R3~G1_58MV~H9d2G1irVg5j7LoiAnAD6EqVnngwcwBNUbzT3")
+                .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                .build();
 
         result = "";
         try {
             Response response = client.newCall(request2).execute();
+            //System.out.println(response.code());
             result = response.body().string();
             response.close();
         } catch (Exception e){
