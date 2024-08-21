@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public class Vimeo implements ShareService{
 
     private final Pattern SupportURL = Pattern.compile("https://vimeo\\.com/(.+)");
-    private final Pattern matcher_JsonData = Pattern.compile("window.vimeo.clip_page_config = \\{(.+)}");
+    private final Pattern matcher_JsonData = Pattern.compile("window\\.vimeo\\.clip_page_config = \\{(.+)}");
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
@@ -30,16 +30,23 @@ public class Vimeo implements ShareService{
         String HtmlText = "";
         Request request_html = new Request.Builder()
                 .url(data.getURL())
+                .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8")
+                //.addHeader("Accept-Encoding", "gzip")
+                .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
+                .addHeader("Connection", "keep-alive")
+                .addHeader("DNT", "1")
+                .addHeader("Priority","u=0, i")
                 .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                 .build();
         Response response = client.newCall(request_html).execute();
         if (response.body() != null){
             HtmlText = response.body().string();
         }
+        //System.out.println(HtmlText);
         response.close();
 
         final Matcher matcher = matcher_JsonData.matcher(HtmlText);
-        String jsonText = "";
+        String jsonText = "{}";
         if (matcher.find()){
             jsonText = "{" + matcher.group(1) + "}";
         }
