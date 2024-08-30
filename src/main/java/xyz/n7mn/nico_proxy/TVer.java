@@ -411,6 +411,7 @@ public class TVer implements ShareService{
             response3.close();
 
             JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
+            //System.out.println(json);
             return json.getAsJsonObject().get("title").getAsString();
         }
 

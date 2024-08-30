@@ -91,6 +91,9 @@ public class SoundCloud implements ShareService{
         }
 
         //System.out.println(result);
+        System.out.println(mediaUrl + "?client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT");
+        // https://api-v2.soundcloud.com/media/soundcloud:tracks:1824099453/2655c3e9-1a0f-4079-b25a-b09e87aeadc0/stream/hls?secret_token=s-eqL3EbShzN3&client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT
+        // https://api-v2.soundcloud.com/media/soundcloud:tracks:1824099453/2655c3e9-1a0f-4079-b25a-b09e87aeadc0/stream/hls?secret_token=s-eqL3EbShzN3?client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT
 
         final Request request2 = new Request.Builder()
                 .url(mediaUrl + "?client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT")
@@ -110,8 +113,30 @@ public class SoundCloud implements ShareService{
 
         //System.out.println(result);
         JsonElement json1 = new Gson().fromJson(result, JsonElement.class);
+        if (json1 != null){
+            return new ResultVideoData(null, json1.getAsJsonObject().get("url").getAsString(), true, false, false, null);
+        } else {
 
-        return new ResultVideoData(null, json1.getAsJsonObject().get("url").getAsString(), true, false, false, null);
+            final Request request3 = new Request.Builder()
+                    .url(mediaUrl + "&client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT")
+                    //.addHeader("x-datadome-clientid", "wlEz39mbH4i1EF83K8NNXGltwpzBmZcgvUwIRgftwHVYUYZHqrMu52LCm3NAh2z0A09o23wktFo32M00R3~G1_58MV~H9d2G1irVg5j7LoiAnAD6EqVnngwcwBNUbzT3")
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                    .build();
+
+            result = "";
+            try {
+                Response response = client.newCall(request3).execute();
+                //System.out.println(response.code());
+                result = response.body().string();
+                response.close();
+            } catch (Exception e){
+                throw e;
+            }
+
+            json1 = new Gson().fromJson(result, JsonElement.class);
+            return new ResultVideoData(null, json1.getAsJsonObject().get("url").getAsString(), true, false, false, null);
+        }
+
     }
 
     @Override
