@@ -24,7 +24,6 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body: |
-            - SoundCloudで一部取得できないのを修正
-            - Vimeoで取得できないのを修正
+            - jitpackのビルドエラー修正
           draft: false
           prerelease: false
