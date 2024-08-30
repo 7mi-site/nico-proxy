@@ -15,8 +15,8 @@ import java.util.regex.Pattern;
 
 public class Vimeo implements ShareService{
 
-    private final Pattern SupportURL = Pattern.compile("https://vimeo\\.com/(.+)");
-    private final Pattern matcher_JsonData = Pattern.compile("window\\.vimeo\\.clip_page_config = \\{(.+)}");
+    private final Pattern SupportURL = Pattern.compile("https://vimeo\\.com/(\\d+)");
+    private final Pattern matcher_JsonData = Pattern.compile("<script id=\"microdata\" type=\"application/ld\\+json\">\n(.+)</script>");
 
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
@@ -42,30 +42,15 @@ public class Vimeo implements ShareService{
         if (response.body() != null){
             HtmlText = response.body().string();
         }
-        //System.out.println(HtmlText);
-        response.close();
 
-        final Matcher matcher = matcher_JsonData.matcher(HtmlText);
-        String jsonText = "{}";
-        if (matcher.find()){
-            jsonText = "{" + matcher.group(1) + "}";
+        Matcher matcher = matcher_JsonData.matcher(HtmlText);
+        if (!matcher.find()){
+            throw new Exception("Not Support URL");
         }
-        //System.out.println(jsonText);
-        JsonElement json;
-        try {
-            json = new Gson().fromJson(jsonText, JsonElement.class);
-        } catch (Exception e){
-            throw new Exception("Not Support Video");
-        }
+        //System.out.println(json);
 
-        if (!json.getAsJsonObject().has("player")){
-            throw new Exception("Not Support Video");
-        }
-        if (!json.getAsJsonObject().get("player").getAsJsonObject().has("config_url")){
-            throw new Exception("Not Support Video");
-        }
-
-        String configUrl = json.getAsJsonObject().get("player").getAsJsonObject().get("config_url").getAsString();
+        Matcher matcher1 = SupportURL.matcher(data.getURL());
+        String configUrl = "https://player.vimeo.com/video/"+(matcher1.find() ? matcher1.group(1) : "")+"/config?ask_ai=0&byline=0&context=Vimeo%5CController%5CApi%5CResources%5CVideoController.&email=0&force_embed=1&h=22062fe07d&like=0&portrait=0&share=0&title=0&transcript=1&transparent=0&watch_later=0&s=2ad1706e93939ae260b7c4f33bfa33d89f67c80d_1725117286";
         Request request = new Request.Builder()
                 .url(configUrl)
                 .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
@@ -75,8 +60,7 @@ public class Vimeo implements ShareService{
             HtmlText = response1.body().string();
         }
         response1.close();
-        json = new Gson().fromJson(HtmlText, JsonElement.class);
-
+        JsonElement json = new Gson().fromJson(HtmlText, JsonElement.class);
         JsonElement element = json.getAsJsonObject().get("request").getAsJsonObject().get("files").getAsJsonObject().get("hls").getAsJsonObject().get("cdns");
 
         String hlsURL = "";
