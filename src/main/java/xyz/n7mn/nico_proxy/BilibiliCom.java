@@ -43,6 +43,7 @@ public class BilibiliCom implements ShareService{
 
         Request request_html = new Request.Builder()
                 .url("https://www.bilibili.com/video/"+id+"/")
+                .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                 .build();
 
         try {
