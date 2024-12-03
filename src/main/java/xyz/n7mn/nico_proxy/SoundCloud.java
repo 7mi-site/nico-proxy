@@ -20,9 +20,8 @@ public class SoundCloud implements ShareService{
     private final Pattern SupportURL_1 = Pattern.compile("https://soundcloud\\.com/");
 
     //private final Pattern appVersion = Pattern.compile("window\\.__sc_version=\"(\\d+)\"");
-    private final Pattern clientId = Pattern.compile("client_application_id:(\\d+),client_id:\"(.+)\",env:\"production\"");
-    private final Pattern jsonData = Pattern.compile("window\\.__sc_hydration = \\[(.+)]");
-    private final Pattern secretTokenCheck = Pattern.compile("secret_token");
+    private final Pattern clientId = Pattern.compile("client_id:\"(.+)\",env:\"production\"");
+    private final Pattern jsonData = Pattern.compile("window\\.__sc_hydration = \\[(.+)\\];");
 
     private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
@@ -36,106 +35,102 @@ public class SoundCloud implements ShareService{
 
         final OkHttpClient client = data.getProxy() != null ? builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(data.getProxy().getProxyIP(), data.getProxy().getPort()))).build() : new OkHttpClient();
 
-        final String ClientID; // = "ICQyLasUBASlFk0tLJ8FRmTTFc11FVBZ";
-        String result = "";
-
-        //System.out.println(result);
-        final Request request = new Request.Builder()
+        // https://soundcloud.com/wipecore-wipecore/frenchinwipecore-remix
+        final Request request1 = new Request.Builder()
                 .url(data.getURL())
                 .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
+                .addHeader("Connection", "keep-alive")
                 .build();
-
-        try {
-            Response response = client.newCall(request).execute();
-            result = response.body().string();
-            response.close();
-        } catch (Exception e){
-            throw e;
-        }
-
-        //System.out.println(result);
-
-        final Matcher matcher = jsonData.matcher(result);
-        //System.out.println(matcher.find());
-        if (!matcher.find()){
-            throw new Exception("Not Found");
-        }
-
-        //System.out.println("[" + matcher.group(1) + "]");
-        final JsonElement json = new Gson().fromJson("[" + matcher.group(1) + "]", JsonElement.class);
-        //System.out.println(json);
-
-        int x = 0;
-        for (int i = 0; i < json.getAsJsonArray().size(); i++){
-            if (json.getAsJsonArray().get(i).getAsJsonObject().has("hydratable") && json.getAsJsonArray().get(i).getAsJsonObject().get("hydratable").getAsString().equals("sound")){
-                x = i;
-                //System.out.println(json.getAsJsonArray().get(i).getAsJsonObject());
-            }
-        }
-
-        final String mediaUrl = json.getAsJsonArray().get(x).getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("transcodings").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
-        //System.out.println(mediaUrl + "?client_id="+ClientID+"&track_authorization=" + track_authorization);
-
-        Request request1 = new Request.Builder()
-                .url("https://api-v2.soundcloud.com/resolve?url="+URLEncoder.encode(data.getURL(), StandardCharsets.UTF_8)+"&client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT")
-                .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
-                .build();
-
-        try {
-            Response response = client.newCall(request1).execute();
-            //System.out.println(response.code());
-            result = response.body().string();
-            response.close();
-        } catch (Exception e){
-            throw e;
-        }
-
-        //System.out.println(result);
-        System.out.println(mediaUrl + "?client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT");
-        // https://api-v2.soundcloud.com/media/soundcloud:tracks:1824099453/2655c3e9-1a0f-4079-b25a-b09e87aeadc0/stream/hls?secret_token=s-eqL3EbShzN3&client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT
-        // https://api-v2.soundcloud.com/media/soundcloud:tracks:1824099453/2655c3e9-1a0f-4079-b25a-b09e87aeadc0/stream/hls?secret_token=s-eqL3EbShzN3?client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT
 
         final Request request2 = new Request.Builder()
-                .url(mediaUrl + "?client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT")
-                //.addHeader("x-datadome-clientid", "wlEz39mbH4i1EF83K8NNXGltwpzBmZcgvUwIRgftwHVYUYZHqrMu52LCm3NAh2z0A09o23wktFo32M00R3~G1_58MV~H9d2G1irVg5j7LoiAnAD6EqVnngwcwBNUbzT3")
+                .url("https://a-v2.sndcdn.com/assets/50-a0fa7b81.js")
                 .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
+                .addHeader("Connection", "keep-alive")
                 .build();
 
-        result = "";
+        String result = "";
         try {
-            Response response = client.newCall(request2).execute();
-            //System.out.println(response.code());
-            result = response.body().string();
-            response.close();
+            Response response1 = client.newCall(request1).execute();
+            result = response1.body().string();
+            response1.close();
         } catch (Exception e){
             throw e;
         }
 
         //System.out.println(result);
-        JsonElement json1 = new Gson().fromJson(result, JsonElement.class);
-        if (json1 != null){
-            return new ResultVideoData(null, json1.getAsJsonObject().get("url").getAsString(), true, false, false, null);
-        } else {
-
-            final Request request3 = new Request.Builder()
-                    .url(mediaUrl + "&client_id=vqid22ZGcnOxBtYCdXruanj1aTJtEdnT")
-                    //.addHeader("x-datadome-clientid", "wlEz39mbH4i1EF83K8NNXGltwpzBmZcgvUwIRgftwHVYUYZHqrMu52LCm3NAh2z0A09o23wktFo32M00R3~G1_58MV~H9d2G1irVg5j7LoiAnAD6EqVnngwcwBNUbzT3")
-                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
-                    .build();
-
-            result = "";
+        Matcher matcher1 = jsonData.matcher(result);
+        JsonElement json = null;
+        if (matcher1.find()){
             try {
-                Response response = client.newCall(request3).execute();
-                //System.out.println(response.code());
-                result = response.body().string();
-                response.close();
+                json = new Gson().fromJson("["+matcher1.group(1)+"]", JsonElement.class);
+                //System.out.println(json);
             } catch (Exception e){
-                throw e;
+                throw new Exception("Not Support URL");
+            }
+        } else {
+            throw new Exception("Not Support URL");
+        }
+
+        try {
+            Response response2 = client.newCall(request2).execute();
+            result = response2.body().string();
+            response2.close();
+        } catch (Exception e){
+            throw e;
+        }
+
+
+        final String ClientId;
+        Matcher matcher2 = clientId.matcher(result);
+        if (matcher2.find()){
+            ClientId = matcher2.group(1);
+        } else {
+            ClientId = null;
+        }
+        //System.out.println(ClientId);
+
+        String TrackAuthorization = null;
+        String BaseURL = null;
+        for (int i = 0; i < json.getAsJsonArray().size(); i++) {
+            if (json.getAsJsonArray().get(i).getAsJsonObject().get("hydratable").getAsString().equals("sound")){
+                if (BaseURL == null){
+                    BaseURL = json.getAsJsonArray().get(i).getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("transcodings").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
+                }
+
+                if (TrackAuthorization == null){
+                    TrackAuthorization = json.getAsJsonArray().get(i).getAsJsonObject().get("data").getAsJsonObject().get("track_authorization").getAsString();
+                }
             }
 
-            json1 = new Gson().fromJson(result, JsonElement.class);
-            return new ResultVideoData(null, json1.getAsJsonObject().get("url").getAsString(), true, false, false, null);
         }
+
+        // https://api-v2.soundcloud.com/media/soundcloud:tracks:1954361827/d26da167-5823-4c08-af84-cebe1b3b82fa/stream/hls?client_id=8cs1BARLZuBIdVIVAHtl42iQVbg3RA71&track_authorization=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW8iOiJKUCIsInN1YiI6IiIsInJpZCI6Ijk0MDIxNjEyLTRkYzUtNGIzYi04Y2NmLTZjYTQzZWM1MDk4YyIsImlhdCI6MTczMzEzMzk4M30.9dGti9Y_TzUnMSpIvroJK4wBGbHiv5cPlQXzuCJrgpk
+        // https://api-v2.soundcloud.com/media/soundcloud:tracks:1954361827/d26da167-5823-4c08-af84-cebe1b3b82fa/stream/hls?client_id=8cs1BARLZuBIdVIVAHtl42iQVbg3RA71&track_authorization=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW8iOiJKUCIsInN1YiI6IiIsInJpZCI6Ijk0MDIxNjEyLTRkYzUtNGIzYi04Y2NmLTZjYTQzZWM1MDk4YyIsImlhdCI6MTczMzEzNDEyMH0.5sgjjHynOINd926y_P-BFEfDRF31EPvLjMh9oLgbb-w
+        final String hlsUrl = BaseURL + "?client_id=" + ClientId + "&track_authorization=" + TrackAuthorization;
+        //System.out.println(hlsUrl);
+        final Request request3 = new Request.Builder()
+                .url(hlsUrl)
+                .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
+                .addHeader("Connection", "keep-alive")
+                .build();
+        try {
+            Response response3 = client.newCall(request3).execute();
+            result = response3.body().string();
+            response3.close();
+        } catch (Exception e){
+            throw e;
+        }
+
+        json = new Gson().fromJson(result, JsonElement.class);
+        //System.out.println(json);
+
+        return new ResultVideoData(null, json.getAsJsonObject().get("url").getAsString(), true, false, false, "");
 
     }
 
@@ -157,6 +152,9 @@ public class SoundCloud implements ShareService{
         final Request request = new Request.Builder()
                 .url(data.getURL())
                 .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
+                .addHeader("Connection", "keep-alive")
                 .build();
 
         String result = "";
@@ -168,16 +166,27 @@ public class SoundCloud implements ShareService{
             throw e;
         }
 
-        //System.out.println(result);
-
-        final Matcher matcher = jsonData.matcher(result);
-        //System.out.println(matcher.find());
-        if (!matcher.find()){
-            throw new Exception("Not Found");
+        Matcher matcher1 = jsonData.matcher(result);
+        JsonElement json = null;
+        if (matcher1.find()){
+            try {
+                json = new Gson().fromJson("["+matcher1.group(1)+"]", JsonElement.class);
+                //System.out.println(json);
+            } catch (Exception e){
+                throw new Exception("Not Support URL");
+            }
+        } else {
+            throw new Exception("Not Support URL");
         }
 
-        final JsonElement json = new Gson().fromJson("[" + matcher.group(1) + "]", JsonElement.class);
-        return json.getAsJsonArray().get(7).getAsJsonObject().get("data").getAsJsonObject().get("title").getAsString();
+        for (int i = 0; i < json.getAsJsonArray().size(); i++) {
+            if (json.getAsJsonArray().get(i).getAsJsonObject().get("hydratable").getAsString().equals("sound")){
+                return json.getAsJsonArray().get(i).getAsJsonObject().get("data").getAsJsonObject().get("title").getAsString();
+            }
+
+        }
+
+        return "";
     }
 
     @Override
@@ -187,6 +196,6 @@ public class SoundCloud implements ShareService{
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 }
