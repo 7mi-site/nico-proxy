@@ -25,6 +25,8 @@ public class SoundCloud implements ShareService{
 
     private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
+    private final Gson gson = new Gson();
+
     @Override
     public ResultVideoData getVideo(RequestVideoData data) throws Exception {
         // https://soundcloud.com/baron1_3/penguin3rd
@@ -66,7 +68,7 @@ public class SoundCloud implements ShareService{
         JsonElement json = null;
         if (matcher1.find()){
             try {
-                json = new Gson().fromJson("["+matcher1.group(1)+"]", JsonElement.class);
+                json = gson.fromJson("["+matcher1.group(1)+"]", JsonElement.class);
                 //System.out.println(json);
             } catch (Exception e){
                 throw new Exception("Not Support URL");
@@ -110,7 +112,7 @@ public class SoundCloud implements ShareService{
 
         // https://api-v2.soundcloud.com/media/soundcloud:tracks:1954361827/d26da167-5823-4c08-af84-cebe1b3b82fa/stream/hls?client_id=8cs1BARLZuBIdVIVAHtl42iQVbg3RA71&track_authorization=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW8iOiJKUCIsInN1YiI6IiIsInJpZCI6Ijk0MDIxNjEyLTRkYzUtNGIzYi04Y2NmLTZjYTQzZWM1MDk4YyIsImlhdCI6MTczMzEzMzk4M30.9dGti9Y_TzUnMSpIvroJK4wBGbHiv5cPlQXzuCJrgpk
         // https://api-v2.soundcloud.com/media/soundcloud:tracks:1954361827/d26da167-5823-4c08-af84-cebe1b3b82fa/stream/hls?client_id=8cs1BARLZuBIdVIVAHtl42iQVbg3RA71&track_authorization=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW8iOiJKUCIsInN1YiI6IiIsInJpZCI6Ijk0MDIxNjEyLTRkYzUtNGIzYi04Y2NmLTZjYTQzZWM1MDk4YyIsImlhdCI6MTczMzEzNDEyMH0.5sgjjHynOINd926y_P-BFEfDRF31EPvLjMh9oLgbb-w
-        final String hlsUrl = BaseURL + "?client_id=" + ClientId + "&track_authorization=" + TrackAuthorization;
+        String hlsUrl = BaseURL + "?client_id=" + ClientId + "&track_authorization=" + TrackAuthorization;
         //System.out.println(hlsUrl);
         final Request request3 = new Request.Builder()
                 .url(hlsUrl)
@@ -127,11 +129,50 @@ public class SoundCloud implements ShareService{
             throw e;
         }
 
-        json = new Gson().fromJson(result, JsonElement.class);
+        json = gson.fromJson(result, JsonElement.class);
         //System.out.println(json);
 
-        return new ResultVideoData(null, json.getAsJsonObject().get("url").getAsString(), true, false, false, "");
+        if (json != null){
+            return new ResultVideoData(null, json.getAsJsonObject().get("url").getAsString(), true, false, false, "");
+        } else {
+            //
+            final Request request4 = new Request.Builder()
+                    .url("https://api-v2.soundcloud.com/resolve?url="+URLEncoder.encode(data.getURL().split("\\?")[0], StandardCharsets.UTF_8)+"&client_id=3WIthHrmko3NUQ6wbfCSRvFcDexHgswc")
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                    .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
+                    .addHeader("Connection", "keep-alive")
+                    .build();
+            try {
+                Response response4 = client.newCall(request4).execute();
+                result = response4.body().string();
+                //System.out.println(result);
+                response4.close();
+            } catch (Exception e){
+                throw e;
+            }
+            json = gson.fromJson(result, JsonElement.class);
 
+            hlsUrl = json.getAsJsonObject().get("media").getAsJsonObject().get("transcodings").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
+            final Request request5 = new Request.Builder()
+                    .url(hlsUrl + "&client_id=3WIthHrmko3NUQ6wbfCSRvFcDexHgswc")
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                    .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
+                    .addHeader("Connection", "keep-alive")
+                    .build();
+            try {
+                Response response5 = client.newCall(request5).execute();
+                result = response5.body().string();
+                response5.close();
+                //System.out.println(result);
+            } catch (Exception e){
+                throw e;
+            }
+            json = gson.fromJson(result, JsonElement.class);
+
+            return new ResultVideoData(null, json.getAsJsonObject().get("url").getAsString(), true, false, false, "");
+        }
     }
 
     @Override
@@ -170,7 +211,7 @@ public class SoundCloud implements ShareService{
         JsonElement json = null;
         if (matcher1.find()){
             try {
-                json = new Gson().fromJson("["+matcher1.group(1)+"]", JsonElement.class);
+                json = gson.fromJson("["+matcher1.group(1)+"]", JsonElement.class);
                 //System.out.println(json);
             } catch (Exception e){
                 throw new Exception("Not Support URL");
