@@ -22,6 +22,7 @@ public class SoundCloud implements ShareService{
     //private final Pattern appVersion = Pattern.compile("window\\.__sc_version=\"(\\d+)\"");
     private final Pattern clientId = Pattern.compile("client_id:\"(.+)\",env:\"production\"");
     private final Pattern jsonData = Pattern.compile("window\\.__sc_hydration = \\[(.+)\\];");
+    private final Pattern CheckQuestion = Pattern.compile("\\?");
 
     private final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
@@ -135,6 +136,7 @@ public class SoundCloud implements ShareService{
         if (json != null){
             return new ResultVideoData(null, json.getAsJsonObject().get("url").getAsString(), true, false, false, "");
         } else {
+
             //
             final Request request4 = new Request.Builder()
                     .url("https://api-v2.soundcloud.com/resolve?url="+URLEncoder.encode(data.getURL().split("\\?")[0], StandardCharsets.UTF_8)+"&client_id=3WIthHrmko3NUQ6wbfCSRvFcDexHgswc")
@@ -154,8 +156,15 @@ public class SoundCloud implements ShareService{
             json = gson.fromJson(result, JsonElement.class);
 
             hlsUrl = json.getAsJsonObject().get("media").getAsJsonObject().get("transcodings").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
-            final Request request5 = new Request.Builder()
+            //System.out.println(hlsUrl);
+            final Request request5 = CheckQuestion.matcher(hlsUrl).find() ? new Request.Builder()
                     .url(hlsUrl + "&client_id=3WIthHrmko3NUQ6wbfCSRvFcDexHgswc")
+                    .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                    .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
+                    .addHeader("Connection", "keep-alive")
+                    .build() : new Request.Builder()
+                    .url(hlsUrl + "?client_id=3WIthHrmko3NUQ6wbfCSRvFcDexHgswc")
                     .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                     .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
