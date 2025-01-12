@@ -78,7 +78,13 @@ public class TikTok implements ShareService{
         //System.out.println(matcher.group(1));
 
         JsonElement json = new Gson().fromJson("{"+matcher.group(1)+"}", JsonElement.class);
-        return new ResultVideoData(json.getAsJsonObject().get("__DEFAULT_SCOPE__").getAsJsonObject().get("webapp.video-detail").getAsJsonObject().get("itemInfo").getAsJsonObject().get("itemStruct").getAsJsonObject().get("video").getAsJsonObject().get("downloadAddr").getAsString(), "", false, false, false, SetCookie, null);
+        //System.out.println(json);
+        String video_url = json.getAsJsonObject().get("__DEFAULT_SCOPE__").getAsJsonObject().get("webapp.video-detail").getAsJsonObject().get("itemInfo").getAsJsonObject().get("itemStruct").getAsJsonObject().get("video").getAsJsonObject().get("downloadAddr").getAsString();
+        if (video_url.isEmpty()){
+            video_url = json.getAsJsonObject().get("__DEFAULT_SCOPE__").getAsJsonObject().get("webapp.video-detail").getAsJsonObject().get("itemInfo").getAsJsonObject().get("itemStruct").getAsJsonObject().get("video").getAsJsonObject().get("playAddr").getAsString();
+        }
+
+        return new ResultVideoData(video_url, "", false, false, false, SetCookie, null);
     }
 
     @Override
