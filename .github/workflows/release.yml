@@ -24,6 +24,6 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body: |
-            - TikTokで取得できない動画があるのを修正
+            - TVerのスペシャルライブで一部再生できないのを修正
           draft: false
           prerelease: false

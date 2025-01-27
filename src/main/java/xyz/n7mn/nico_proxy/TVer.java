@@ -340,7 +340,14 @@ public class TVer implements ShareService{
         //System.out.println(jsonText);
 
         JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
-        url = url + "&" + json.getAsJsonArray().get(0).getAsJsonObject().get("query").getAsString();
+        if (json.getAsJsonObject().has("message")){
+            if (!json.getAsJsonObject().get("message").getAsString().equals("Config Not Found")){
+                url = url + "&" + json.getAsJsonArray().get(0).getAsJsonObject().get("query").getAsString();
+            }
+        } else {
+            url = url + "&" + json.getAsJsonArray().get(0).getAsJsonObject().get("query").getAsString();
+        }
+
 
 
         return new ResultVideoData(url, null, true, false, true, null);
