@@ -137,9 +137,10 @@ public class SoundCloud implements ShareService{
             return new ResultVideoData(null, json.getAsJsonObject().get("url").getAsString(), true, false, false, "");
         } else {
 
+            String ClientID = "3WIthHrmko3NUQ6wbfCSRvFcDexHgswc";
             //
             final Request request4 = new Request.Builder()
-                    .url("https://api-v2.soundcloud.com/resolve?url="+URLEncoder.encode(data.getURL().split("\\?")[0], StandardCharsets.UTF_8)+"&client_id=3WIthHrmko3NUQ6wbfCSRvFcDexHgswc")
+                    .url("https://api-v2.soundcloud.com/resolve?url="+URLEncoder.encode(data.getURL().split("\\?")[0], StandardCharsets.UTF_8)+"&client_id="+ClientID)
                     .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                     .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
@@ -154,17 +155,38 @@ public class SoundCloud implements ShareService{
                 throw e;
             }
             json = gson.fromJson(result, JsonElement.class);
+            //System.out.println(json);
+
+            if (json == null){
+                ClientID = "YHtBnq6bxM7DhJkIfzrGq3gYrueyLDMM";
+                final Request request4_2 = new Request.Builder()
+                        .url("https://api-v2.soundcloud.com/resolve?url="+URLEncoder.encode(data.getURL().split("\\?")[0], StandardCharsets.UTF_8)+"&client_id="+ClientID)
+                        .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
+                        .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                        .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
+                        .addHeader("Connection", "keep-alive")
+                        .build();
+                try {
+                    Response response4_2 = client.newCall(request4_2).execute();
+                    result = response4_2.body().string();
+                    //System.out.println(result);
+                    response4_2.close();
+                } catch (Exception e){
+                    throw e;
+                }
+                json = gson.fromJson(result, JsonElement.class);
+            }
 
             hlsUrl = json.getAsJsonObject().get("media").getAsJsonObject().get("transcodings").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
             //System.out.println(hlsUrl);
             final Request request5 = CheckQuestion.matcher(hlsUrl).find() ? new Request.Builder()
-                    .url(hlsUrl + "&client_id=3WIthHrmko3NUQ6wbfCSRvFcDexHgswc")
+                    .url(hlsUrl + "&client_id="+ClientID)
                     .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                     .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
                     .addHeader("Connection", "keep-alive")
                     .build() : new Request.Builder()
-                    .url(hlsUrl + "?client_id=3WIthHrmko3NUQ6wbfCSRvFcDexHgswc")
+                    .url(hlsUrl + "?client_id="+ClientID)
                     .addHeader("User-Agent", Constant.nico_proxy_UserAgent)
                     .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                     .addHeader("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
