@@ -317,7 +317,7 @@ public class NicoNicoVideo implements ShareService {
                         @Override
                         public void run() {
                             webSocket.send("{\"type\":\"keepSeat\"}");
-                            System.out.println("{\"type\":\"keepSeat\"}");
+                            //System.out.println("{\"type\":\"keepSeat\"}");
 
                             Request request;
                             if (temp[2] == null){
