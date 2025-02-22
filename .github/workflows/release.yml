@@ -24,6 +24,6 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body: |
-            - SoundCloudで再生できない問題の修正
+            - ニコ生 新配信サーバーに対応(そのままでは再生できないため必要なCookie情報をgetTokenJson()に出すように)
           draft: false
           prerelease: false

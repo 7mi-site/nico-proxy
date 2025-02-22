@@ -243,12 +243,13 @@ public class NicoNicoVideo implements ShareService {
         }
 
         String websocketURL = "wss://"+matcher.group(1);
+        //System.out.println(websocketURL);
         Request request = new Request.Builder()
                 .url(websocketURL)
                 .addHeader("User-Agent", UserAgent)
                 .build();
 
-        String[] temp = new String[]{"wait", ""};
+        String[] temp = new String[]{"wait", "", null};
         webSocket = client.newWebSocket(request, new WebSocketListener() {
             private final Timer timer = new Timer();
             private String liveUrl = "";
@@ -260,26 +261,42 @@ public class NicoNicoVideo implements ShareService {
                 System.out.println("---- reason text ----");
                 System.out.println(reason);
                 System.out.println("---- reason text ----");
-                 */
+                 *//*
+                System.out.println("---- reason text ----");
+                System.out.println(reason);
+                System.out.println("---- reason text ----");*/
                 timer.cancel();
             }
 
             @Override
             public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-                timer.cancel();
-                super.onClosing(webSocket, code, reason);
+                timer.cancel();/*
+                System.out.println("---- reason text ----");
+                System.out.println(reason);
+                System.out.println("---- reason text ----");*/
+                //super.onClosing(webSocket, code, reason);
             }
 
             @Override
             public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
                 timer.cancel();
-                super.onFailure(webSocket, t, response);
+                /*System.out.println("---- reason text ----");
+                try {
+                    if (response != null){
+                        System.out.println(response.body().string());
+                    }
+                } catch (IOException e) {
+                    // e.printStackTrace();
+                }
+                System.out.println("---- reason text ----");*/
+                //super.onFailure(webSocket, t, response);
             }
 
             @Override
             public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
                 //System.out.println("----");
                 //System.out.println(text);
+                //System.out.println("----");
 
                 if (text.startsWith("{\"type\":\"serverTime\",\"data\":{")) {
                     webSocket.send("{\"type\":\"getEventState\",\"data\":{}}");
@@ -300,11 +317,22 @@ public class NicoNicoVideo implements ShareService {
                         @Override
                         public void run() {
                             webSocket.send("{\"type\":\"keepSeat\"}");
-                            //System.out.println("{\"type\":\"keepSeat\"}");
-                            Request request = new Request.Builder()
-                                    .url(liveUrl)
-                                    .addHeader("User-Agent", UserAgent)
-                                    .build();
+                            System.out.println("{\"type\":\"keepSeat\"}");
+
+                            Request request;
+                            if (temp[2] == null){
+                                request = new Request.Builder()
+                                        .url(liveUrl)
+                                        .addHeader("User-Agent", UserAgent)
+                                        .build();
+                            } else {
+                                request = new Request.Builder()
+                                        .url(liveUrl)
+                                        .addHeader("User-Agent", UserAgent)
+                                        .addHeader("Cookie", temp[2])
+                                        .build();
+                            }
+
                             try {
                                 Response response = client.newCall(request).execute();
                                 if (response.code() == 403 || response.code() == 404){
@@ -328,21 +356,31 @@ public class NicoNicoVideo implements ShareService {
                     webSocket.cancel();
                 }
 
-                Matcher matcherData = matcher_WebsocketData1.matcher(text);
+                if (text.startsWith("{\"type\":\"messageServer\"")){
+                    webSocket.send("{\"type\":\"notifyNewVisit\",\"data\":{}}");
+                    webSocket.send("{\"type\":\"getAkashic\",\"data\":{\"chasePlay\":false}}");
+                }
 
-                if (matcherData.find()) {
-                    Matcher matcher = matcher_WebsocketData2.matcher(text);
-                    //System.out.println("url get");
-                    if (matcher.find()) {
-                        //System.out.println("url get ok");
-                        temp[0] = matcher.group(1);
+                if (text.startsWith("{\"type\":\"stream\",")){
+                    JsonElement json = new Gson().fromJson(text, JsonElement.class);
+                    //System.out.println(json);
+
+                    if (json.getAsJsonObject().get("data").getAsJsonObject().has("uri")){
+                        StringBuilder sb = new StringBuilder();
+                        if (json.getAsJsonObject().get("data").getAsJsonObject().has("cookies") && !json.getAsJsonObject().get("data").getAsJsonObject().get("cookies").getAsJsonArray().isEmpty()){
+                            for (JsonElement jsonElement : json.getAsJsonObject().get("data").getAsJsonObject().get("cookies").getAsJsonArray()) {
+                                sb.append(jsonElement.getAsJsonObject().get("name").getAsString()).append("=").append(jsonElement.getAsJsonObject().get("value").getAsString()).append("; ");
+                            }
+
+                            temp[2] = sb.substring(0, sb.length() - 2);
+                        }
+
+                        temp[0] = json.getAsJsonObject().get("data").getAsJsonObject().get("uri").getAsString();
                         liveUrl = temp[0];
                     } else {
                         temp[0] = "Error";
                         webSocket.cancel();
                     }
-
-                    //System.out.println(temp[0]);
                 }
 
                 //System.out.println("----");
@@ -356,14 +394,15 @@ public class NicoNicoVideo implements ShareService {
             @Override
             public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
                 //System.out.println("websocket open");
-                webSocket.send("{\"type\":\"startWatching\",\"data\":{\"stream\":{\"quality\":\"abr\",\"protocol\":\"hls\",\"latency\":\"low\",\"chasePlay\":false},\"room\":{\"protocol\":\"webSocket\",\"commentable\":true},\"reconnect\":false}}");
+                //webSocket.send("{\"type\":\"startWatching\",\"data\":{\"stream\":{\"quality\":\"abr\",\"protocol\":\"hls\",\"latency\":\"low\",\"chasePlay\":false},\"room\":{\"protocol\":\"webSocket\",\"commentable\":true},\"reconnect\":false}}");
+                webSocket.send("{\"type\":\"startWatching\",\"data\":{\"stream\":{\"quality\":\"abr\",\"protocol\":\"hls\",\"latency\":\"low\",\"accessRightMethod\":\"single_cookie\",\"chasePlay\":false},\"room\":{\"protocol\":\"webSocket\",\"commentable\":true},\"reconnect\":false}}");
             }
         });
         while (temp[0].startsWith("wait")){
             temp[1] = temp[0];
         }
 
-        LiveURL = new ResultVideoData(temp[0], null, true, false, true, null);
+        LiveURL = new ResultVideoData(temp[0], null, true, temp[2] != null, true, temp[2]);
 
         //System.out.println("t : "+temp[0]);
         //System.out.println("l : "+LiveURL);
