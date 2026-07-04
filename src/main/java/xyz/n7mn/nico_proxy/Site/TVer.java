@@ -107,7 +107,7 @@ public class TVer implements ServiceAPI {
 
             //System.out.println(json);
             if (channel.equals("local")){
-                if (videoRefID.startsWith("cbc")){
+                if (videoRefID.startsWith("cbc") || videoRefID.startsWith("ctc")){
                     channel = "mcc";
                 }
             }
@@ -148,12 +148,12 @@ public class TVer implements ServiceAPI {
             int i = 1;
             while (!isFound){
 
-                System.out.println(channel);
+                //System.out.println(channel);
                 if (channel.startsWith("ntv")){
                     channel = "ntv";
                 }
                 if (channel.equals("local")){
-                    if (videoRefID.startsWith("cbc")){
+                    if (videoRefID.startsWith("cbc") || videoRefID.startsWith("ctc")){
                         channel = "mcc";
                     }
                 }
