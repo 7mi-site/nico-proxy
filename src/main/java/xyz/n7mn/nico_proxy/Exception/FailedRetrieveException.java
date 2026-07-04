@@ -11,4 +11,9 @@ public class FailedRetrieveException extends Exception {
     public FailedRetrieveException(String errorMessage) {
         this.errorMessage = errorMessage;
     }
+
+    @Override
+    public String getMessage() {
+        return errorMessage;
+    }
 }
