@@ -122,7 +122,7 @@ jobs:
 
       - name: bandcamp Test
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://yuqt.bandcamp.com/album/yall-ready-for-dis-extended-mix)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://yuqt.bandcamp.com/album/yall-ready-for-dis-extended-mix )
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
@@ -161,16 +161,20 @@ jobs:
       #  shell: bash
 
       - name: mellow-fan Test 1
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/movie/ovrdvqgx3rj)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/movie/ovrdvqgx3rj $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
         shell: bash
 
       - name: mellow-fan Test 2
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/live/6oz3xveoyz3)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/live/6oz3xveoyz3 $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
