@@ -299,32 +299,40 @@ jobs:
         shell: bash
 
       - name: TVer Test 1
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ep1fgcrtxe)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ep1fgcrtxe $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
         shell: bash
 
       - name: TVer Test 2
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/tbs)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/tbs $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
         shell: bash
 
       #- name: TVer Test 3
+      #  env:
+      #    proxy: ${{ secrets.PROXY }}
       #  run: |
-      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ephye5cie1)
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ephye5cie1 $proxy)
       #    if [ "$RESULT" != "0" ]; then
       #      exit 1
       #    fi
       #  shell: bash
 
       - name: TVer Test 4
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/special/le1zlvjk8i)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/special/le1zlvjk8i $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
@@ -611,32 +619,40 @@ jobs:
         shell: bash
 
       - name: TVer Test 1
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ep1fgcrtxe)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ep1fgcrtxe $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
         shell: bash
 
       - name: TVer Test 2
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/tbs)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/tbs $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
         shell: bash
 
       #- name: TVer Test 3
+      #  env:
+      #    proxy: ${{ secrets.PROXY }}
       #  run: |
-      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ephye5cie1)
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ephye5cie1 $proxy)
       #    if [ "$RESULT" != "0" ]; then
       #      exit 1
       #    fi
       #  shell: bash
 
       - name: TVer Test 4
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/special/le1zlvjk8i)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/special/le1zlvjk8i $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
