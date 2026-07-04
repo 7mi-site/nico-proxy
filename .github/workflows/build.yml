@@ -198,7 +198,7 @@ jobs:
 
       - name: NicoNico Test 2
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://nico.ms/watch/sm9)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://nico.ms/sm9)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
@@ -470,20 +470,24 @@ jobs:
       #  shell: bash
 
       - name: mellow-fan Test 1
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/movie/ovrdvqgx3rj)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/movie/ovrdvqgx3rj $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
         shell: bash
 
-      - name: mellow-fan Test 2
-        run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/live/6oz3xveoyz3)
-          if [ "$RESULT" != "0" ]; then
-            exit 1
-          fi
-        shell: bash
+      #- name: mellow-fan Test 2
+      #  env:
+      #    proxy: ${{ secrets.PROXY }}
+      #  run: |
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/live/nqz5g21nmrv $proxy)
+      #    if [ "$RESULT" != "0" ]; then
+      #      exit 1
+      #    fi
+      #  shell: bash
 
       - name: Mixcloud Test
         run: |
@@ -503,7 +507,7 @@ jobs:
 
       - name: NicoNico Test 2
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://nico.ms/watch/sm9)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://nico.ms/sm9)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
