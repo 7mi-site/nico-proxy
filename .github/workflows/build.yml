@@ -240,8 +240,9 @@ jobs:
         env:
           usersession: ${{ secrets.NICONICO_USERSESSION }}
           nicosid: ${{ secrets.NICONICO_NICOSID }}
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/sm45650421 $usersession $nicosid )
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/sm45650421 $usersession $nicosid $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
@@ -549,8 +550,9 @@ jobs:
         env:
           usersession: ${{ secrets.NICONICO_USERSESSION }}
           nicosid: ${{ secrets.NICONICO_NICOSID }}
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/sm45650421 $usersession $nicosid )
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/sm45650421 $usersession $nicosid $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
