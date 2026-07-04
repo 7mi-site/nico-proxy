@@ -174,7 +174,7 @@ jobs:
         env:
           proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/live/6oz3xveoyz3 $proxy)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/live/nqz5g21nmrv $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
