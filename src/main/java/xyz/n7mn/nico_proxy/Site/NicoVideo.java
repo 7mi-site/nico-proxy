@@ -563,7 +563,7 @@ public class NicoVideo implements ServiceAPI {
                                                     //System.out.println("30");
                                                     try {
                                                         Thread.sleep(30000L);
-                                                        System.out.println(loopFlag[0]);
+                                                        //System.out.println(loopFlag[0]);
                                                         if (!loopFlag[0]){
                                                             webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "").join();
                                                             client1.close();
