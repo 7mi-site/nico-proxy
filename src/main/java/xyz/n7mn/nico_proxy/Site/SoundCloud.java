@@ -164,7 +164,7 @@ public class SoundCloud implements ServiceAPI {
 
         send = client.send(request, HttpResponse.BodyHandlers.ofString());
         text = send.body();
-        System.out.println("text: "+send.statusCode()+"\n" + text);
+        //System.out.println("text: "+send.statusCode()+"\n" + text);
         json = Function.gson.fromJson(text, JsonElement.class);
         //System.out.println(json);
 
