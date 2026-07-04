@@ -99,7 +99,7 @@ jobs:
       - name: Abema Test 1
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/video/episode/25-139_s1_p1)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -107,7 +107,7 @@ jobs:
       #- name: Abema Test 2
       #  run: |
       #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/channels/mahjong/slots/)
-      #    if [ "$RESULT" -ne 0 ]; then
+      #    if [ "$RESULT" -ne "0" ]; then
       #      exit 1
       #    fi
       #  shell: bash
@@ -115,7 +115,7 @@ jobs:
       - name: Abema Test 3
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/now-on-air/mahjong)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -123,7 +123,7 @@ jobs:
       - name: bandcamp Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://yuqt.bandcamp.com/album/yall-ready-for-dis-extended-mix)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -131,7 +131,7 @@ jobs:
       - name: bilibili Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.bilibili.com/video/BV1y5411Y7A2/?spm_id_from=333.999.0.0)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -139,7 +139,7 @@ jobs:
       - name: fc2 Test 1
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://video.fc2.com/content/2026070409B5QQnu)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -147,7 +147,7 @@ jobs:
       - name: fc2 Test 2
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://video.fc2.com/a/content/20250225sLDdvdLD)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -155,7 +155,7 @@ jobs:
       #- name: iwara.tv Test
       #  run: |
       #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.iwara.tv/video/4lbqvFBO4n98ZN/sex-1)
-      #    if [ "$RESULT" -ne 0 ]; then
+      #    if [ "$RESULT" -ne "0" ]; then
       #      exit 1
       #    fi
       #  shell: bash
@@ -163,7 +163,7 @@ jobs:
       - name: mellow-fan Test 1
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/movie/ovrdvqgx3rj)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -171,7 +171,7 @@ jobs:
       - name: mellow-fan Test 2
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/live/6oz3xveoyz3)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -179,7 +179,7 @@ jobs:
       - name: Mixcloud Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mixcloud.com/M4Tyyyyy/m4tt-play-m4-only-set/)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -187,7 +187,7 @@ jobs:
       - name: NicoNico Test 1
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/sm9)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -195,7 +195,7 @@ jobs:
       - name: NicoNico Test 2
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://nico.ms/watch/sm9)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -203,7 +203,7 @@ jobs:
       - name: NicoNico Test 3
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/ss46186592)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -211,7 +211,7 @@ jobs:
       - name: NicoNico Test 4
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/shorts/ss46186592)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -219,7 +219,7 @@ jobs:
       - name: NicoNico Test 5
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://nico.ms/ss46186592)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -227,7 +227,7 @@ jobs:
       - name: NicoNico Test 6
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://cas.nicovideo.jp/user/70969122)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -238,7 +238,7 @@ jobs:
           nicosid: ${{ secrets.NICONICO_NICOSID }}
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/sm45650421 $usersession $nicosid )
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -246,7 +246,7 @@ jobs:
       - name: piapro Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://piapro.jp/t/KQn0)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -254,7 +254,7 @@ jobs:
       - name: Pornhub Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.pornhub.com/view_video.php?viewkey=66b185c79fc62)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -262,7 +262,7 @@ jobs:
       - name: Sonicbowl Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://player.sonicbowl.cloud/episode/f338b118-b13c-47b3-b26b-d1966ca19cb8/)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -270,7 +270,7 @@ jobs:
       - name: SoundCloud Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://soundcloud.com/baron1_3/penguin3rd)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -278,7 +278,7 @@ jobs:
       - name: SpankBang Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.spankbang.com/9it15/video/otokonoko)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -286,7 +286,7 @@ jobs:
       - name: TikTok Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.tiktok.com/@uni_uni_uta/video/7561752838683086100)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -294,7 +294,7 @@ jobs:
       - name: TVer Test 1
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ep1fgcrtxe)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -302,7 +302,7 @@ jobs:
       - name: TVer Test 2
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/tbs)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -310,7 +310,7 @@ jobs:
       #- name: TVer Test 3
       #  run: |
       #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ephye5cie1)
-      #    if [ "$RESULT" -ne 0 ]; then
+      #    if [ "$RESULT" -ne "0" ]; then
       #      exit 1
       #    fi
       #  shell: bash
@@ -318,7 +318,7 @@ jobs:
       - name: TVer Test 4
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/special/le1zlvjk8i)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -329,7 +329,7 @@ jobs:
       #    ClientSecret: ${{ secrets.TWITCAST_TOKEN_CLIENTSECRET }}
       #  run: |
       #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://twitcasting.tv/twitcasting_jp $ClientID $ClientSecret )
-      #    if [ "$RESULT" -ne 0 ]; then
+      #    if [ "$RESULT" -ne "0" ]; then
       #      exit 1
       #    fi
       #  shell: bash
@@ -340,7 +340,7 @@ jobs:
           ClientSecret: ${{ secrets.TWITCAST_TOKEN_CLIENTSECRET }}
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://twitcasting.tv/twitcasting_jp/movie/817612486 $ClientID $ClientSecret )
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -348,7 +348,7 @@ jobs:
       - name: Twitter Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://x.com/7mi_vrc/status/1996716145559457976/)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -356,7 +356,7 @@ jobs:
       - name: Vimeo Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://vimeo.com/394801904)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -364,7 +364,7 @@ jobs:
       - name: XVIDEOS.COM Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.xvideos.com/video.hhmkceo3490/_)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -372,7 +372,7 @@ jobs:
       - name: XVIDEOS.COM Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.youjizz.com/videos/brother-who-became-a-otokonoko-52029891.html)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -404,7 +404,7 @@ jobs:
       - name: Abema Test 1
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/video/episode/25-139_s1_p1)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -412,7 +412,7 @@ jobs:
       #- name: Abema Test 2
       #  run: |
       #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/channels/mahjong/slots/)
-      #    if [ "$RESULT" -ne 0 ]; then
+      #    if [ "$RESULT" -ne "0" ]; then
       #      exit 1
       #    fi
       #  shell: bash
@@ -420,7 +420,7 @@ jobs:
       - name: Abema Test 3
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/now-on-air/mahjong)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -428,7 +428,7 @@ jobs:
       - name: bandcamp Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://yuqt.bandcamp.com/album/yall-ready-for-dis-extended-mix)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -436,7 +436,7 @@ jobs:
       - name: bilibili Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.bilibili.com/video/BV1y5411Y7A2/?spm_id_from=333.999.0.0)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -444,7 +444,7 @@ jobs:
       - name: fc2 Test 1
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://video.fc2.com/content/2026070409B5QQnu)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -452,7 +452,7 @@ jobs:
       - name: fc2 Test 2
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://video.fc2.com/a/content/20250225sLDdvdLD)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -460,7 +460,7 @@ jobs:
       #- name: iwara.tv Test
       #  run: |
       #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.iwara.tv/video/4lbqvFBO4n98ZN/sex-1)
-      #    if [ "$RESULT" -ne 0 ]; then
+      #    if [ "$RESULT" -ne "0" ]; then
       #      exit 1
       #    fi
       #  shell: bash
@@ -468,7 +468,7 @@ jobs:
       - name: mellow-fan Test 1
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/movie/ovrdvqgx3rj)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -476,7 +476,7 @@ jobs:
       - name: mellow-fan Test 2
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/live/6oz3xveoyz3)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -484,7 +484,7 @@ jobs:
       - name: Mixcloud Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mixcloud.com/M4Tyyyyy/m4tt-play-m4-only-set/)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -492,7 +492,7 @@ jobs:
       - name: NicoNico Test 1
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/sm9)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -500,7 +500,7 @@ jobs:
       - name: NicoNico Test 2
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://nico.ms/watch/sm9)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -508,7 +508,7 @@ jobs:
       - name: NicoNico Test 3
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/ss46186592)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -516,7 +516,7 @@ jobs:
       - name: NicoNico Test 4
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/shorts/ss46186592)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -524,7 +524,7 @@ jobs:
       - name: NicoNico Test 5
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://nico.ms/ss46186592)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -532,7 +532,7 @@ jobs:
       - name: NicoNico Test 6
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://cas.nicovideo.jp/user/70969122)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -543,7 +543,7 @@ jobs:
           nicosid: ${{ secrets.NICONICO_NICOSID }}
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/sm45650421 $usersession $nicosid )
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -551,7 +551,7 @@ jobs:
       - name: piapro Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://piapro.jp/t/KQn0)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -559,7 +559,7 @@ jobs:
       - name: Pornhub Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.pornhub.com/view_video.php?viewkey=66b185c79fc62)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -567,7 +567,7 @@ jobs:
       - name: Sonicbowl Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://player.sonicbowl.cloud/episode/f338b118-b13c-47b3-b26b-d1966ca19cb8/)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -575,7 +575,7 @@ jobs:
       - name: SoundCloud Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://soundcloud.com/baron1_3/penguin3rd)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -583,7 +583,7 @@ jobs:
       - name: SpankBang Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.spankbang.com/9it15/video/otokonoko)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -591,7 +591,7 @@ jobs:
       - name: TikTok Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.tiktok.com/@uni_uni_uta/video/7561752838683086100)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -599,7 +599,7 @@ jobs:
       - name: TVer Test 1
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ep1fgcrtxe)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -607,7 +607,7 @@ jobs:
       - name: TVer Test 2
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/tbs)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -615,7 +615,7 @@ jobs:
       #- name: TVer Test 3
       #  run: |
       #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ephye5cie1)
-      #    if [ "$RESULT" -ne 0 ]; then
+      #    if [ "$RESULT" -ne "0" ]; then
       #      exit 1
       #    fi
       #  shell: bash
@@ -623,7 +623,7 @@ jobs:
       - name: TVer Test 4
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/special/le1zlvjk8i)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -634,7 +634,7 @@ jobs:
       #    ClientSecret: ${{ secrets.TWITCAST_TOKEN_CLIENTSECRET }}
       #  run: |
       #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://twitcasting.tv/twitcasting_jp $ClientID $ClientSecret )
-      #    if [ "$RESULT" -ne 0 ]; then
+      #    if [ "$RESULT" -ne "0" ]; then
       #      exit 1
       #    fi
       #  shell: bash
@@ -645,7 +645,7 @@ jobs:
           ClientSecret: ${{ secrets.TWITCAST_TOKEN_CLIENTSECRET }}
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://twitcasting.tv/twitcasting_jp/movie/817612486 $ClientID $ClientSecret )
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -653,7 +653,7 @@ jobs:
       - name: Twitter Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://x.com/7mi_vrc/status/1996716145559457976/)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -661,7 +661,7 @@ jobs:
       - name: Vimeo Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://vimeo.com/394801904)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -669,7 +669,7 @@ jobs:
       - name: XVIDEOS.COM Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.xvideos.com/video.hhmkceo3490/_)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
@@ -677,7 +677,7 @@ jobs:
       - name: XVIDEOS.COM Test
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.youjizz.com/videos/brother-who-became-a-otokonoko-52029891.html)
-          if [ "$RESULT" -ne 0 ]; then
+          if [ "$RESULT" -ne "0" ]; then
             exit 1
           fi
         shell: bash
