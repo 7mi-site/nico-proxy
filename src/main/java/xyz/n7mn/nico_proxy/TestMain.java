@@ -29,8 +29,8 @@ public class TestMain {
         for (ServiceAPI api : ServiceList.getServiceList()) {
             for (String s : api.getCorrespondingURL()) {
                 Pattern compile = Pattern.compile(s.replaceAll("\\.", "\\.").replaceAll("\\*", ".*"));
-                //System.out.println(s);
-                if (URL.startsWith("http://"+s) ||  URL.startsWith("https://"+s) || URL.startsWith(s)) {
+                System.out.println(s);
+                if (URL.startsWith("http://"+s) ||  URL.startsWith("https://"+s) || (!URL.startsWith("http") && URL.startsWith(s))) {
                     Service = api;
                     break;
                 }
