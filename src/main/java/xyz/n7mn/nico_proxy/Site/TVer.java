@@ -148,9 +148,14 @@ public class TVer implements ServiceAPI {
             int i = 1;
             while (!isFound){
 
-                //System.out.println(channel);
+                System.out.println(channel);
                 if (channel.startsWith("ntv")){
                     channel = "ntv";
+                }
+                if (channel.equals("local")){
+                    if (videoRefID.startsWith("cbc")){
+                        channel = "mcc";
+                    }
                 }
                 String key = json.getAsJsonObject().get("tver-"+channel).getAsJsonObject().getAsJsonObject().get("api_key").getAsJsonObject().get("key0"+i).getAsString();
 
