@@ -1,7 +1,9 @@
 package xyz.n7mn.nico_proxy;
 
+import xyz.n7mn.nico_proxy.Site.NicoVideo;
 import xyz.n7mn.nico_proxy.Site.ServiceAPI;
 import xyz.n7mn.nico_proxy.Site.ServiceList;
+import xyz.n7mn.nico_proxy.Site.fc2;
 
 import java.net.InetSocketAddress;
 import java.net.ProxySelector;
@@ -76,10 +78,20 @@ public class TestMain {
                 Service.setProxy(new ProxySetting(Proxy.split(":")[0], Integer.parseInt(Proxy.split(":")[1])));
             }
 
-            String result = Service.get();
-            if (result != null){
-                System.out.println(0);
-                return;
+            try {
+                String result = Service.get();
+                if (result != null) {
+                    System.out.println(0);
+                    if (Service instanceof NicoVideo){
+                        ((NicoVideo) Service).close();
+                    }
+                    if (Service instanceof fc2){
+                        ((fc2) Service).close();
+                    }
+                }
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         } catch (Exception e){
             System.out.println(3);
