@@ -25,7 +25,7 @@ public class TestMain {
         ServiceAPI Service = null;
         for (ServiceAPI api : ServiceList.getServiceList()) {
             for (String s : api.getCorrespondingURL()) {
-                if (URL.startsWith("http://"+s) || URL.startsWith("https://"+s)){
+                if (URL.startsWith("http://"+s) || URL.startsWith("https://"+s) || URL.startsWith(s)){
                     Service = api;
                     break;
                 }
