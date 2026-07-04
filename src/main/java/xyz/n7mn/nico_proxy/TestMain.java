@@ -1,9 +1,6 @@
 package xyz.n7mn.nico_proxy;
 
-import xyz.n7mn.nico_proxy.Site.NicoVideo;
-import xyz.n7mn.nico_proxy.Site.ServiceAPI;
-import xyz.n7mn.nico_proxy.Site.ServiceList;
-import xyz.n7mn.nico_proxy.Site.fc2;
+import xyz.n7mn.nico_proxy.Site.*;
 
 import java.net.InetSocketAddress;
 import java.net.ProxySelector;
@@ -26,23 +23,31 @@ public class TestMain {
         String Proxy = args.length == 4 ? args[3] : (args.length == 2 ? args[1] : null);
 
         ServiceAPI Service = null;
-        for (ServiceAPI api : ServiceList.getServiceList()) {
-            for (String s : api.getCorrespondingURL()) {
-                Pattern compile = Pattern.compile(s.replaceAll("\\.", "\\.").replaceAll("\\*", ".*"));
-                System.out.println(s);
-                if (URL.startsWith("http://"+s) ||  URL.startsWith("https://"+s) || (URL.startsWith(s) && api.getServiceName().equals("ニコニコ"))) {
-                    Service = api;
-                    break;
+
+        //System.out.println(URL);
+        if (URL.startsWith("http://soundcloud") || URL.startsWith("https://soundcloud")) {
+            //System.out.println("a");
+            Service = new SoundCloud();
+        } else {
+            for (ServiceAPI api : ServiceList.getServiceList()) {
+                for (String s : api.getCorrespondingURL()) {
+                    Pattern compile = Pattern.compile(s.replaceAll("\\.", "\\.").replaceAll("\\*", ".*"));
+                    //System.out.println(s);
+
+                    if (URL.startsWith("http://"+s) ||  URL.startsWith("https://"+s) || (!URL.startsWith("http") && URL.startsWith(s) && api.getServiceName().equals("ニコニコ"))) {
+                        Service = api;
+                        break;
+                    }
+
+                    if (URL.startsWith("http") && compile.matcher(URL).find() && !api.getServiceName().equals("ニコニコ")){
+                        Service = api;
+                        break;
+                    }
                 }
 
-                if (URL.startsWith("http") && compile.matcher(URL).find() && !api.getServiceName().equals("ニコニコ")){
-                    Service = api;
+                if (Service != null){
                     break;
                 }
-            }
-
-            if (Service != null){
-                break;
             }
         }
 
