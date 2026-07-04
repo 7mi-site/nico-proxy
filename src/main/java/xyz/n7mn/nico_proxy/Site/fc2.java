@@ -296,10 +296,20 @@ public class fc2 implements ServiceAPI {
                                 Thread.ofVirtual().start(()->{
                                     try {
                                         Thread.sleep(30000L);
+                                        if (!loopFlag[0]){
+                                            webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "").join();
+                                            client2.close();
+                                            return;
+                                        }
                                         while (loopFlag[0]){
                                             webSocket.sendText("{\"name\":\"heartbeat\",\"arguments\":{},\"id\":"+count[0]+"}", true);
                                             count[0]++;
 
+                                            if (!loopFlag[0]){
+                                                webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "").join();
+                                                client2.close();
+                                                break;
+                                            }
                                             Thread.sleep(30000L);
                                         }
                                     } catch (Exception e) {

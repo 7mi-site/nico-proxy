@@ -560,18 +560,31 @@ public class NicoVideo implements ServiceAPI {
                                                 webSocket.sendText("{\"type\":\"keepSeat\"}", true);
                                                 loopFlag[0] = true;
                                                 Thread.ofVirtual().start(()->{
-                                                   try {
-                                                       Thread.sleep(30000L);
+                                                    //System.out.println("30");
+                                                    try {
+                                                        Thread.sleep(30000L);
+                                                        System.out.println(loopFlag[0]);
+                                                        if (!loopFlag[0]){
+                                                            webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "").join();
+                                                            client1.close();
+                                                            //System.out.println("終了");
+                                                            return;
+                                                        }
 
-                                                       while (loopFlag[0]){
-                                                           //System.out.println("---> {\"type\":\"keepSeat\"}");
-                                                           webSocket.sendText("{\"type\":\"keepSeat\"}", true);
+                                                        while (loopFlag[0]){
+                                                            System.out.println("---> {\"type\":\"keepSeat\"}");
+                                                            webSocket.sendText("{\"type\":\"keepSeat\"}", true);
 
-                                                           Thread.sleep(30000L);
-                                                       }
-                                                   } catch (Exception e) {
-                                                       loopFlag[0] = false;
-                                                   }
+                                                            if (!loopFlag[0]){
+                                                                webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "");
+                                                                client1.close();
+                                                                break;
+                                                            }
+                                                            Thread.sleep(30000L);
+                                                        }
+                                                    } catch (Exception e) {
+                                                        loopFlag[0] = false;
+                                                    }
                                                 });
 
                                             }
