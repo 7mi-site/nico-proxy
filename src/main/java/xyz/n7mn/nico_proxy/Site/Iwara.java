@@ -2,7 +2,6 @@ package xyz.n7mn.nico_proxy.Site;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import xyz.n7mn.nico_proxy.Exception.FailedRetrieveException;
 import xyz.n7mn.nico_proxy.Exception.URLNotFoundException;
 import xyz.n7mn.nico_proxy.Exception.URLNotSupportException;
 import xyz.n7mn.nico_proxy.Function;
