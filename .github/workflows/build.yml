@@ -377,8 +377,10 @@ jobs:
       #  shell: bash
 
       - name: XVIDEOS.COM Test
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.xvideos.com/video.hhmkceo3490/_)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.xvideos.com/video.hhmkceo3490/_ $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
@@ -697,8 +699,10 @@ jobs:
       #  shell: bash
 
       - name: XVIDEOS.COM Test
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.xvideos.com/video.hhmkceo3490/_)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.xvideos.com/video.hhmkceo3490/_ $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi

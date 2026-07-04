@@ -57,12 +57,12 @@ public class TestMain {
         }
 
         try (HttpClient client = Proxy == null ? HttpClient.newBuilder()
-                                                 .version(HttpClient.Version.HTTP_2)
+                                                 .version(HttpClient.Version.HTTP_3)
                                                  .followRedirects(HttpClient.Redirect.NORMAL)
                                                  .connectTimeout(Duration.ofSeconds(5))
                                                  .build() :
                                                  HttpClient.newBuilder()
-                                                 .version(HttpClient.Version.HTTP_2)
+                                                 .version(HttpClient.Version.HTTP_3)
                                                  .followRedirects(HttpClient.Redirect.NORMAL)
                                                  .connectTimeout(Duration.ofSeconds(5))
                                                  .proxy(ProxySelector.of(new InetSocketAddress(Proxy.split(":")[0], Integer.parseInt(Proxy.split(":")[1]))))
