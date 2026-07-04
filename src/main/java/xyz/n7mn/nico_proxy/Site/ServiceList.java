@@ -7,6 +7,7 @@ public class ServiceList {
 
     public static List<ServiceAPI> getServiceList(){
         final List<ServiceAPI> list = new ArrayList<>();
+        list.add(new Abema());
         list.add(new NicoVideo());
         list.add(new bilibili_com());
         list.add(new XVIDEOS());
@@ -15,7 +16,6 @@ public class ServiceList {
         list.add(new mellow_fan());
         list.add(new Pornhub());
         list.add(new Twitcasting());
-        list.add(new Abema());
         list.add(new TVer());
         //list.add(new Iwara());
         list.add(new piapro());
