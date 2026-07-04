@@ -30,7 +30,7 @@ public class TestMain {
             for (String s : api.getCorrespondingURL()) {
                 Pattern compile = Pattern.compile(s.replaceAll("\\.", "\\.").replaceAll("\\*", ".*"));
                 System.out.println(s);
-                if (URL.startsWith("http://"+s) ||  URL.startsWith("https://"+s) || (!URL.startsWith("http") && URL.startsWith(s))) {
+                if (URL.startsWith("http://"+s) ||  URL.startsWith("https://"+s) || (URL.startsWith(s) && api.getServiceName().equals("ニコニコ"))) {
                     Service = api;
                     break;
                 }
