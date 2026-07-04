@@ -71,7 +71,7 @@ public class Vimeo implements ServiceAPI {
         if (matcher1.find()){
 
             Matcher matcher2 = SupportURL.matcher(url);
-            String configUrl = "https://player.vimeo.com/video/"+(matcher2.find() ? matcher2.group(1) : "")+"/config?airplay=1&ask_ai=0&audio_tracks=1&badge=1&byline=0&cc=1&chapters=1&chromecast=1&colors=000000%2C00adef%2Cffffff%2C000000&context=Vimeo%5CController%5CApi%5CResources%5CVideoController.&email=0&force_embed=1&fullscreen=1&h=eb35e2616e&like=0&outro=beginning&pip=1&play_button_position=auto&playbar=1&portrait=0&preload=auto&quality_selector=1&share=0&skipping_forward=1&speed=1&title=0&transcript=0&transparent=0&vimeo_logo=1&volume=1&watch_later=0&s=321d69be11aaf3b407817afa7efd9ccf5ed71a84_1756490512";
+            String configUrl = "https://player.vimeo.com/video/"+(matcher2.find() ? matcher2.group(1) : "")+"/config?airplay=1&ask_ai=0&audio_tracks=1&autoplay=0&badge=1&byline=0&cc=1&chapters=1&chromecast=1&colors=000000%2C00adef%2Cffffff%2C000000&context=Vimeo%5CController%5CApi%5CResources%5CVideoController.&email=0&force_embed=1&fullscreen=1&h=eb35e2616e&like=1&muted=1&outro=beginning&pip=1&play_button_position=auto&playbar=1&portrait=0&preload=auto&quality_selector=1&share=1&skipping_forward=1&speed=1&title=0&transcript=0&transparent=0&vimeo_logo=1&volume=1&watch_later=1&s=9ec729bb4b1e85191cc9e6ee560da45bf53a1d9b_1783276808";
             try {
 
                 request = HttpRequest.newBuilder()

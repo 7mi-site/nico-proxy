@@ -56,13 +56,16 @@ public class TestMain {
             return;
         }
 
+        int length = HttpClient.Version.values().length;
+        String ver = length == 3 ? "HTTP_3" : "HTTP_2";
+
         try (HttpClient client = Proxy == null ? HttpClient.newBuilder()
-                                                 .version(HttpClient.Version.HTTP_3)
+                                                 .version(HttpClient.Version.valueOf(ver))
                                                  .followRedirects(HttpClient.Redirect.NORMAL)
                                                  .connectTimeout(Duration.ofSeconds(5))
                                                  .build() :
                                                  HttpClient.newBuilder()
-                                                 .version(HttpClient.Version.HTTP_3)
+                                                 .version(HttpClient.Version.valueOf(ver))
                                                  .followRedirects(HttpClient.Redirect.NORMAL)
                                                  .connectTimeout(Duration.ofSeconds(5))
                                                  .proxy(ProxySelector.of(new InetSocketAddress(Proxy.split(":")[0], Integer.parseInt(Proxy.split(":")[1]))))

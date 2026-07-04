@@ -474,13 +474,13 @@ jobs:
           fi
         shell: bash
 
-      #- name: iwara.tv Test
-      #  run: |
-      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.iwara.tv/video/4lbqvFBO4n98ZN/sex-1)
-      #    if [ "$RESULT" != "0" ]; then
-      #      exit 1
-      #    fi
-      #  shell: bash
+      - name: iwara.tv Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.iwara.tv/video/4lbqvFBO4n98ZN/sex-1)
+          if [ "$RESULT" != "0" ]; then
+            exit 1
+          fi
+        shell: bash
 
       - name: mellow-fan Test 1
         env:
@@ -604,13 +604,13 @@ jobs:
           fi
         shell: bash
 
-      #- name: SpankBang Test
-      #  run: |
-      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.spankbang.com/9it15/video/otokonoko)
-      #    if [ "$RESULT" != "0" ]; then
-      #      exit 1
-      #    fi
-      #  shell: bash
+      - name: SpankBang Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.spankbang.com/9it15/video/otokonoko)
+          if [ "$RESULT" != "0" ]; then
+            exit 1
+          fi
+        shell: bash
 
       - name: TikTok Test
         run: |
@@ -690,13 +690,13 @@ jobs:
           fi
         shell: bash
 
-      #- name: Vimeo Test
-      #  run: |
-      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://vimeo.com/394801904)
-      #    if [ "$RESULT" != "0" ]; then
-      #      exit 1
-      #    fi
-      #  shell: bash
+      - name: Vimeo Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://vimeo.com/394801904)
+          if [ "$RESULT" != "0" ]; then
+            exit 1
+          fi
+        shell: bash
 
       - name: XVIDEOS.COM Test
         env:

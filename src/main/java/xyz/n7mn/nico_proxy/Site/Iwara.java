@@ -64,22 +64,16 @@ public class Iwara implements ServiceAPI {
                 .uri(new URI("https://api.iwara.tv/video/" + split[4]))
                 .headers("Accept", "application/json")
                 .headers("Accept-Language", "ja,en;q=0.9,en-US;q=0.8")
-                .headers("Connection", "keep-alive")
                 .headers("Content-Type", "application/json")
-                .headers("Host", "api.iwara.tv")
                 .headers("Origin", "https://www.iwara.tv")
-                .headers("Priority", "u=4")
                 .headers("Referer", "https://www.iwara.tv/")
-                .headers("Sec-Fetch-Dest", "empty")
-                .headers("Sec-Fetch-Mode", "cors")
-                .headers("Sec-Fetch-Site", "same-site")
                 .GET()
                 .build();
 
         HttpResponse<String> send = client.send(request, HttpResponse.BodyHandlers.ofString());
         String jsonText = send.body();
 
-        System.out.println(jsonText);
+        //System.out.println(jsonText);
         JsonElement json = new Gson().fromJson(jsonText, JsonElement.class);
 
         IwaraResult result = new IwaraResult();
@@ -96,14 +90,13 @@ public class Iwara implements ServiceAPI {
                 .headers("User-Agent", Function.UserAgent)
                 .headers("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                 .headers("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
-                .headers("Accept-Encoding", "gzip, br")
                 // いつかこのX-Versionを取れるようにする
                 // .headers("X-Version","3f8ce8c9518993ed46b9f388988b4ad0781eff7d")
                 .GET()
                 .build();
         send = client.send(request, HttpResponse.BodyHandlers.ofString());
         jsonText = send.body();
-        json = new Gson().fromJson(jsonText, JsonElement.class);
+        json = Function.gson.fromJson(jsonText, JsonElement.class);
 
         result.setVideoURL("https:"+json.getAsJsonArray().get(0).getAsJsonObject().get("src").getAsJsonObject().get("view").getAsString());
 
