@@ -257,8 +257,10 @@ jobs:
         shell: bash
 
       - name: Pornhub Test
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.pornhub.com/view_video.php?viewkey=66b185c79fc62)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.pornhub.com/view_video.php?viewkey=66b185c79fc62 $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
@@ -567,8 +569,10 @@ jobs:
         shell: bash
 
       - name: Pornhub Test
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.pornhub.com/view_video.php?viewkey=66b185c79fc62)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.pornhub.com/view_video.php?viewkey=66b185c79fc62 $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
