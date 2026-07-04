@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.net.ProxySelector;
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.regex.Pattern;
 
 public class TestMain {
 
@@ -25,7 +26,8 @@ public class TestMain {
         ServiceAPI Service = null;
         for (ServiceAPI api : ServiceList.getServiceList()) {
             for (String s : api.getCorrespondingURL()) {
-                if (URL.startsWith("http://"+s) || URL.startsWith("https://"+s) || URL.startsWith(s)){
+                Pattern compile = Pattern.compile(s);
+                if (URL.startsWith("http://"+s) || URL.startsWith("https://"+s) || URL.startsWith(s) || compile.matcher(URL).find()) {
                     Service = api;
                     break;
                 }
