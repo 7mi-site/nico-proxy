@@ -9,48 +9,676 @@ name: Java CI with Gradle
 
 on:
   push:
-    branches: [ "master", "v1.x", "v2.x" ]
+    branches: [ "master", "v2.x" ]
   pull_request:
-    branches: [ "master", "v1.x", "v2.x" ]
+    branches: [ "master", "v2.x" ]
 
 jobs:
-  build-17:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4.1.7
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4.2.1
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      # Configure Gradle for optimal use in GiHub Actions, including caching of downloaded dependencies.
-      # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3.5.0
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-      - name: Build with Gradle Wrapper
-        run: ./gradlew shadowJar
   build-21:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.0
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5.4.0
         with:
           java-version: '21'
-          distribution: 'temurin'
+          distribution: 'oracle'
 
       # Configure Gradle for optimal use in GiHub Actions, including caching of downloaded dependencies.
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3.5.0
+        uses: gradle/actions/setup-gradle@v6.1.0
+
       - name: Make gradlew executable
         run: chmod +x ./gradlew
+
       - name: Build with Gradle Wrapper
         run: ./gradlew shadowJar
+
+      - name: Upload JarFile
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: jar1
+          path: ./build/libs/nico-proxy-2.0-SNAPSHOT-all.jar
+
+  build-26:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.0
+      - name: Set up JDK 26
+        uses: actions/setup-java@v5.4.0
+        with:
+          java-version: '26'
+          distribution: 'oracle'
+
+      # Configure Gradle for optimal use in GiHub Actions, including caching of downloaded dependencies.
+      # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6.1.0
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build with Gradle Wrapper
+        run: ./gradlew shadowJar
+
+      - name: Upload JarFile
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: jar2
+          path: ./build/libs/nico-proxy-2.0-SNAPSHOT-all.jar
+
+  test_for21:
+    needs: build-21
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.0
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5.4.0
+        with:
+          java-version: '21'
+          distribution: 'oracle'
+
+      - name: Download JarFile
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: jar1
+
+      - name: Delete File
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            jar1
+
+      - name: Abema Test 1
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/video/episode/25-139_s1_p1)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      #- name: Abema Test 2
+      #  run: |
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/channels/mahjong/slots/)
+      #    if [ "$RESULT" -ne 0 ]; then
+      #      exit 1
+      #    fi
+      #  shell: bash
+
+      - name: Abema Test 3
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/now-on-air/mahjong)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: bandcamp Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://yuqt.bandcamp.com/album/yall-ready-for-dis-extended-mix)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: bilibili Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.bilibili.com/video/BV1y5411Y7A2/?spm_id_from=333.999.0.0)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: fc2 Test 1
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://video.fc2.com/content/2026070409B5QQnu)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: fc2 Test 2
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://video.fc2.com/a/content/20250225sLDdvdLD)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      #- name: iwara.tv Test
+      #  run: |
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.iwara.tv/video/4lbqvFBO4n98ZN/sex-1)
+      #    if [ "$RESULT" -ne 0 ]; then
+      #      exit 1
+      #    fi
+      #  shell: bash
+
+      - name: mellow-fan Test 1
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/movie/ovrdvqgx3rj)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: mellow-fan Test 2
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/live/6oz3xveoyz3)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: Mixcloud Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mixcloud.com/M4Tyyyyy/m4tt-play-m4-only-set/)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 1
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/sm9)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 2
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://nico.ms/watch/sm9)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 3
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/ss46186592)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 4
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/shorts/ss46186592)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 5
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://nico.ms/ss46186592)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 6
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://cas.nicovideo.jp/user/70969122)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 7
+        env:
+          usersession: ${{ secrets.NICONICO_USERSESSION }}
+          nicosid: ${{ secrets.NICONICO_NICOSID }}
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/sm45650421 $usersession $nicosid )
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: piapro Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://piapro.jp/t/KQn0)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: Pornhub Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.pornhub.com/view_video.php?viewkey=66b185c79fc62)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: Sonicbowl Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://player.sonicbowl.cloud/episode/f338b118-b13c-47b3-b26b-d1966ca19cb8/)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: SoundCloud Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://soundcloud.com/baron1_3/penguin3rd)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: SpankBang Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.spankbang.com/9it15/video/otokonoko)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: TikTok Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.tiktok.com/@uni_uni_uta/video/7561752838683086100)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: TVer Test 1
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ep1fgcrtxe)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: TVer Test 2
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/tbs)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      #- name: TVer Test 3
+      #  run: |
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ephye5cie1)
+      #    if [ "$RESULT" -ne 0 ]; then
+      #      exit 1
+      #    fi
+      #  shell: bash
+
+      - name: TVer Test 4
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/special/le1zlvjk8i)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      #- name: ツイキャス Test 1
+      #  env:
+      #    ClientID: ${{ secrets.TWITCAST_TOKEN_CLIENTID }}
+      #    ClientSecret: ${{ secrets.TWITCAST_TOKEN_CLIENTSECRET }}
+      #  run: |
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://twitcasting.tv/twitcasting_jp $ClientID $ClientSecret )
+      #    if [ "$RESULT" -ne 0 ]; then
+      #      exit 1
+      #    fi
+      #  shell: bash
+
+      - name: ツイキャス Test 2
+        env:
+          ClientID: ${{ secrets.TWITCAST_TOKEN_CLIENTID }}
+          ClientSecret: ${{ secrets.TWITCAST_TOKEN_CLIENTSECRET }}
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://twitcasting.tv/twitcasting_jp/movie/817612486 $ClientID $ClientSecret )
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: Twitter Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://x.com/7mi_vrc/status/1996716145559457976/)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: Vimeo Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://vimeo.com/394801904)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: XVIDEOS.COM Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.xvideos.com/video.hhmkceo3490/_)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: XVIDEOS.COM Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.youjizz.com/videos/brother-who-became-a-otokonoko-52029891.html)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+  test_for26:
+    needs: build-26
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.0
+      - name: Set up JDK 26
+        uses: actions/setup-java@v5.4.0
+        with:
+          java-version: '26'
+          distribution: 'oracle'
+
+      - name: Download JarFile
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: jar2
+
+      - name: Delete File
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            jar2
+
+      - name: Abema Test 1
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/video/episode/25-139_s1_p1)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      #- name: Abema Test 2
+      #  run: |
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/channels/mahjong/slots/)
+      #    if [ "$RESULT" -ne 0 ]; then
+      #      exit 1
+      #    fi
+      #  shell: bash
+
+      - name: Abema Test 3
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/now-on-air/mahjong)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: bandcamp Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://yuqt.bandcamp.com/album/yall-ready-for-dis-extended-mix)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: bilibili Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.bilibili.com/video/BV1y5411Y7A2/?spm_id_from=333.999.0.0)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: fc2 Test 1
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://video.fc2.com/content/2026070409B5QQnu)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: fc2 Test 2
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://video.fc2.com/a/content/20250225sLDdvdLD)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      #- name: iwara.tv Test
+      #  run: |
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.iwara.tv/video/4lbqvFBO4n98ZN/sex-1)
+      #    if [ "$RESULT" -ne 0 ]; then
+      #      exit 1
+      #    fi
+      #  shell: bash
+
+      - name: mellow-fan Test 1
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/movie/ovrdvqgx3rj)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: mellow-fan Test 2
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mellow-fan.com/live/6oz3xveoyz3)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: Mixcloud Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.mixcloud.com/M4Tyyyyy/m4tt-play-m4-only-set/)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 1
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/sm9)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 2
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://nico.ms/watch/sm9)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 3
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/ss46186592)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 4
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/shorts/ss46186592)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 5
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://nico.ms/ss46186592)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 6
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://cas.nicovideo.jp/user/70969122)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: NicoNico Test 7
+        env:
+          usersession: ${{ secrets.NICONICO_USERSESSION }}
+          nicosid: ${{ secrets.NICONICO_NICOSID }}
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.nicovideo.jp/watch/sm45650421 $usersession $nicosid )
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: piapro Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://piapro.jp/t/KQn0)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: Pornhub Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.pornhub.com/view_video.php?viewkey=66b185c79fc62)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: Sonicbowl Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://player.sonicbowl.cloud/episode/f338b118-b13c-47b3-b26b-d1966ca19cb8/)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: SoundCloud Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://soundcloud.com/baron1_3/penguin3rd)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: SpankBang Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://jp.spankbang.com/9it15/video/otokonoko)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: TikTok Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.tiktok.com/@uni_uni_uta/video/7561752838683086100)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: TVer Test 1
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ep1fgcrtxe)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: TVer Test 2
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/tbs)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      #- name: TVer Test 3
+      #  run: |
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ephye5cie1)
+      #    if [ "$RESULT" -ne 0 ]; then
+      #      exit 1
+      #    fi
+      #  shell: bash
+
+      - name: TVer Test 4
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/live/special/le1zlvjk8i)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      #- name: ツイキャス Test 1
+      #  env:
+      #    ClientID: ${{ secrets.TWITCAST_TOKEN_CLIENTID }}
+      #    ClientSecret: ${{ secrets.TWITCAST_TOKEN_CLIENTSECRET }}
+      #  run: |
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://twitcasting.tv/twitcasting_jp $ClientID $ClientSecret )
+      #    if [ "$RESULT" -ne 0 ]; then
+      #      exit 1
+      #    fi
+      #  shell: bash
+
+      - name: ツイキャス Test 2
+        env:
+          ClientID: ${{ secrets.TWITCAST_TOKEN_CLIENTID }}
+          ClientSecret: ${{ secrets.TWITCAST_TOKEN_CLIENTSECRET }}
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://twitcasting.tv/twitcasting_jp/movie/817612486 $ClientID $ClientSecret )
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: Twitter Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://x.com/7mi_vrc/status/1996716145559457976/)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: Vimeo Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://vimeo.com/394801904)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: XVIDEOS.COM Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.xvideos.com/video.hhmkceo3490/_)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+
+      - name: XVIDEOS.COM Test
+        run: |
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.youjizz.com/videos/brother-who-became-a-otokonoko-52029891.html)
+          if [ "$RESULT" -ne 0 ]; then
+            exit 1
+          fi
+        shell: bash
+# https://vimeo.com/394801904

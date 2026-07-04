@@ -9,12 +9,12 @@ name: Create Release
 jobs:
   build:
     name: Create Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.0
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
@@ -24,6 +24,7 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body: |
-            - 前提ライブラリの更新
+            - 内部構造1から作り直し
+            - Java 21以降に変更
           draft: false
           prerelease: false
