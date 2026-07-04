@@ -27,7 +27,13 @@ public class TestMain {
         for (ServiceAPI api : ServiceList.getServiceList()) {
             for (String s : api.getCorrespondingURL()) {
                 Pattern compile = Pattern.compile(s.replaceAll("\\.", "\\.").replaceAll("\\*", ".*"));
-                if (URL.startsWith("http://"+s) ||  URL.startsWith("https://"+s) || (!URL.startsWith("http") && compile.matcher(URL).find())) {
+                //System.out.println(s);
+                if (URL.startsWith("http://"+s) ||  URL.startsWith("https://"+s) || URL.startsWith(s)) {
+                    Service = api;
+                    break;
+                }
+
+                if (URL.startsWith("http") && compile.matcher(URL).find() && !api.getServiceName().equals("ニコニコ")){
                     Service = api;
                     break;
                 }
