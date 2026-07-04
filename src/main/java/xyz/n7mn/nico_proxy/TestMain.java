@@ -13,7 +13,7 @@ public class TestMain {
     public static void main(String[] args) {
 
         if (args.length < 1 || args.length > 5) {
-            System.out.println(-1);
+            System.out.println(1);
             return;
         }
 
@@ -37,7 +37,7 @@ public class TestMain {
         }
 
         if (Service == null){
-            System.out.println(-1);
+            System.out.println(1);
         }
 
         try (HttpClient client = Proxy == null ? HttpClient.newBuilder()
@@ -72,7 +72,7 @@ public class TestMain {
                 System.out.println(0);
             }
         } catch (Exception e){
-            System.out.println(-1);
+            System.out.println(1);
         }
 
 
