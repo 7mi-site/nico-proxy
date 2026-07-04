@@ -27,7 +27,7 @@ public class TestMain {
         for (ServiceAPI api : ServiceList.getServiceList()) {
             for (String s : api.getCorrespondingURL()) {
                 Pattern compile = Pattern.compile(s);
-                if (URL.startsWith("http://"+s) || URL.startsWith("https://"+s) || URL.startsWith(s) || compile.matcher(URL).find()) {
+                if (compile.matcher(URL).find()) {
                     Service = api;
                     break;
                 }
@@ -77,6 +77,7 @@ public class TestMain {
             }
         } catch (Exception e){
             System.out.println(3);
+            e.printStackTrace();
         }
 
 
