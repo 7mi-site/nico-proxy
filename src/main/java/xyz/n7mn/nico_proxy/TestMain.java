@@ -83,10 +83,10 @@ public class TestMain {
                 if (result != null) {
                     System.out.println(0);
                     if (Service instanceof NicoVideo){
-                        ((NicoVideo) Service).close();
+                        ((NicoVideo) Service).closeWebsocket();
                     }
                     if (Service instanceof fc2){
-                        ((fc2) Service).close();
+                        ((fc2) Service).closeWebsocket();
                     }
                 }
 
