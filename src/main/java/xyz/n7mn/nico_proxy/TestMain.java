@@ -25,7 +25,7 @@ public class TestMain {
         ServiceAPI Service = null;
         for (ServiceAPI api : ServiceList.getServiceList()) {
             for (String s : api.getCorrespondingURL()) {
-                if (URL.startsWith(s)){
+                if (URL.startsWith("http://"+s) || URL.startsWith("https://"+s)){
                     Service = api;
                     break;
                 }
@@ -37,7 +37,8 @@ public class TestMain {
         }
 
         if (Service == null){
-            System.out.println(1);
+            System.out.println(2);
+            return;
         }
 
         try (HttpClient client = Proxy == null ? HttpClient.newBuilder()
@@ -70,9 +71,10 @@ public class TestMain {
             String result = Service.get();
             if (result != null){
                 System.out.println(0);
+                return;
             }
         } catch (Exception e){
-            System.out.println(1);
+            System.out.println(3);
         }
 
 
