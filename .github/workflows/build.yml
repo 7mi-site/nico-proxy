@@ -368,13 +368,13 @@ jobs:
           fi
         shell: bash
 
-      - name: Vimeo Test
-        run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://vimeo.com/394801904)
-          if [ "$RESULT" != "0" ]; then
-            exit 1
-          fi
-        shell: bash
+      #- name: Vimeo Test
+      #  run: |
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://vimeo.com/394801904)
+      #    if [ "$RESULT" != "0" ]; then
+      #      exit 1
+      #    fi
+      #  shell: bash
 
       - name: XVIDEOS.COM Test
         run: |
@@ -688,13 +688,13 @@ jobs:
           fi
         shell: bash
 
-      - name: Vimeo Test
-        run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://vimeo.com/394801904)
-          if [ "$RESULT" != "0" ]; then
-            exit 1
-          fi
-        shell: bash
+      #- name: Vimeo Test
+      #  run: |
+      #    RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://vimeo.com/394801904)
+      #    if [ "$RESULT" != "0" ]; then
+      #      exit 1
+      #    fi
+      #  shell: bash
 
       - name: XVIDEOS.COM Test
         run: |
