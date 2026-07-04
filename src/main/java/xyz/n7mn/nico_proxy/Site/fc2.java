@@ -28,6 +28,7 @@ public class fc2 implements ServiceAPI {
     private String url = null;
     private HttpClient client = null;
     private ProxySetting proxy = null;
+    private HttpClient client2 = null;
 
     private Pattern matcher_description = Pattern.compile("<meta name=\"description\" content=\"(.+)\" />");
     private final ConcurrentHashMap<String, fc2Result> LiveCacheList = new ConcurrentHashMap<>();
@@ -239,7 +240,7 @@ public class fc2 implements ServiceAPI {
             if (json.isJsonObject() && json.getAsJsonObject().has("status") && json.getAsJsonObject().get("status").getAsInt() != 11){
 
                 // ;
-                HttpClient client2 = proxy == null ? HttpClient.newBuilder()
+                client2 = proxy == null ? HttpClient.newBuilder()
                                                      .version(HttpClient.Version.HTTP_2)
                                                      .followRedirects(HttpClient.Redirect.NORMAL)
                                                      .connectTimeout(Duration.ofSeconds(5))
@@ -379,5 +380,12 @@ public class fc2 implements ServiceAPI {
     public String getServiceName() {
         return "fc2";
     }
+
+    public void close(){
+        if (client2 != null){
+            client2.close();
+        }
+    }
+
 
 }

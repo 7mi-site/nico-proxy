@@ -81,6 +81,7 @@ public class NicoVideo implements ServiceAPI {
     private String nicosid = null;
 
     private ProxySetting proxy = null;
+    private HttpClient client1 = null;
 
     @Override
     public String[] getCorrespondingURL() {
@@ -493,7 +494,7 @@ public class NicoVideo implements ServiceAPI {
                             if (cacheData == null){
                                 String WebsocketURL = json.getAsJsonObject().get("site").getAsJsonObject().get("relive").getAsJsonObject().get("webSocketUrl").getAsString();
 
-                                final HttpClient client1;
+
                                 if (proxy == null){
                                     client1 = HttpClient.newBuilder()
                                             .version(HttpClient.Version.HTTP_2)
@@ -667,5 +668,11 @@ public class NicoVideo implements ServiceAPI {
     @Override
     public String getServiceName() {
         return "ニコニコ";
+    }
+
+    public void close(){
+        if (client1 != null){
+            client1.close();
+        }
     }
 }
