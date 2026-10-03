@@ -15,6 +15,7 @@ public class bilibili {
     private long Duration;
 
     private String VideoURL;
+    private String AudioURL;
     private HashMap<String, String> VideoAccessCookie;
     //private String LiveURL;
     //private HashMap<String, String> LiveAccessCookie;
@@ -106,6 +107,14 @@ public class bilibili {
 
     public void setVideoURL(String videoURL) {
         VideoURL = videoURL;
+    }
+
+    public String getAudioURL() {
+        return AudioURL;
+    }
+
+    public void setAudioURL(String audioURL) {
+        AudioURL = audioURL;
     }
 
     public HashMap<String, String> getVideoAccessCookie() {
