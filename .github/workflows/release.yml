@@ -24,6 +24,8 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body: |
-            - TVerで一部動画が見れない問題修正
+            - ニコニコ動画の仕様変更対応
+            - bilibiliの仕様変更対応
+
           draft: false
           prerelease: false
