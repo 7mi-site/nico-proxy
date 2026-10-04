@@ -2,17 +2,15 @@ package xyz.n7mn.nico_proxy.Site;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import xyz.n7mn.nico_proxy.Exception.FailedRetrieveException;
 import xyz.n7mn.nico_proxy.Exception.URLNotFoundException;
 import xyz.n7mn.nico_proxy.Exception.URLNotSupportException;
 import xyz.n7mn.nico_proxy.Function;
 import xyz.n7mn.nico_proxy.ProxySetting;
 import xyz.n7mn.nico_proxy.Site.SiteResult.bilibili;
-import xyz.n7mn.nico_proxy.TestMain;
 
+import java.io.StringReader;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -29,7 +27,8 @@ public class bilibili_com implements ServiceAPI {
     private final Pattern Support_URL2 = Pattern.compile("https://www\\.bilibili\\.com/video/(.+)");
     private final Pattern Support_URL3 = Pattern.compile("b23\\.tv");
 
-    private final Pattern matcher_json = Pattern.compile("<script>window\\.__INITIAL_STATE__=\\{(.+)\\};");
+    private final Pattern matcher_json1 = Pattern.compile("<script>window\\.__playinfo__=\\{(.+)\\};");
+    private final Pattern matcher_json2 = Pattern.compile("<script>window\\.__INITIAL_STATE__=\\{(.+)\\};");
 
     @Override
     public String[] getCorrespondingURL() {
@@ -109,22 +108,109 @@ public class bilibili_com implements ServiceAPI {
 
         HttpResponse<byte[]> send = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
 
-        if (send.statusCode() >= 400){
+        if (send.statusCode() >= 400 && send.statusCode() != 412) {
             //client.close();
             request = null;
             uri = null;
             throw new FailedRetrieveException("取得に失敗しました。(HTTPエラーコード : "+send.statusCode()+")");
         }
 
+        if (send.statusCode() == 412) {
+
+            /*
+            send.headers().map().forEach((name, value) -> {
+                System.out.println("--- "+name+" ---");
+                System.out.println(value);
+            });
+             */
+/*
+            String cookie = send.headers().firstValue("set-cookie").get();
+            //System.out.println(cookie);
+            String[] split = cookie.split(";")[0].split("=");
+            //System.out.println("debug : "+split[0]+"="+split[1]);
+
+            request = HttpRequest.newBuilder()
+                    .uri(new URI("https://security.bilibili.com/412"))
+                    .headers("User-Agent", Function.UserAgent)
+                    .header("Accept", "* /*")
+                    .header("Accept-Encoding", "gzip")
+                    .header("Accept-Language", "ja,en;q=0.9,en-US;q=0.8")
+                    .build();
+            send = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+            //System.out.println(new String(send.body(), StandardCharsets.UTF_8));
+
+            request = HttpRequest.newBuilder()
+                    .uri(new URI("https://security.bilibili.com/th/captcha/get"))
+                    .headers("User-Agent", Function.UserAgent)
+                    .header("Accept", "* /*")
+                    .header("Accept-Encoding", "gzip")
+                    .header("Accept-Language", "ja,en;q=0.9,en-US;q=0.8")
+                    .build();
+            send = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+            //System.out.println(new String(send.body(), StandardCharsets.UTF_8));
+
+            request = HttpRequest.newBuilder()
+                    .uri(new URI("https://security.bilibili.com/th/captcha/cc/check"))
+                    .headers("User-Agent", Function.UserAgent)
+                    .header("Accept", "* /*")
+                    .header("Accept-Encoding", "gzip")
+                    .header("Accept-Language", "ja,en;q=0.9,en-US;q=0.8")
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .POST(HttpRequest.BodyPublishers.ofString("token=&result=1763618"))
+                    .build();
+            send = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+            System.out.println(new String(send.body(), StandardCharsets.UTF_8));
+*/
+
+
+            request = HttpRequest.newBuilder()
+                    .uri(uri)
+                    .headers("User-Agent", Function.UserAgent)
+                    .header("Accept", "*/*")
+                    .header("Accept-Encoding", "gzip")
+                    .header("Accept-Language", "ja,en;q=0.9,en-US;q=0.8")
+                    //.header("Cookie", split[0]+"="+split[1])
+                    .header("Cookie", "X-BILI-SEC-TOKEN=3,eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJxIjoiTTlvNldDOENVV0VhVVVUdVNMdFB5aHpzTTZMbGgxeHAiLCJyIjoiNzg3ZTA5OTFjMzNmOGY4ZTViNjk5YzE1OGI2ZWQ2YTBiY2ZhMzRlM2JlZGIzYzc0MjgyZjZlOWJjZWE0ODE2ZiIsImlwIjoiMTYwLjI1MS4yMDYuMjUwIiwiZnAiOiJhNzgyMTE2ZDRjNmE2MTU3MGJjOWI1NTBkMzA3Mzk1NCIsInZlcml0eSI6MSwidHlwZSI6IjEiLCJleHAiOjE3OTExMDI5NDYsImlhdCI6MTc5MTA5OTMzMn0.nthqgAE8_aasWVRvUA-zkVYZfhbb2-BX3HAgBxFjbMY")
+                    .GET()
+                    .build();
+            send = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+            if (send.statusCode() >= 400) {
+                throw new FailedRetrieveException("取得に失敗しました。(HTTPエラーコード : "+send.statusCode()+")");
+            }
+        }
+
         String html = new String(Function.decompressByte(send.body(), send.headers().firstValue("content-encoding").get()), StandardCharsets.UTF_8);
-        Matcher matcher = matcher_json.matcher(html);
+        Matcher matcher_html1 = matcher_json1.matcher(html);
+        Matcher matcher_html2 = matcher_json2.matcher(html);
+
+        boolean isHtmlData = false;
+        boolean html1 = matcher_html1.find();
+        boolean html2 = matcher_html2.find();
+
         String jsonText = "{}";
-        if (matcher.find()){
-            jsonText = "{"+matcher.group(1)+"}";
+
+        if (html1) {
+            isHtmlData = true;
+            jsonText = "{"+matcher_html1.group(1)+"}";
+        }
+
+        if (!html1 && html2){
+            jsonText = "{"+matcher_html2.group(1)+"}";
         }
 
         JsonElement json = Function.gson.fromJson(jsonText, JsonElement.class);
+/*
+        if (isHtmlData){
 
+            System.out.println(json);
+
+            return null;
+        }
+*/
         String avid = "";
         String bvid = "";
         String cid = "";
@@ -150,6 +236,7 @@ public class bilibili_com implements ServiceAPI {
         result.setFavoriteCount(json.getAsJsonObject().get("videoData").getAsJsonObject().get("stat").getAsJsonObject().get("favorite").getAsInt());
         result.setDuration(json.getAsJsonObject().get("videoData").getAsJsonObject().get("duration").getAsInt());
 
+        //uri = new URI("https://api.bilibili.com/x/player/wbi/playurl?bvid="+bvid+"&cid="+cid+"&fnval=4048&try_look=1&wts=1791030916&w_rid=abad2de942aa1b07ac313dc644ea8d9d");
         uri = new URI("https://api.bilibili.com/x/player/wbi/playurl?avid="+avid+"&bvid="+bvid+"&cid="+cid+"&qn=0&fnver=0&fnval=4048&fourk=1&gaia_source=&from_client=BROWSER&is_main_page=true&need_fragment=false&isGaiaAvoided=false&client_attr=0&version_name=4.10.4&app_id=100&session=bea6a57fe31194bf5fce97ee4f0dc942&web_location=1315873&dm_img_list=[]&dm_img_str=V2ViR0wgMS&dm_cover_img_str=QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgR1RYIDk4MCBEaXJlY3QzRDExIHZzXzVfMCBwc181XzApLCBvciBzaW1pbGFyR29vZ2xlIEluYy4gKE5WSURJQS&dm_img_inter=%7B%22ds%22:[],%22wh%22:[5773,6976,105],%22of%22:[331,662,331]%7D&x-bili-device-req-json=%7B%22platform%22:%22web%22,%22device%22:%22pc%22,%22mobi_app%22:%22web_cn%22%7D&x-bili-locale-json=%7B%22c_locale%22:%7B%22language%22:%22zh%22,%22script%22:%22Hans%22%7D,%22always_translate%22:false%7D&w_rid=77dde55e1e434e02143c8084dba6ad41&wts=1791025255");
         request = HttpRequest.newBuilder()
                 .uri(uri)
@@ -167,7 +254,12 @@ public class bilibili_com implements ServiceAPI {
             uri = null;
             throw new FailedRetrieveException("取得に失敗しました。(HTTPエラーコード : "+send.statusCode()+")");
         }
-        jsonText = new String(Function.decompressByte(send.body(), send.headers().firstValue("content-encoding").get()), StandardCharsets.UTF_8);
+
+        String s = "";
+        if (send.headers().firstValue("content-encoding").isPresent()){
+            s = send.headers().firstValue("content-encoding").get();
+        }
+        jsonText = new String(Function.decompressByte(send.body(), s), StandardCharsets.UTF_8);
 
         json = Function.gson.fromJson(jsonText, JsonElement.class);
 
