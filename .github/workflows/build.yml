@@ -130,7 +130,7 @@ jobs:
 
       - name: bilibili Test
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.bilibili.com/video/BV1y5411Y7A2/ )
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.bilibili.com/video/BV1y5411Y7A2/ $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
@@ -452,7 +452,7 @@ jobs:
 
       - name: bilibili Test
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.bilibili.com/video/BV1y5411Y7A2/ )
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.bilibili.com/video/BV1y5411Y7A2/ $proxy )
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
