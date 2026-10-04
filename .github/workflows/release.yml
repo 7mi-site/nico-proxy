@@ -26,6 +26,6 @@ jobs:
           body: |
             - ニコニコ動画の仕様変更対応
             - bilibiliの仕様変更対応
-
+            - SoundCloudの仕様変更対応
           draft: false
           prerelease: false
