@@ -123,6 +123,8 @@ jobs:
         shell: bash
 
       - name: bilibili Test
+        env:
+          proxy: ${{ secrets.PROXY }}
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://www.bilibili.com/video/BV1y5411Y7A2/ $proxy)
           if [ "$RESULT" != "0" ]; then
