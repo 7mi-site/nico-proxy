@@ -302,7 +302,7 @@ jobs:
         env:
           proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ep1fgcrtxe $proxy)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ep5ceoaxti $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi
@@ -624,7 +624,7 @@ jobs:
         env:
           proxy: ${{ secrets.PROXY }}
         run: |
-          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ep1fgcrtxe $proxy)
+          RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://tver.jp/episodes/ep5ceoaxti $proxy)
           if [ "$RESULT" != "0" ]; then
             exit 1
           fi

@@ -241,9 +241,10 @@ public class bilibili_com implements ServiceAPI {
         request = HttpRequest.newBuilder()
                 .uri(uri)
                 .headers("User-Agent", Function.UserAgent)
-                .header("Accept", "*/*")
-                .header("Accept-Encoding", "gzip")
-                .header("Accept-Language", "ja,en;q=0.9,en-US;q=0.8")
+                .headers("Accept", "*/*")
+                .headers("Accept-Encoding", "gzip")
+                .headers("Accept-Language", "ja,en;q=0.9,en-US;q=0.8")
+                .headers("Cookie", "b_lsid=940AF4BD_1A10611B318; buvid3=0B9DC0B2-9AEF-3837-C001-5E51FA5A61B591250infoc; b_nut=1791103191; _uuid=B59E4A2C-6E75-A5C4-655C-9EB86210ED7FA85477infoc; CURRENT_FNVAL=4048; CURRENT_QUALITY=0; buvid_fp=0f7691c97448244aa89b60c729662e74")
                 .GET()
                 .build();
 
