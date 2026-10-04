@@ -264,6 +264,36 @@ public class bilibili_com implements ServiceAPI {
 
         json = Function.gson.fromJson(jsonText, JsonElement.class);
 
+        if (!json.getAsJsonObject().get("data").getAsJsonObject().has("dash")){
+            Thread.sleep(2000L);
+            uri = new URI("https://api.bilibili.com/x/player/wbi/playurl?avid="+avid+"&bvid="+bvid+"&cid="+cid+"&qn=0&fnver=0&fnval=4048&fourk=1&gaia_source=&from_client=BROWSER&is_main_page=true&need_fragment=false&isGaiaAvoided=false&client_attr=0&version_name=4.10.4&app_id=100&session=bea6a57fe31194bf5fce97ee4f0dc942&web_location=1315873&dm_img_list=[]&dm_img_str=V2ViR0wgMS&dm_cover_img_str=QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgR1RYIDk4MCBEaXJlY3QzRDExIHZzXzVfMCBwc181XzApLCBvciBzaW1pbGFyR29vZ2xlIEluYy4gKE5WSURJQS&dm_img_inter=%7B%22ds%22:[],%22wh%22:[5773,6976,105],%22of%22:[331,662,331]%7D&x-bili-device-req-json=%7B%22platform%22:%22web%22,%22device%22:%22pc%22,%22mobi_app%22:%22web_cn%22%7D&x-bili-locale-json=%7B%22c_locale%22:%7B%22language%22:%22zh%22,%22script%22:%22Hans%22%7D,%22always_translate%22:false%7D&w_rid=77dde55e1e434e02143c8084dba6ad41&wts=1791025255");
+            request = HttpRequest.newBuilder()
+                    .uri(uri)
+                    .headers("User-Agent", Function.UserAgent)
+                    .headers("Accept", "*/*")
+                    .headers("Accept-Encoding", "gzip")
+                    .headers("Accept-Language", "ja,en;q=0.9,en-US;q=0.8")
+                    .headers("Cookie", "b_lsid=940AF4BD_1A10611B318; buvid3=0B9DC0B2-9AEF-3837-C001-5E51FA5A61B591250infoc; b_nut=1791103191; _uuid=B59E4A2C-6E75-A5C4-655C-9EB86210ED7FA85477infoc; CURRENT_FNVAL=4048; CURRENT_QUALITY=0; buvid_fp=0f7691c97448244aa89b60c729662e74")
+                    .GET()
+                    .build();
+
+            send = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            if (send.statusCode() >= 400){
+                //client.close();
+                request = null;
+                uri = null;
+                throw new FailedRetrieveException("取得に失敗しました。(HTTPエラーコード : "+send.statusCode()+")");
+            }
+
+            s = "";
+            if (send.headers().firstValue("content-encoding").isPresent()){
+                s = send.headers().firstValue("content-encoding").get();
+            }
+            jsonText = new String(Function.decompressByte(send.body(), s), StandardCharsets.UTF_8);
+
+            json = Function.gson.fromJson(jsonText, JsonElement.class);
+        }
+
         JsonArray arrayVideo = json.getAsJsonObject().get("data").getAsJsonObject().get("dash").getAsJsonObject().get("video").getAsJsonArray();
         JsonArray arrayAudio = json.getAsJsonObject().get("data").getAsJsonObject().get("dash").getAsJsonObject().get("audio").getAsJsonArray();
 
