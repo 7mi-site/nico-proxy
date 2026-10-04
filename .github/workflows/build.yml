@@ -90,12 +90,6 @@ jobs:
         with:
           name: jar1
 
-      - name: Delete File
-        uses: geekyeggo/delete-artifact@v5
-        with:
-          name: |
-            jar1
-
       - name: Abema Test 1
         run: |
           RESULT=$(java -jar ./nico-proxy-2.0-SNAPSHOT-all.jar https://abema.tv/video/episode/25-139_s1_p1)
@@ -394,6 +388,12 @@ jobs:
           fi
         shell: bash
 
+      - name: Delete File
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            jar1
+
   test_for26:
     needs: build-26
     runs-on: ubuntu-24.04
@@ -411,12 +411,6 @@ jobs:
         uses: actions/download-artifact@v8.0.1
         with:
           name: jar2
-
-      - name: Delete File
-        uses: geekyeggo/delete-artifact@v5
-        with:
-          name: |
-            jar2
 
       - name: Abema Test 1
         run: |
@@ -715,4 +709,10 @@ jobs:
             exit 1
           fi
         shell: bash
+
+      - name: Delete File
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            jar2
 # https://vimeo.com/394801904
