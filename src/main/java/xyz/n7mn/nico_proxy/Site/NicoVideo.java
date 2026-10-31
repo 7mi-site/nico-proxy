@@ -380,19 +380,89 @@ public class NicoVideo implements ServiceAPI {
                         result.setThumbnail(json.getAsJsonObject().get("data").getAsJsonObject().get("response").getAsJsonObject().get("$watchV4").getAsJsonObject().get("data").getAsJsonObject().get("video").getAsJsonObject().get("thumbnail").getAsJsonObject().get("player").getAsString());
 
                         HashMap<String, String> cookie = new HashMap<>();
-                        if (domand_bid != null){
-                            cookie.put("domand_bid", domand_bid);
-                        }
+
                         cookie.put("nicosid", nicosid);
 
                         if (user_session != null){
                             cookie.put("user_session", user_session);
                         }
 
-                        result.setVideoAccessCookie(cookie);
 
-                        result.setVideoURL(json.getAsJsonObject().get("data").getAsJsonObject().get("response").getAsJsonObject().get("$watchV4").getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("hls").getAsJsonObject().get("url").getAsString().replaceAll("&amp;", "&"));
+                        if (!json.getAsJsonObject().get("data").getAsJsonObject().get("response").getAsJsonObject().get("$watchV4").getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("hls").isJsonNull()) {
+                            result.setVideoURL(json.getAsJsonObject().get("data").getAsJsonObject().get("response").getAsJsonObject().get("$watchV4").getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("hls").getAsJsonObject().get("url").getAsString().replaceAll("&amp;", "&"));
+                        } else {
+                            StringBuffer buffer = new StringBuffer("{\"outputs\":[");
 
+                            for (JsonElement jsonElement : json.getAsJsonObject().get("data").getAsJsonObject().get("response").getAsJsonObject().get("$watchV4").getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("contents").getAsJsonObject().get("videos").getAsJsonArray()) {
+                                if (jsonElement.getAsJsonObject().get("isAvailable").getAsBoolean()) {
+                                    for (JsonElement element : json.getAsJsonObject().get("data").getAsJsonObject().get("response").getAsJsonObject().get("$watchV4").getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("contents").getAsJsonObject().get("audios").getAsJsonArray()) {
+                                        if (element.getAsJsonObject().get("isAvailable").getAsBoolean()){
+                                            buffer.append("[\"").append(jsonElement.getAsJsonObject().get("id").getAsString()).append("\",\"").append(element.getAsJsonObject().get("id").getAsString()).append("\"],");
+                                        }
+                                    }
+
+                                }
+                            }
+                            buffer.setLength(buffer.length() - 1);
+                            buffer.append("]}");
+
+                            //System.out.println(buffer.toString());
+
+                            //System.out.println("https://nvapi.nicovideo.jp/v1/watch/"+json.getAsJsonObject().get("data").getAsJsonObject().get("response").getAsJsonObject().get("$watchV4").getAsJsonObject().get("data").getAsJsonObject().get("video").getAsJsonObject().get("id").getAsString()+"/access-rights/hls?actionTrackId="+json.getAsJsonObject().get("data").getAsJsonObject().get("response").getAsJsonObject().get("$watchV4").getAsJsonObject().get("data").getAsJsonObject().get("client").getAsJsonObject().get("watchTrackId").getAsString());
+                            request = HttpRequest.newBuilder()
+                                    .uri(new URI("https://nvapi.nicovideo.jp/v1/watch/"+json.getAsJsonObject().get("data").getAsJsonObject().get("response").getAsJsonObject().get("$watchV4").getAsJsonObject().get("data").getAsJsonObject().get("video").getAsJsonObject().get("id").getAsString()+"/access-rights/hls?actionTrackId="+json.getAsJsonObject().get("data").getAsJsonObject().get("response").getAsJsonObject().get("$watchV4").getAsJsonObject().get("data").getAsJsonObject().get("client").getAsJsonObject().get("watchTrackId").getAsString()))
+                                    .headers("User-Agent", Function.UserAgent)
+                                    .headers("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                                    .headers("Accept-Language", "ja,en;q=0.7,en-US;q=0.3")
+                                    .headers("Accept-Encoding", "gzip, br")
+                                    .headers("Cookie", cookieText.toString())
+                                    .headers("X-Access-Right-Key", json.getAsJsonObject().get("data").getAsJsonObject().get("response").getAsJsonObject().get("$watchV4").getAsJsonObject().get("data").getAsJsonObject().get("media").getAsJsonObject().get("accessRightKey").getAsString())
+                                    .headers("X-Frontend-Id", "6")
+                                    .headers("X-Frontend-Version", "0")
+                                    .headers("X-Niconico-Language", "ja-jp")
+                                    .headers("X-Request-With", "https://www.nicovideo.jp")
+                                    .POST(HttpRequest.BodyPublishers.ofString(buffer.toString()))
+                                    .build();
+
+                            send = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                            jsonText = send.body();
+
+                            final String[] tempCookie1 = {null};
+
+                            if (!send.headers().allValues("Set-Cookie").isEmpty()){
+                                send.headers().allValues("Set-Cookie").forEach((cookie1) -> {
+                                    Matcher matcher1 = matcher_cookie_domand.matcher(cookie1);
+                                    if (matcher1.find()) {
+                                        tempCookie1[0] = matcher1.group(1);
+                                    }
+                                });
+
+                            }
+                            if (!send.headers().allValues("set-cookie").isEmpty()){
+                                send.headers().allValues("set-cookie").forEach((cookie1) -> {
+                                    Matcher matcher1 = matcher_cookie_domand.matcher(cookie1);
+                                    if (matcher1.find()) {
+                                        tempCookie1[0] = matcher1.group(1);
+                                    }
+                                });
+
+                            }
+
+                            String domand_bid1 = null;
+                            if (tempCookie1[0] != null){
+                                domand_bid1 = tempCookie1[0];
+                            }
+
+                            if (domand_bid1 != null){
+                                cookie.put("domand_bid", domand_bid1);
+                            }
+                            result.setVideoAccessCookie(cookie);
+
+                            json = Function.gson.fromJson(jsonText, JsonElement.class);
+
+                            //System.out.println(json.getAsJsonObject().get("data").getAsJsonObject().get("contentUrl").getAsString());
+                            result.setVideoURL(json.getAsJsonObject().get("data").getAsJsonObject().get("contentUrl").getAsString());
+                        }
                         return Function.gson.toJson(result);
                     }
 
